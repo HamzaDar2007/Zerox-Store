@@ -1,0 +1,395 @@
+I now have complete information from all 35 migration files. Here is the comprehensive summary:
+
+---
+
+## Complete Migration Catalog — All Tables, Columns, Foreign Keys & Relationships
+
+### Migration 001–004: Infrastructure (No Tables)
+Extensions (`uuid-ossp`, `pgcrypto`, `pg_trgm`, `btree_gist`), enums (disabled — using TypeScript), sequences (`order_number_seq`, `refund_number_seq`, `ticket_number_seq`, `return_number_seq`, `dispute_number_seq`, `shipment_number_seq`, `payout_number_seq`), and utility functions.
+
+---
+
+### Migration 005: Auth & Users — 7 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 1 | **users** | id, name, email, password, phone, role (`user_role_enum`), is_email_verified, email_verified_at, phone_verified_at, is_active, profile_image, date_of_birth, gender, referral_code, last_login_at, last_login_ip, login_attempts, locked_until, two_factor_enabled, two_factor_secret, two_factor_backup_codes, preferred_language_id, preferred_currency_id, deleted_at, created_at, updated_at | preferred_language_id → languages(id), preferred_currency_id → currencies(id) *(added in migration 028)* |
+| 2 | **roles** | id, name (unique), display_name, description, is_system, created_at | — |
+| 3 | **permissions** | id, role_id, module, action, created_at; UNIQUE(role_id, module, action) | role_id → roles(id) CASCADE |
+| 4 | **user_roles** | id, user_id, role_id, assigned_by, assigned_at; UNIQUE(user_id, role_id) | user_id → users(id) CASCADE, role_id → roles(id) CASCADE, assigned_by → users(id) |
+| 5 | **sessions** | id, user_id, refresh_token, ip_address, user_agent, device_fingerprint, is_valid, last_activity_at, expires_at, created_at | user_id → users(id) CASCADE |
+| 6 | **addresses** | id, user_id, label, full_name, phone, country, province, city, area, street_address, postal_code, latitude, longitude, delivery_instructions, is_default_shipping, is_default_billing, created_at, updated_at | user_id → users(id) CASCADE |
+| 7 | **login_history** | id, user_id, login_at, ip_address, user_agent, device_fingerprint, status, failure_reason, location_country, location_city | user_id → users(id) CASCADE |
+
+---
+
+### Migration 006: Sellers & Stores — 8 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 8 | **sellers** | id, user_id (unique), business_name, cnic, cnic_front_image, cnic_back_image, tax_id, business_reg_no, bank_name, bank_account_no, bank_account_title, bank_branch_code, payout_frequency, min_payout_amount, commission_rate, verification_status, rejection_reason, approved_at, approved_by, total_products, total_sales, avg_rating, response_time_avg, vacation_mode, vacation_start, vacation_end, created_at, updated_at | user_id → users(id) CASCADE, approved_by → users(id) |
+| 9 | **stores** | id, seller_id (unique), name, slug (unique), logo_url, banner_url, description, return_policy, shipping_policy, meta_title, meta_description, rating, total_sales, total_followers, avg_processing_hours, is_active, created_at, updated_at | seller_id → sellers(id) CASCADE |
+| 10 | **store_followers** | id, store_id, user_id, followed_at; UNIQUE(store_id, user_id) | store_id → stores(id) CASCADE, user_id → users(id) CASCADE |
+| 11 | **seller_wallets** | id, seller_id (unique), balance, pending_balance, total_earned, total_withdrawn, total_commission_paid, last_payout_at, created_at, updated_at | seller_id → sellers(id) CASCADE |
+| 12 | **wallet_transactions** | id, wallet_id, order_id, type, amount, commission, net_amount, balance_after, description, reference_type, reference_id, status, created_at | wallet_id → seller_wallets(id) CASCADE |
+| 13 | **seller_documents** | id, seller_id, document_type, file_url, status, reviewed_by, reviewed_at, rejection_reason, expires_at, created_at | seller_id → sellers(id) CASCADE, reviewed_by → users(id) |
+| 14 | **seller_violations** | id, seller_id, violation_type, description, evidence_urls, severity, penalty_action, penalty_amount, status, acknowledged_at, resolved_at, created_by, created_at, updated_at | seller_id → sellers(id) CASCADE, created_by → users(id) |
+| 15 | **seller_performance_snapshots** | id, seller_id, snapshot_date, orders_received, orders_fulfilled, orders_cancelled, avg_fulfillment_hours, avg_rating, total_revenue, total_commission, return_rate, response_rate, response_time_avg_min, new_products_listed, new_reviews_received, created_at; UNIQUE(seller_id, snapshot_date) | seller_id → sellers(id) CASCADE |
+
+---
+
+### Migration 007: Categories & Brands — 7 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 16 | **categories** | id, parent_id, name, slug (unique), image_url, icon_url, banner_url, description, meta_title, meta_description, commission_rate, is_active, is_featured, sort_order, depth, path, created_at, updated_at | parent_id → categories(id) SET NULL |
+| 17 | **brands** | id, name (unique), slug (unique), logo_url, description, website_url, country_of_origin, is_active, is_featured, sort_order, created_at, updated_at | — |
+| 18 | **attribute_groups** | id, name, slug (unique), sort_order, is_active, created_at | — |
+| 19 | **attributes** | id, attribute_group_id, name, slug (unique), type, unit, is_filterable, is_required, is_variant_attribute, is_active, sort_order, created_at | attribute_group_id → attribute_groups(id) SET NULL |
+| 20 | **attribute_options** | id, attribute_id, value, color_hex, image_url, sort_order, is_active; UNIQUE(attribute_id, value) | attribute_id → attributes(id) CASCADE |
+| 21 | **category_attributes** | id, category_id, attribute_id, is_required, sort_order; UNIQUE(category_id, attribute_id) | category_id → categories(id) CASCADE, attribute_id → attributes(id) CASCADE |
+| 22 | **brand_categories** | id, brand_id, category_id; UNIQUE(brand_id, category_id) | brand_id → brands(id) CASCADE, category_id → categories(id) CASCADE |
+
+---
+
+### Migration 008: Products — 8 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 23 | **products** | id, seller_id, category_id, brand_id, name, slug (unique), description, short_description, price, compare_at_price, cost_price, stock, sku (unique), weight, dimensions, min/max_order_qty, warranty_type/duration/policy, country_of_origin, hs_code, tags, status, is_featured, is_digital, is_fragile, is_returnable, return_window_days, requires_shipping, meta_title, meta_description, search_vector, avg_rating, total_ratings, total_reviews, total_sold, total_questions, view_count, published_at, deleted_at, created_at, updated_at | seller_id → sellers(id) CASCADE, category_id → categories(id), brand_id → brands(id) |
+| 24 | **product_variants** | id, product_id, name, sku, barcode, price, compare_at_price, cost_price, stock, low_stock_threshold, weight, dimensions, options (jsonb), image_url, is_active, position, created_at, updated_at | product_id → products(id) CASCADE |
+| 25 | **product_images** | id, product_id, variant_id, url, alt_text, is_primary, sort_order, created_at | product_id → products(id) CASCADE, variant_id → product_variants(id) SET NULL |
+| 26 | **product_attributes** | id, product_id, attribute_id, attribute_option_id, value_text, value_numeric; UNIQUE(product_id, attribute_id) | product_id → products(id) CASCADE, attribute_id → attributes(id) CASCADE, attribute_option_id → attribute_options(id) SET NULL |
+| 27 | **variant_attribute_values** | id, product_variant_id, attribute_id, attribute_option_id; UNIQUE(product_variant_id, attribute_id) | product_variant_id → product_variants(id) CASCADE, attribute_id → attributes(id) CASCADE, attribute_option_id → attribute_options(id) CASCADE |
+| 28 | **price_history** | id, product_id, variant_id, old_price, new_price, old_compare_at_price, new_compare_at_price, changed_by, change_reason, created_at | product_id → products(id) CASCADE, variant_id → product_variants(id) CASCADE, changed_by → users(id) |
+| 29 | **product_questions** | id, product_id, user_id, question_text, is_approved, approved_at, answer_count, created_at | product_id → products(id) CASCADE, user_id → users(id) |
+| 30 | **product_answers** | id, question_id, user_id, seller_id, answer_text, is_seller_answer, is_approved, upvote_count, created_at | question_id → product_questions(id) CASCADE, user_id → users(id), seller_id → sellers(id) |
+
+---
+
+### Migration 009: Inventory — 6 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 31 | **warehouses** | id, seller_id, name, code (unique), address fields, contact fields, is_active, is_default, priority, created_at, updated_at | seller_id → sellers(id) CASCADE |
+| 32 | **inventory** | id, product_id, product_variant_id, warehouse_id, quantity_on_hand, quantity_reserved, quantity_available (GENERATED), low_stock_threshold, reorder_point, reorder_quantity, last_restocked_at, last_sold_at, updated_at; UNIQUE(product_id, product_variant_id, warehouse_id) | product_id → products(id) CASCADE, product_variant_id → product_variants(id) CASCADE, warehouse_id → warehouses(id) CASCADE |
+| 33 | **stock_movements** | id, inventory_id, type, quantity, quantity_before, quantity_after, reference_type, reference_id, cost_per_unit, note, performed_by, created_at | inventory_id → inventory(id) CASCADE, performed_by → users(id) |
+| 34 | **stock_reservations** | id, inventory_id, product_id, product_variant_id, order_id, cart_id, checkout_session_id, quantity, status, expires_at, released_at, committed_at, created_at | inventory_id → inventory(id) CASCADE, product_id → products(id), product_variant_id → product_variants(id) |
+| 35 | **inventory_transfers** | id, transfer_number (unique), from_warehouse_id, to_warehouse_id, status, notes, initiated_by, approved_by, timestamps, created_at, updated_at | from/to_warehouse_id → warehouses(id), initiated_by/approved_by → users(id) |
+| 36 | **inventory_transfer_items** | id, transfer_id, product_id, product_variant_id, quantity_requested, quantity_shipped, quantity_received; UNIQUE(transfer_id, product_id, product_variant_id) | transfer_id → inventory_transfers(id) CASCADE, product_id → products(id), product_variant_id → product_variants(id) |
+
+---
+
+### Migration 010: Cart & Checkout — 4 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 37 | **carts** | id, user_id (unique), session_id, currency_code, voucher_id, discount_amount, last_activity_at, abandoned_email_sent, created_at, updated_at | user_id → users(id) CASCADE |
+| 38 | **cart_items** | id, cart_id, product_id, variant_id, quantity, price_at_addition, created_at, updated_at; UNIQUE(cart_id, product_id, variant_id) | cart_id → carts(id) CASCADE, product_id → products(id) CASCADE, variant_id → product_variants(id) SET NULL |
+| 39 | **wishlists** | id, user_id, product_id, notify_on_sale, notify_on_restock, created_at; UNIQUE(user_id, product_id) | user_id → users(id) CASCADE, product_id → products(id) CASCADE |
+| 40 | **checkout_sessions** | id, user_id, cart_id, session_token, step, shipping_address_id, billing_address_id, shipping_method_id, delivery_slot_id, payment_method, voucher_id, cart_snapshot (jsonb), subtotal, shipping_cost, tax_amount, discount_amount, total, price_locked_until, loyalty_points_to_use, loyalty_discount, is_gift, gift_message, delivery_instructions, ip_address, user_agent, device_type, started_at, completed_at, abandoned_at, created_at, updated_at | user_id → users(id), cart_id → carts(id), shipping/billing_address_id → addresses(id) |
+
+---
+
+### Migration 011: Orders — 6 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 41 | **orders** | id, user_id, address_id, order_number (unique auto-gen), is_split_order, parent_order_id, status, voucher_id, voucher_code, currency_code, exchange_rate, subtotal, discount_amount, tax_amount, delivery_charges, gift_wrap_cost, total_amount, payment_method, estimated_delivery_at, delivered_at, delivery_instructions, delivery_slot_id, is_gift, gift_message, loyalty_points_earned/used, loyalty_discount, customer_notes, admin_notes, cancelled_at/by, cancellation_reason, ip_address, user_agent, source_device, checkout_session_id, created_at, updated_at | user_id → users(id), address_id → addresses(id), parent_order_id → orders(id), cancelled_by → users(id) |
+| 42 | **order_items** | id, order_id, product_id, seller_id, variant_id, warehouse_id, product_name, variant_name, sku, product_image, quantity, cancelled_qty, returned_qty, fulfilled_qty, unit_price, total_price, discount_amount, tax_amount, commission_rate, commission_amount, seller_amount, status, weight, is_gift, created_at, updated_at | order_id → orders(id) CASCADE, product_id → products(id), seller_id → sellers(id), variant_id → product_variants(id), warehouse_id → warehouses(id) |
+| 43 | **order_status_history** | id, order_id, order_item_id, from_status, to_status, changed_by, change_reason, metadata (jsonb), created_at | order_id → orders(id) CASCADE, order_item_id → order_items(id) CASCADE, changed_by → users(id) |
+| 44 | **shipments** | id, order_id, shipment_number (unique), carrier_name, carrier_code, shipping_method, tracking_number, tracking_url, status, weight, dimensions, package_count, shipped_from_warehouse, shipping_cost, insurance_cost, shipping_label_url, estimated_delivery_at, shipped_at, delivered_at, signature_required, delivery_proof_url, delivery_notes, receiver_name, created_at, updated_at | order_id → orders(id) CASCADE, shipped_from_warehouse → warehouses(id) |
+| 45 | **shipment_items** | id, shipment_id, order_item_id, quantity; UNIQUE(shipment_id, order_item_id) | shipment_id → shipments(id) CASCADE, order_item_id → order_items(id) |
+| 46 | **order_snapshots** | id, order_item_id (unique), product_data, variant_data, seller_data, attributes, images (all jsonb), created_at | order_item_id → order_items(id) CASCADE |
+
+---
+
+### Migration 012: Payments — 4 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 47 | **payments** | id, order_id, transaction_id (unique), gateway_name, method, currency_code, amount, gateway_fee, platform_fee, net_amount, status, is_captured, authorized_at, captured_at, gateway_response (jsonb), failure_reason, retry_count, billing_address_id, ip_address, paid_at, created_at, updated_at | order_id → orders(id) CASCADE, billing_address_id → addresses(id) |
+| 48 | **payment_attempts** | id, payment_id, attempt_number, method, gateway_name, amount, status, gateway_response (jsonb), error_code, error_message, ip_address, created_at | payment_id → payments(id) CASCADE |
+| 49 | **refunds** | id, refund_number (unique auto-gen), order_id, order_item_id, payment_id, user_id, reason, evidence_images (jsonb), amount, currency_code, refund_method, gateway_refund_id, status, admin_note, approved_by, approved_at, rejected_reason, processed_at, gateway_response (jsonb), created_at, updated_at | order_id → orders(id), order_item_id → order_items(id), payment_id → payments(id), user_id → users(id), approved_by → users(id) |
+| 50 | **saved_payment_methods** | id, user_id, type, provider, token_encrypted, last_four, card_brand, card_holder_name, expiry_month, expiry_year, wallet_number, is_default, is_active, last_used_at, created_at, updated_at | user_id → users(id) CASCADE |
+
+---
+
+### Migration 013: Returns — 4 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 51 | **return_reasons** | id, reason_text, description, applicable_to, requires_image, is_active, sort_order, created_at | — |
+| 52 | **return_requests** | id, return_number (unique auto-gen), order_id, order_item_id, user_id, seller_id, type, reason_id, description, quantity, status, exchange_variant_id, refund_id, refund_amount, approved_by, approved_at, rejected_reason, seller_note, admin_note, qc_status, qc_note, qc_completed_at, created_at, updated_at | order_id → orders(id), order_item_id → order_items(id), user_id → users(id), seller_id → sellers(id), reason_id → return_reasons(id), exchange_variant_id → product_variants(id), approved_by → users(id) |
+| 53 | **return_images** | id, return_request_id, image_url, description, sort_order, created_at | return_request_id → return_requests(id) CASCADE |
+| 54 | **return_shipments** | id, return_request_id, tracking_number, carrier_name, carrier_code, status, pickup_scheduled_at, picked_up_at, shipped_at, received_at, shipping_cost, paid_by, created_at, updated_at | return_request_id → return_requests(id) CASCADE |
+
+---
+
+### Migration 014: Disputes — 3 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 55 | **disputes** | id, dispute_number (unique auto-gen), order_id, order_item_id, return_request_id, opened_by, against_user_id, type, subject, description, status, priority, resolution, resolution_amount, resolution_note, assigned_admin_id, assigned_at, seller_response_deadline, escalation_deadline, resolved_at, closed_at, created_at, updated_at | order_id → orders(id), order_item_id → order_items(id), return_request_id → return_requests(id), opened_by → users(id), against_user_id → users(id), assigned_admin_id → users(id) |
+| 56 | **dispute_messages** | id, dispute_id, sender_id, message_text, attachment_urls (jsonb), is_internal_note, is_system_message, created_at | dispute_id → disputes(id) CASCADE, sender_id → users(id) |
+| 57 | **dispute_evidence** | id, dispute_id, uploaded_by, file_url, file_type, file_name, description, created_at | dispute_id → disputes(id) CASCADE, uploaded_by → users(id) |
+
+---
+
+### Migration 015: Reviews — 3 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 58 | **reviews** | id, product_id, user_id, order_item_id, variant_id, rating, title, body, pros, cons, images, video_url, is_verified_purchase, helpful_count, unhelpful_count, reported_count, moderation_status, moderated_by, moderated_at, moderation_note, seller_reply, seller_replied_at, is_active, created_at, updated_at; UNIQUE(user_id, order_item_id) | product_id → products(id) CASCADE, user_id → users(id), order_item_id → order_items(id), variant_id → product_variants(id), moderated_by → users(id) |
+| 59 | **review_helpfulness** | id, review_id, user_id, is_helpful, created_at; UNIQUE(review_id, user_id) | review_id → reviews(id) CASCADE, user_id → users(id) |
+| 60 | **review_reports** | id, review_id, user_id, reason, description, status, reviewed_by, reviewed_at, created_at; UNIQUE(review_id, user_id) | review_id → reviews(id) CASCADE, user_id → users(id), reviewed_by → users(id) |
+
+---
+
+### Migration 016: Marketing — 8 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 61 | **vouchers** | id, code (unique), name, description, seller_id, type, discount_value, min_order_amount, max_discount, applicable_to, applicable_ids (jsonb), total_limit, per_user_limit, used_count, first_order_only, stackable, display_on_store, currency_code, starts_at, expires_at, is_active, created_at, updated_at | seller_id → sellers(id) CASCADE |
+| 62 | **voucher_conditions** | id, voucher_id, condition_type, condition_value (jsonb), created_at | voucher_id → vouchers(id) CASCADE |
+| 63 | **voucher_products** | id, voucher_id, product_id, category_id, brand_id (mutually exclusive CHECK) | voucher_id → vouchers(id) CASCADE, product_id → products(id) CASCADE, category_id → categories(id) CASCADE, brand_id → brands(id) CASCADE |
+| 64 | **voucher_usages** | id, voucher_id, user_id, order_id, discount_applied, used_at | voucher_id → vouchers(id), user_id → users(id), order_id → orders(id) |
+| 65 | **campaigns** | id, name, slug (unique), description, type, banner_url, mobile_banner_url, thumbnail_url, discount_percentage, starts_at, ends_at, is_active, is_featured, meta_title, meta_description, created_at, updated_at | — |
+| 66 | **campaign_products** | id, campaign_id, product_id, sale_price, discount_percentage, stock_limit, sold_count, sort_order; UNIQUE(campaign_id, product_id) | campaign_id → campaigns(id) CASCADE, product_id → products(id) CASCADE |
+| 67 | **flash_sales** | id, name, slug (unique), description, banner_url, starts_at, ends_at, is_active, created_at, updated_at | — |
+| 68 | **flash_sale_products** | id, flash_sale_id, product_id, variant_id, sale_price, original_price, stock_limit, sold_count, per_user_limit, sort_order; UNIQUE(flash_sale_id, product_id, variant_id) | flash_sale_id → flash_sales(id) CASCADE, product_id → products(id) CASCADE, variant_id → product_variants(id) |
+
+---
+
+### Migration 017: Tax — 4 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 69 | **tax_classes** | id, name (unique), description, is_default, is_active, created_at | — |
+| 70 | **tax_zones** | id, name, country_code, state_code, city, postal_code_pattern, is_active, created_at | — |
+| 71 | **tax_rates** | id, tax_zone_id, tax_class_id, name, rate, is_compound, priority, is_active, effective_from, effective_until, created_at, updated_at | tax_zone_id → tax_zones(id) CASCADE, tax_class_id → tax_classes(id) CASCADE |
+| 72 | **order_tax_lines** | id, order_id, order_item_id, tax_rate_id, tax_name, rate_applied, taxable_amount, tax_amount, created_at | order_id → orders(id) CASCADE, order_item_id → order_items(id) CASCADE, tax_rate_id → tax_rates(id) |
+
+---
+
+### Migration 018: Shipping — 5 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 73 | **shipping_methods** | id, name, code (unique), type, description, is_active, sort_order, created_at | — |
+| 74 | **shipping_zones** | id, name, countries, states, cities, postal_code_ranges (jsonb), is_active, created_at, updated_at | — |
+| 75 | **shipping_rates** | id, shipping_zone_id, shipping_method_id, seller_id, min/max_weight, min/max_order_amount, base_rate, per_kg_rate, per_item_rate, free_shipping_threshold, estimated_days_min/max, currency_code, is_active, created_at, updated_at | shipping_zone_id → shipping_zones(id) CASCADE, shipping_method_id → shipping_methods(id) CASCADE, seller_id → sellers(id) CASCADE |
+| 76 | **shipping_carriers** | id, name, code (unique), logo_url, website_url, tracking_url_template, api_endpoint, api_key_encrypted, supports_cod, supports_insurance, supports_signature, is_active, sort_order, created_at, updated_at | — |
+| 77 | **delivery_slots** | id, shipping_zone_id, shipping_method_id, day_of_week, start_time, end_time, max_orders, current_orders, cutoff_time, surcharge, is_active, created_at | shipping_zone_id → shipping_zones(id) CASCADE, shipping_method_id → shipping_methods(id) CASCADE |
+
+---
+
+### Migration 019: Search — 4 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 78 | **search_history** | id, user_id, session_id, query_text, results_count, filters_applied (jsonb), category_id, clicked_product_id, ip_address, device_type, created_at | user_id → users(id) CASCADE, category_id → categories(id), clicked_product_id → products(id) |
+| 79 | **recently_viewed** | id, user_id, product_id, view_count, viewed_at; UNIQUE(user_id, product_id) | user_id → users(id) CASCADE, product_id → products(id) CASCADE |
+| 80 | **product_recommendations** | id, product_id, recommended_product_id, type, score, created_at, updated_at; UNIQUE(product_id, recommended_product_id, type) | product_id → products(id) CASCADE, recommended_product_id → products(id) CASCADE |
+| 81 | **product_comparisons** | id, user_id, category_id, name, product_ids (uuid[]), created_at, updated_at | user_id → users(id) CASCADE, category_id → categories(id) |
+
+---
+
+### Migration 020: Notifications — 3 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 82 | **notification_templates** | id, code (unique), name, description, channels, title_template, body_template, email_subject_template, email_body_template, sms_template, push_template, priority, is_active, created_at, updated_at | — |
+| 83 | **notifications** | id, user_id, template_id, type, title, message, action_url, image_url, entity_type, entity_id, data (jsonb), channel, priority, is_read, read_at, is_dismissed, expires_at, created_at | user_id → users(id) CASCADE, template_id → notification_templates(id) |
+| 84 | **notification_preferences** | id, user_id, notification_type, channel, is_enabled; UNIQUE(user_id, notification_type, channel) | user_id → users(id) CASCADE |
+
+---
+
+### Migration 021: Chat — 2 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 85 | **conversations** | id, buyer_id, seller_id, product_id, order_id, status, message_count, unread_buyer_count, unread_seller_count, last_message_at, last_message_preview, last_message_sender_id, created_at, updated_at | buyer_id → users(id), seller_id → sellers(id), product_id → products(id), order_id → orders(id), last_message_sender_id → users(id) |
+| 86 | **messages** | id, conversation_id, sender_id, message_type, content, attachment_url, attachment_type, attachment_name, reference_product_id, reference_order_id, is_read, read_at, is_system_message, deleted_by_sender, created_at | conversation_id → conversations(id) CASCADE, sender_id → users(id), reference_product_id → products(id), reference_order_id → orders(id) |
+
+---
+
+### Migration 022: Tickets — 3 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 87 | **ticket_categories** | id, name, description, parent_id, sla_response_hours, sla_resolution_hours, priority_default, is_active, sort_order, created_at | parent_id → ticket_categories(id) |
+| 88 | **tickets** | id, ticket_number (unique auto-gen), user_id, category_id, subject, description, status, priority, assigned_to, assigned_at, order_id, product_id, related_entity_type, related_entity_id, sla_response/resolution_deadline, first_response_at, sla_breached flags, resolved_at, closed_at, resolution_note, satisfaction_rating, satisfaction_comment, tags, last_reply_at, created_at, updated_at | user_id → users(id), category_id → ticket_categories(id), assigned_to → users(id), order_id → orders(id), product_id → products(id) |
+| 89 | **ticket_messages** | id, ticket_id, sender_id, message, is_internal_note, attachments (jsonb), created_at | ticket_id → tickets(id) CASCADE, sender_id → users(id) |
+
+---
+
+### Migration 023: Loyalty — 5 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 90 | **loyalty_tiers** | id, name (unique), min_points, max_points, earn_multiplier, benefits (jsonb), icon_url, color_hex, sort_order, is_active, created_at | — |
+| 91 | **loyalty_points** | id, user_id (unique), tier_id, total_earned, total_redeemed, total_expired, available_balance, lifetime_points, tier_recalculated_at, created_at, updated_at | user_id → users(id) CASCADE, tier_id → loyalty_tiers(id) |
+| 92 | **loyalty_transactions** | id, user_id, type, points, balance_after, reference_type, reference_id, description, expires_at, created_at | user_id → users(id) |
+| 93 | **referral_codes** | id, user_id (unique), code (unique), total_referrals, total_points_earned, is_active, created_at | user_id → users(id) |
+| 94 | **referrals** | id, referrer_user_id, referred_user_id (unique), referral_code_id, status, points_awarded, rewarded_at, qualified_at, created_at | referrer_user_id → users(id), referred_user_id → users(id), referral_code_id → referral_codes(id) |
+
+---
+
+### Migration 024: Bundles — 2 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 95 | **product_bundles** | id, name, slug (unique), description, image_url, discount_type, discount_value, bundle_price, original_total_price, starts_at, ends_at, is_active, seller_id, created_at, updated_at | seller_id → sellers(id) |
+| 96 | **bundle_items** | id, bundle_id, product_id, variant_id, quantity, sort_order; UNIQUE(bundle_id, product_id, variant_id) | bundle_id → product_bundles(id) CASCADE, product_id → products(id) CASCADE, variant_id → product_variants(id) |
+
+---
+
+### Migration 025: Subscriptions — 2 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 97 | **subscriptions** | id, user_id, product_id, variant_id, quantity, frequency, delivery_address_id, payment_method_id, unit_price, discount_percentage, next_delivery_date, last_order_date, status, paused_at, cancelled_at, cancellation_reason, total_orders, total_spent, created_at, updated_at | user_id → users(id), product_id → products(id), variant_id → product_variants(id), delivery_address_id → addresses(id), payment_method_id → saved_payment_methods(id) |
+| 98 | **subscription_orders** | id, subscription_id, order_id, scheduled_date, actual_date, status, failure_reason, retry_count, created_at | subscription_id → subscriptions(id) CASCADE, order_id → orders(id) |
+
+---
+
+### Migration 026: CMS — 2 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 99 | **banners** | id, title, subtitle, image_url, mobile_image_url, link_url, link_type, link_target_id, position, sort_order, starts_at, ends_at, is_active, view_count, click_count, created_by, created_at, updated_at | created_by → users(id) |
+| 100 | **pages** | id, slug (unique), title, content, excerpt, meta_title, meta_description, parent_id, sort_order, is_published, published_at, author_id, created_at, updated_at | parent_id → pages(id), author_id → users(id) |
+
+---
+
+### Migration 027: SEO — 2 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 101 | **seo_metadata** | id, entity_type, entity_id, meta_title, meta_description, meta_keywords, canonical_url, og fields, twitter fields, structured_data (jsonb), robots_directive, created_at, updated_at; UNIQUE(entity_type, entity_id) | — |
+| 102 | **url_redirects** | id, source_url (unique), target_url, redirect_type, is_active, hit_count, last_hit_at, created_by, created_at | created_by → users(id) |
+
+---
+
+### Migration 028: I18n — 4 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 103 | **languages** | id, code (unique), name, native_name, direction, is_default, is_active, sort_order, created_at | — |
+| 104 | **translations** | id, language_id, entity_type, entity_id, field_name, translated_value, is_auto_translated, created_at, updated_at; UNIQUE(language_id, entity_type, entity_id, field_name) | language_id → languages(id) CASCADE |
+| 105 | **currencies** | id, code (unique), name, symbol, symbol_position, decimal_places, thousands_separator, decimal_separator, exchange_rate, is_default, is_active, updated_at, created_at | — |
+| 106 | **currency_rate_history** | id, currency_id, rate, source, recorded_at | currency_id → currencies(id) CASCADE |
+
+---
+
+### Migration 029: System — 2 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 107 | **system_settings** | id, "group", key (unique), value, value_type, display_name, description, is_public, is_encrypted, updated_by, created_at, updated_at | updated_by → users(id) |
+| 108 | **feature_flags** | id, name (unique), description, is_enabled, rollout_percentage, conditions (jsonb), enabled_for_roles, enabled_for_users, updated_by, created_at, updated_at | updated_by → users(id) |
+
+---
+
+### Migration 030: Audit — 2 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 109 | **audit_logs** | id, user_id, action, entity_type, entity_id, old_values (jsonb), new_values (jsonb), changed_fields, ip_address, user_agent, session_id, description, created_at | user_id → users(id) |
+| 110 | **user_activity_logs** | id, user_id, session_id, activity_type, entity_type, entity_id, metadata (jsonb), ip_address, user_agent, device_type, referrer_url, page_url, created_at | user_id → users(id) |
+
+---
+
+### Migration 031: Operations — 2 tables
+
+| # | Table | Key Columns | Foreign Keys |
+|---|-------|-------------|--------------|
+| 111 | **import_export_jobs** | id, user_id, type, status, source_file_url, result_file_url, total/processed/success/failed_rows, error_log (jsonb), error_summary, options (jsonb), started_at, completed_at, created_at, updated_at | user_id → users(id) |
+| 112 | **bulk_operations** | id, user_id, operation_type, entity_type, status, entity_ids (uuid[]), parameters (jsonb), total/success/failure_count, error_log (jsonb), started_at, completed_at, created_at, updated_at | user_id → users(id) |
+
+---
+
+### Migrations 032–035: No new tables
+Triggers/functions (032), stored procedures (033), materialized views (034), maintenance functions (035). Materialized views created: `mv_category_stats`, `mv_seller_dashboard`, `mv_trending_products`, `mv_platform_kpis`, `mv_bestsellers_by_category`, `mv_daily_sales_summary`, `mv_product_search_cache`.
+
+---
+
+## Summary Totals
+
+**112 tables** created across migrations 005–031.
+
+---
+
+## Auth Structure
+
+### Roles (from docs & enums)
+| Fixed UUID | name | display_name | is_system |
+|---|---|---|---|
+| `11111111-...` | super_admin | Super Admin | true |
+| `22222222-...` | admin | Admin | true |
+| `33333333-...` | seller | Seller | true |
+| `44444444-...` | customer | Customer | true |
+
+### Permissions structure: `(role_id, module, action)` — unique constraint
+
+---
+
+## All Resource/Module Names for Permission Seeding
+
+Based on every table created, here are the **distinct resource modules** you should create permissions for:
+
+| Module Name | Source Tables | Description |
+|---|---|---|
+| `users` | users, login_history | User management |
+| `roles` | roles | Role management |
+| `permissions` | permissions | Permission management |
+| `user_roles` | user_roles | User-role assignment |
+| `sessions` | sessions | Session management |
+| `addresses` | addresses | Address management |
+| `sellers` | sellers, seller_documents, seller_violations, seller_performance_snapshots | Seller management |
+| `stores` | stores, store_followers | Store management |
+| `seller_wallets` | seller_wallets, wallet_transactions | Wallet/payout management |
+| `categories` | categories, category_attributes | Category management |
+| `brands` | brands, brand_categories | Brand management |
+| `attributes` | attributes, attribute_groups, attribute_options | Attribute management |
+| `products` | products, product_variants, product_images, product_attributes, variant_attribute_values, price_history | Product management |
+| `product_questions` | product_questions, product_answers | Q&A management |
+| `inventory` | inventory, stock_movements, stock_reservations | Inventory management |
+| `warehouses` | warehouses, inventory_transfers, inventory_transfer_items | Warehouse management |
+| `carts` | carts, cart_items | Cart management |
+| `wishlists` | wishlists | Wishlist management |
+| `checkout` | checkout_sessions | Checkout management |
+| `orders` | orders, order_items, order_status_history, order_snapshots | Order management |
+| `shipments` | shipments, shipment_items | Shipment management |
+| `payments` | payments, payment_attempts, saved_payment_methods | Payment management |
+| `refunds` | refunds | Refund management |
+| `returns` | return_requests, return_reasons, return_images, return_shipments | Return management |
+| `disputes` | disputes, dispute_messages, dispute_evidence | Dispute management |
+| `reviews` | reviews, review_helpfulness, review_reports | Review management |
+| `vouchers` | vouchers, voucher_conditions, voucher_products, voucher_usages | Voucher management |
+| `campaigns` | campaigns, campaign_products | Campaign management |
+| `flash_sales` | flash_sales, flash_sale_products | Flash sale management |
+| `tax` | tax_classes, tax_zones, tax_rates, order_tax_lines | Tax management |
+| `shipping` | shipping_methods, shipping_zones, shipping_rates, shipping_carriers, delivery_slots | Shipping management |
+| `search` | search_history, recently_viewed, product_recommendations, product_comparisons | Search/discovery |
+| `notifications` | notifications, notification_templates, notification_preferences | Notification management |
+| `conversations` | conversations, messages | Chat management |
+| `tickets` | tickets, ticket_categories, ticket_messages | Ticket/support management |
+| `loyalty` | loyalty_tiers, loyalty_points, loyalty_transactions | Loyalty management |
+| `referrals` | referral_codes, referrals | Referral management |
+| `bundles` | product_bundles, bundle_items | Bundle management |
+| `subscriptions` | subscriptions, subscription_orders | Subscription management |
+| `banners` | banners | Banner/CMS management |
+| `pages` | pages | Page/CMS management |
+| `seo` | seo_metadata, url_redirects | SEO management |
+| `languages` | languages, translations | Language/i18n management |
+| `currencies` | currencies, currency_rate_history | Currency management |
+| `system_settings` | system_settings | System settings management |
+| `feature_flags` | feature_flags | Feature flag management |
+| `audit_logs` | audit_logs, user_activity_logs | Audit management |
+| `import_export` | import_export_jobs | Import/export management |
+| `bulk_operations` | bulk_operations | Bulk operations management |
+
+### Standard CRUD actions per module: `create`, `read`, `update`, `delete`
+### Additional actions to consider: `manage`, `export`, `import`, `approve`, `assign`, `moderate`
