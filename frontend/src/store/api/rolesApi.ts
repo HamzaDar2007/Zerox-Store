@@ -3,12 +3,13 @@ import type { ApiResponse, Role, Permission } from '@/common/types';
 
 interface CreateRoleDto {
   name: string;
+  displayName?: string;
   description?: string;
+  isSystem?: boolean;
 }
 
 interface CreatePermissionDto {
-  name: string;
-  description?: string;
+  roleId: string;
   module: string;
   action: string;
 }

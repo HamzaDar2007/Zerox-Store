@@ -102,6 +102,37 @@ export class PaymentsController extends BaseController {
   getAttempts(@Param('id', ParseUUIDPipe) id: string) {
     return this.handleAsyncOperation(this.paymentsService.getPaymentAttempts(id));
   }
+
+  @Post(':id/stripe/create-intent')
+  @ApiOperation({ summary: 'Create Stripe PaymentIntent for a payment' })
+  @ApiResponse({ status: 200, description: 'PaymentIntent created with client secret' })
+  createStripeIntent(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { stripePaymentMethodId?: string; stripeCustomerId?: string },
+  ) {
+    return this.handleAsyncOperation(
+      this.paymentsService.createStripePaymentIntent({
+        paymentId: id,
+        stripePaymentMethodId: body.stripePaymentMethodId,
+        stripeCustomerId: body.stripeCustomerId,
+      }),
+    );
+  }
+
+  @Post(':id/stripe/confirm')
+  @ApiOperation({ summary: 'Confirm a Stripe PaymentIntent (server-side)' })
+  @ApiResponse({ status: 200, description: 'Payment confirmed' })
+  confirmStripePayment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { stripePaymentMethodId?: string },
+  ) {
+    return this.handleAsyncOperation(
+      this.paymentsService.confirmStripePayment({
+        paymentId: id,
+        stripePaymentMethodId: body.stripePaymentMethodId,
+      }),
+    );
+  }
 }
 
 @ApiTags('Refunds')
@@ -190,12 +221,29 @@ export class PaymentMethodsController extends BaseController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete payment method' })
   remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.paymentsService.deleteSavedPaymentMethod(id, user.id));
+    return this.handleAsyncOperation(this.paymentsService.deletePaymentMethodWithStripe(id, user.id));
   }
 
   @Post(':id/default')
   @ApiOperation({ summary: 'Set default payment method' })
   setDefault(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.handleAsyncOperation(this.paymentsService.setDefaultPaymentMethod(id, user.id));
+  }
+
+  @Post('stripe/save')
+  @ApiOperation({ summary: 'Save a Stripe payment method' })
+  @ApiResponse({ status: 201, description: 'Stripe payment method saved' })
+  saveStripeMethod(
+    @CurrentUser() user: User,
+    @Body() body: { stripePaymentMethodId: string; stripeCustomerId: string; setDefault?: boolean },
+  ) {
+    return this.handleAsyncOperation(
+      this.paymentsService.saveStripePaymentMethod(
+        user.id,
+        body.stripePaymentMethodId,
+        body.stripeCustomerId,
+        body.setDefault,
+      ),
+    );
   }
 }

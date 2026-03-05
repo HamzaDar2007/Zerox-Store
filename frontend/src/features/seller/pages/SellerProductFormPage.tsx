@@ -24,8 +24,10 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProductStatus } from '@/common/types/enums';
 import type { CreateProductDto } from '@/common/types';
+import { useAppSelector } from '@/store';
 
 const defaultForm: CreateProductDto = {
+  sellerId: '',
   categoryId: '',
   name: '',
   slug: '',
@@ -57,11 +59,13 @@ export default function SellerProductFormPage() {
 
   const [createProduct, { isLoading: creating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
+  const user = useAppSelector((s) => s.auth.user);
 
   const [form, setForm] = useState<CreateProductDto>(() => {
     if (productData?.data) {
       const p = productData.data;
       return {
+        sellerId: p.sellerId ?? '',
         categoryId: p.categoryId ?? '',
         name: p.name,
         slug: p.slug,
@@ -104,7 +108,7 @@ export default function SellerProductFormPage() {
         await updateProduct({ id: productId!, data: form }).unwrap();
         toast.success('Product updated');
       } else {
-        await createProduct(form).unwrap();
+        await createProduct({ ...form, sellerId: user?.id ?? '' }).unwrap();
         toast.success('Product created');
       }
       navigate('/seller/products');

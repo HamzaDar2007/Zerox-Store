@@ -15,6 +15,7 @@ import {
   useMarkConversationAsReadMutation,
   useCreateConversationMutation,
 } from '@/store/api';
+import { useAppSelector } from '@/store';
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,8 @@ export default function CustomerChatPage() {
   const [messageText, setMessageText] = useState('');
   const [showNew, setShowNew] = useState(false);
   const [newSubject, setNewSubject] = useState('');
-  const [newParticipant, setNewParticipant] = useState('');
+  const [newStoreId, setNewStoreId] = useState('');
+  const user = useAppSelector((s) => s.auth.user);
 
   const { data: convoData, isLoading: loadingConvos } = useGetConversationsQuery();
   const conversations = convoData?.data ?? [];
@@ -55,11 +57,11 @@ export default function CustomerChatPage() {
   };
 
   const handleCreate = async () => {
-    if (!newParticipant.trim()) return;
-    await createConvo({ participantId: newParticipant, subject: newSubject || undefined });
+    if (!newStoreId.trim()) return;
+    await createConvo({ type: 'customer_seller', customerId: user?.id ?? '', storeId: newStoreId, subject: newSubject || undefined });
     setShowNew(false);
     setNewSubject('');
-    setNewParticipant('');
+    setNewStoreId('');
   };
 
   if (loadingConvos) return <LoadingSpinner label="Loading conversations..." />;
@@ -158,9 +160,9 @@ export default function CustomerChatPage() {
           </DialogHeader>
           <div className="space-y-4">
             <Input
-              placeholder="Participant ID (seller)"
-              value={newParticipant}
-              onChange={(e) => setNewParticipant(e.target.value)}
+              placeholder="Store ID (seller)"
+              value={newStoreId}
+              onChange={(e) => setNewStoreId(e.target.value)}
             />
             <Input
               placeholder="Subject (optional)"

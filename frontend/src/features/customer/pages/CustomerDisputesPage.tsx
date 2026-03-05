@@ -18,6 +18,7 @@ import {
   useGetDisputeMessagesQuery,
   useAddDisputeMessageMutation,
 } from '@/store/api';
+import { useAppSelector } from '@/store';
 import {
   Dialog,
   DialogContent,
@@ -31,8 +32,9 @@ export default function CustomerDisputesPage() {
   const [limit, setLimit] = useState(10);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [form, setForm] = useState({ orderId: '', type: '' as DisputeType | '', subject: '', description: '' });
+  const [form, setForm] = useState({ orderId: '', type: '' as DisputeType | '', subject: '', description: '', sellerId: '' });
   const [msgText, setMsgText] = useState('');
+  const user = useAppSelector((s) => s.auth.user);
 
   const { data, isLoading } = useGetDisputesQuery({ page, limit });
   const disputes = data?.data?.items ?? [];
@@ -50,9 +52,9 @@ export default function CustomerDisputesPage() {
 
   const handleCreate = async () => {
     if (!form.orderId || !form.type || !form.subject) return;
-    await createDispute({ orderId: form.orderId, type: form.type as DisputeType, subject: form.subject, description: form.description });
+    await createDispute({ orderId: form.orderId, customerId: user?.id ?? '', sellerId: form.sellerId, type: form.type as DisputeType, subject: form.subject, description: form.description });
     setShowCreate(false);
-    setForm({ orderId: '', type: '', subject: '', description: '' });
+    setForm({ orderId: '', type: '', subject: '', description: '', sellerId: '' });
   };
 
   const handleSendMsg = async () => {
@@ -127,6 +129,11 @@ export default function CustomerDisputesPage() {
               placeholder="Order ID"
               value={form.orderId}
               onChange={(e) => setForm((f) => ({ ...f, orderId: e.target.value }))}
+            />
+            <Input
+              placeholder="Seller ID"
+              value={form.sellerId}
+              onChange={(e) => setForm((f) => ({ ...f, sellerId: e.target.value }))}
             />
             <select
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"

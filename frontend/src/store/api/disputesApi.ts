@@ -18,10 +18,16 @@ interface DisputeQueryParams {
 
 interface CreateDisputeDto {
   orderId: string;
+  customerId: string;
+  sellerId: string;
   type: string;
   subject: string;
   description: string;
   disputedAmount?: number;
+  status?: string;
+  resolution?: string;
+  resolutionNotes?: string;
+  assignedTo?: string;
 }
 
 interface CreateDisputeMessageDto {

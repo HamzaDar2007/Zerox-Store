@@ -18,6 +18,18 @@ interface CreateCheckoutSessionDto {
   notes?: string;
 }
 
+interface UpdateCheckoutSessionDto {
+  shippingAddressId?: string;
+  billingAddressId?: string;
+  shippingMethodId?: string;
+  paymentMethod?: string;
+  voucherCode?: string;
+  notes?: string;
+  giftWrapRequested?: boolean;
+  giftMessage?: string;
+  loyaltyPointsUsed?: number;
+}
+
 export const cartApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // ── Cart ──
@@ -110,7 +122,7 @@ export const cartApi = baseApi.injectEndpoints({
 
     updateCheckoutSession: builder.mutation<
       ApiResponse<CheckoutSession>,
-      { id: string; data: Partial<CreateCheckoutSessionDto> }
+      { id: string; data: UpdateCheckoutSessionDto }
     >({
       query: ({ id, data }) => ({
         url: `/checkout/session/${id}`,

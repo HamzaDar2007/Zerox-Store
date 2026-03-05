@@ -27,13 +27,21 @@ interface RefundQueryParams {
 }
 
 interface CreateSavedPaymentMethodDto {
-  type: string;
-  provider: string;
-  last4: string;
-  expiryMonth?: number;
-  expiryYear?: number;
-  holderName?: string;
-  token: string;
+  userId: string;
+  paymentMethod: string;
+  nickname?: string;
+  isDefault?: boolean;
+  gatewayToken?: string;
+  cardLastFour?: string;
+  cardBrand?: string;
+  cardExpiryMonth?: number;
+  cardExpiryYear?: number;
+  bankName?: string;
+  accountLastFour?: string;
+  walletProvider?: string;
+  walletId?: string;
+  metadata?: Record<string, unknown>;
+  expiresAt?: string;
 }
 
 export const paymentsApi = baseApi.injectEndpoints({
@@ -187,6 +195,46 @@ export const paymentsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['PaymentMethod'],
     }),
+
+    // ── Stripe ──
+    createStripeIntent: builder.mutation<
+      ApiResponse<{ clientSecret: string; paymentIntentId: string; status: string }>,
+      { paymentId: string; stripePaymentMethodId?: string; stripeCustomerId?: string }
+    >({
+      query: ({ paymentId, ...body }) => ({
+        url: `/payments/${paymentId}/stripe/create-intent`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (_r, _e, { paymentId }) => [{ type: 'Payment', id: paymentId }],
+    }),
+
+    confirmStripePayment: builder.mutation<
+      ApiResponse<Payment>,
+      { paymentId: string; stripePaymentMethodId?: string }
+    >({
+      query: ({ paymentId, ...body }) => ({
+        url: `/payments/${paymentId}/stripe/confirm`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (_r, _e, { paymentId }) => [
+        { type: 'Payment', id: paymentId },
+        { type: 'Order', id: 'LIST' },
+      ],
+    }),
+
+    saveStripePaymentMethod: builder.mutation<
+      ApiResponse<SavedPaymentMethod>,
+      { stripePaymentMethodId: string; stripeCustomerId: string; setDefault?: boolean }
+    >({
+      query: (body) => ({
+        url: '/payment-methods/stripe/save',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PaymentMethod'],
+    }),
   }),
 });
 
@@ -206,4 +254,7 @@ export const {
   useCreateSavedPaymentMethodMutation,
   useDeleteSavedPaymentMethodMutation,
   useSetDefaultPaymentMethodMutation,
+  useCreateStripeIntentMutation,
+  useConfirmStripePaymentMutation,
+  useSaveStripePaymentMethodMutation,
 } = paymentsApi;

@@ -53,7 +53,7 @@ export default function SellerStoreSettingsPage() {
         await updateStore({ id: store.id, data: form }).unwrap();
         toast.success('Store updated');
       } else {
-        await createStore({ sellerId: user?.id ?? '', data: form }).unwrap();
+        await createStore({ sellerId: user?.id ?? '', data: { ...form, sellerId: user?.id ?? '' } }).unwrap();
         toast.success('Store created');
       }
     } catch {

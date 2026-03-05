@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,12 +16,15 @@ import { CreateRefundDto } from './dto/create-refund.dto';
 import { UpdateRefundDto } from './dto/update-refund.dto';
 import { CreateSavedPaymentMethodDto } from './dto/create-saved-payment-method.dto';
 import { ServiceResponse } from '../../common/interfaces/service-response.interface';
-import { PaymentStatus, RefundStatus, PaymentAttemptStatus } from '@common/enums';
+import { PaymentStatus, RefundStatus, PaymentAttemptStatus, PaymentMethod } from '@common/enums';
 import { MailService } from '../../common/modules/mail/mail.service';
+import { StripeService } from './providers/stripe.service';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name);
+
   constructor(
     @InjectRepository(Payment)
     private paymentRepository: Repository<Payment>,
@@ -31,6 +35,7 @@ export class PaymentsService {
     @InjectRepository(SavedPaymentMethod)
     private savedMethodRepository: Repository<SavedPaymentMethod>,
     private readonly mailService: MailService,
+    private readonly stripeService: StripeService,
   ) {}
 
   // ==================== PAYMENTS ====================
@@ -146,16 +151,54 @@ export class PaymentsService {
     await this.attemptRepository.save(attempt);
 
     try {
-      // Here you would integrate with actual payment gateway
-      // For now, simulate successful payment
-      payment.status = PaymentStatus.COMPLETED;
-      payment.paidAt = new Date();
-      payment.gatewayTransactionId = `TXN${Date.now()}`;
+      const isStripe = payment.gatewayName === 'stripe' ||
+        payment.paymentMethod === PaymentMethod.STRIPE ||
+        paymentData?.stripePaymentMethodId;
 
-      attempt.status = PaymentAttemptStatus.SUCCESS;
-      await this.attemptRepository.save(attempt);
+      if (isStripe) {
+        // ===== STRIPE PAYMENT PROCESSING =====
+        const amountInSmallestUnit = Math.round(Number(payment.amount) * 100);
+        const intent = await this.stripeService.createPaymentIntent({
+          amount: amountInSmallestUnit,
+          currency: payment.currencyCode || 'pkr',
+          customerId: paymentData?.stripeCustomerId,
+          paymentMethodId: paymentData?.stripePaymentMethodId,
+          metadata: {
+            paymentId: payment.id,
+            paymentNumber: payment.paymentNumber,
+            orderId: payment.orderId || '',
+          },
+          confirm: !!paymentData?.stripePaymentMethodId,
+        });
+
+        payment.gatewayName = 'stripe';
+        payment.gatewayTransactionId = intent.id;
+        payment.gatewayResponse = intent as any;
+
+        if (intent.status === 'succeeded') {
+          payment.status = PaymentStatus.COMPLETED;
+          payment.paidAt = new Date();
+        } else if (intent.status === 'requires_action' || intent.status === 'requires_confirmation') {
+          payment.status = PaymentStatus.AUTHORIZED;
+        } else {
+          payment.status = PaymentStatus.PENDING;
+        }
+
+        attempt.status = PaymentAttemptStatus.SUCCESS;
+        attempt.gatewayResponse = intent as any;
+        await this.attemptRepository.save(attempt);
+      } else {
+        // ===== NON-STRIPE (legacy simulation) =====
+        payment.status = PaymentStatus.COMPLETED;
+        payment.paidAt = new Date();
+        payment.gatewayTransactionId = `TXN${Date.now()}`;
+
+        attempt.status = PaymentAttemptStatus.SUCCESS;
+        await this.attemptRepository.save(attempt);
+      }
     } catch (error) {
       payment.status = PaymentStatus.FAILED;
+      payment.failureReason = error.message;
       attempt.status = PaymentAttemptStatus.FAILED;
       attempt.errorMessage = error.message;
       await this.attemptRepository.save(attempt);
@@ -303,7 +346,10 @@ export class PaymentsService {
   }
 
   async processRefund(refundId: string): Promise<ServiceResponse<Refund>> {
-    const refund = await this.refundRepository.findOne({ where: { id: refundId } });
+    const refund = await this.refundRepository.findOne({
+      where: { id: refundId },
+      relations: ['payment'],
+    });
 
     if (!refund) {
       throw new NotFoundException('Refund not found');
@@ -313,19 +359,48 @@ export class PaymentsService {
       throw new BadRequestException('Refund already processed');
     }
 
-    // Here you would integrate with payment gateway for actual refund
-    refund.status = RefundStatus.COMPLETED;
-    refund.processedAt = new Date();
-    refund.gatewayRefundId = `REF${Date.now()}`;
+    const payment = refund.payment || await this.paymentRepository.findOne({ where: { id: refund.paymentId } });
+
+    try {
+      const isStripe = payment?.gatewayName === 'stripe' && payment?.gatewayTransactionId;
+
+      if (isStripe) {
+        // ===== STRIPE REFUND PROCESSING =====
+        const amountInSmallestUnit = Math.round(Number(refund.amount) * 100);
+        const stripeRefund = await this.stripeService.createRefund({
+          paymentIntentId: payment.gatewayTransactionId,
+          amount: amountInSmallestUnit,
+          metadata: {
+            refundId: refund.id,
+            refundNumber: refund.refundNumber,
+          },
+        });
+
+        refund.status = RefundStatus.COMPLETED;
+        refund.processedAt = new Date();
+        refund.gatewayRefundId = stripeRefund.id;
+      } else {
+        // ===== NON-STRIPE (legacy simulation) =====
+        refund.status = RefundStatus.COMPLETED;
+        refund.processedAt = new Date();
+        refund.gatewayRefundId = `REF${Date.now()}`;
+      }
+    } catch (error) {
+      refund.status = RefundStatus.FAILED;
+      refund.reasonDetails = error.message;
+      this.logger.error(`Refund processing failed: ${error.message}`);
+    }
 
     const updatedRefund = await this.refundRepository.save(refund);
 
-    // Send refund completed email (fire-and-forget)
-    this.sendRefundEmail(updatedRefund, 'completed').catch(() => {});
+    // Send refund email (fire-and-forget)
+    if (updatedRefund.status === RefundStatus.COMPLETED) {
+      this.sendRefundEmail(updatedRefund, 'completed').catch(() => {});
+    }
 
     return {
       success: true,
-      message: 'Refund processed successfully',
+      message: `Refund ${updatedRefund.status.toLowerCase()}`,
       data: updatedRefund,
     };
   }
@@ -452,6 +527,222 @@ export class PaymentsService {
       success: true,
       message: 'Default payment method updated',
       data: updatedMethod,
+    };
+  }
+
+  // ==================== STRIPE-SPECIFIC METHODS ====================
+
+  /**
+   * Create a Stripe PaymentIntent and return the client secret for frontend confirmation.
+   */
+  async createStripePaymentIntent(params: {
+    paymentId: string;
+    stripePaymentMethodId?: string;
+    stripeCustomerId?: string;
+  }): Promise<ServiceResponse<{ clientSecret: string; paymentIntentId: string; status: string }>> {
+    const payment = await this.paymentRepository.findOne({ where: { id: params.paymentId } });
+    if (!payment) throw new NotFoundException('Payment not found');
+
+    const amountInSmallestUnit = Math.round(Number(payment.amount) * 100);
+    const intent = await this.stripeService.createPaymentIntent({
+      amount: amountInSmallestUnit,
+      currency: payment.currencyCode || 'pkr',
+      customerId: params.stripeCustomerId,
+      paymentMethodId: params.stripePaymentMethodId,
+      metadata: {
+        paymentId: payment.id,
+        paymentNumber: payment.paymentNumber,
+        orderId: payment.orderId || '',
+      },
+    });
+
+    // Store the intent reference on the payment
+    payment.gatewayName = 'stripe';
+    payment.gatewayTransactionId = intent.id;
+    payment.gatewayResponse = intent as any;
+    await this.paymentRepository.save(payment);
+
+    return {
+      success: true,
+      message: 'Stripe PaymentIntent created',
+      data: {
+        clientSecret: intent.client_secret!,
+        paymentIntentId: intent.id,
+        status: intent.status,
+      },
+    };
+  }
+
+  /**
+   * Confirm a Stripe PaymentIntent (server-side).
+   */
+  async confirmStripePayment(params: {
+    paymentId: string;
+    stripePaymentMethodId?: string;
+  }): Promise<ServiceResponse<Payment>> {
+    const payment = await this.paymentRepository.findOne({ where: { id: params.paymentId } });
+    if (!payment) throw new NotFoundException('Payment not found');
+    if (!payment.gatewayTransactionId) {
+      throw new BadRequestException('No Stripe PaymentIntent found on this payment');
+    }
+
+    const intent = await this.stripeService.confirmPaymentIntent(
+      payment.gatewayTransactionId,
+      params.stripePaymentMethodId,
+    );
+
+    payment.gatewayResponse = intent as any;
+
+    if (intent.status === 'succeeded') {
+      payment.status = PaymentStatus.COMPLETED;
+      payment.paidAt = new Date();
+    } else if (intent.status === 'requires_action') {
+      payment.status = PaymentStatus.AUTHORIZED;
+    }
+
+    const updated = await this.paymentRepository.save(payment);
+
+    if (updated.status === PaymentStatus.COMPLETED) {
+      this.sendPaymentEmail(updated).catch(() => {});
+    }
+
+    return {
+      success: true,
+      message: `Payment ${updated.status.toLowerCase()}`,
+      data: updated,
+    };
+  }
+
+  /**
+   * Handle webhook event from Stripe and update payment status accordingly.
+   */
+  async handleStripeWebhook(event: any): Promise<void> {
+    this.logger.log(`Stripe webhook event: ${event.type}`);
+
+    switch (event.type) {
+      case 'payment_intent.succeeded': {
+        const intent = event.data.object;
+        const payment = await this.paymentRepository.findOne({
+          where: { gatewayTransactionId: intent.id },
+        });
+        if (payment && payment.status !== PaymentStatus.COMPLETED) {
+          payment.status = PaymentStatus.COMPLETED;
+          payment.paidAt = new Date();
+          payment.gatewayResponse = intent;
+          await this.paymentRepository.save(payment);
+          this.sendPaymentEmail(payment).catch(() => {});
+        }
+        break;
+      }
+      case 'payment_intent.payment_failed': {
+        const intent = event.data.object;
+        const payment = await this.paymentRepository.findOne({
+          where: { gatewayTransactionId: intent.id },
+        });
+        if (payment) {
+          payment.status = PaymentStatus.FAILED;
+          payment.failureReason = intent.last_payment_error?.message || 'Payment failed';
+          payment.gatewayResponse = intent;
+          await this.paymentRepository.save(payment);
+          this.sendPaymentEmail(payment).catch(() => {});
+        }
+        break;
+      }
+      case 'charge.refunded': {
+        const charge = event.data.object;
+        // Find refund by gateway refund id
+        if (charge.refunds?.data?.length) {
+          for (const stripeRefund of charge.refunds.data) {
+            const refund = await this.refundRepository.findOne({
+              where: { gatewayRefundId: stripeRefund.id },
+            });
+            if (refund && refund.status !== RefundStatus.COMPLETED) {
+              refund.status = RefundStatus.COMPLETED;
+              refund.processedAt = new Date();
+              await this.refundRepository.save(refund);
+              this.sendRefundEmail(refund, 'completed').catch(() => {});
+            }
+          }
+        }
+        break;
+      }
+      default:
+        this.logger.log(`Unhandled Stripe event type: ${event.type}`);
+    }
+  }
+
+  /**
+   * Save a Stripe payment method by attaching it to a Stripe customer and storing it locally.
+   */
+  async saveStripePaymentMethod(
+    userId: string,
+    stripePaymentMethodId: string,
+    stripeCustomerId: string,
+    setDefault = false,
+  ): Promise<ServiceResponse<SavedPaymentMethod>> {
+    // Attach the payment method to the Stripe customer
+    const stripePm = await this.stripeService.attachPaymentMethod(stripePaymentMethodId, stripeCustomerId);
+
+    if (setDefault) {
+      await this.savedMethodRepository.update({ userId }, { isDefault: false });
+    }
+
+    const method = new SavedPaymentMethod();
+    method.userId = userId;
+    method.paymentMethod = PaymentMethod.STRIPE;
+    method.gatewayToken = stripePm.id;
+    method.isDefault = setDefault;
+    method.nickname = stripePm.card
+      ? `${stripePm.card.brand?.toUpperCase()} ****${stripePm.card.last4}`
+      : 'Stripe Payment Method';
+
+    if (stripePm.card) {
+      method.cardLastFour = stripePm.card.last4 || null;
+      method.cardBrand = stripePm.card.brand || null;
+      method.cardExpiryMonth = stripePm.card.exp_month || null;
+      method.cardExpiryYear = stripePm.card.exp_year || null;
+    }
+
+    method.metadata = {
+      stripeCustomerId,
+      stripePaymentMethodType: stripePm.type,
+    };
+
+    const saved = await this.savedMethodRepository.save(method);
+
+    return {
+      success: true,
+      message: 'Stripe payment method saved',
+      data: saved,
+    };
+  }
+
+  /**
+   * Delete a saved payment method – if it's a Stripe method, also detach from Stripe.
+   */
+  async deletePaymentMethodWithStripe(id: string, userId: string): Promise<ServiceResponse<void>> {
+    const method = await this.savedMethodRepository.findOne({
+      where: { id, userId },
+    });
+
+    if (!method) {
+      throw new NotFoundException('Payment method not found');
+    }
+
+    // If it's a Stripe method with a gateway token, detach from Stripe
+    if (method.gatewayToken && method.paymentMethod === PaymentMethod.STRIPE) {
+      try {
+        await this.stripeService.detachPaymentMethod(method.gatewayToken);
+      } catch (err) {
+        this.logger.warn(`Failed to detach Stripe PM ${method.gatewayToken}: ${err.message}`);
+      }
+    }
+
+    await this.savedMethodRepository.remove(method);
+
+    return {
+      success: true,
+      message: 'Payment method deleted successfully',
     };
   }
 }

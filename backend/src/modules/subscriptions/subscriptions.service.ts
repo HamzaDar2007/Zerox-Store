@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual } from 'typeorm';
 import { Subscription } from './entities/subscription.entity';
@@ -8,15 +8,19 @@ import { SubscriptionStatus, SubscriptionFrequency } from '@common/enums';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { MailService } from '../../common/modules/mail/mail.service';
+import { StripeService } from '../payments/providers/stripe.service';
 
 @Injectable()
 export class SubscriptionsService {
+  private readonly logger = new Logger(SubscriptionsService.name);
+
   constructor(
     @InjectRepository(Subscription)
     private subscriptionRepository: Repository<Subscription>,
     @InjectRepository(SubscriptionOrder)
     private orderRepository: Repository<SubscriptionOrder>,
     private readonly mailService: MailService,
+    private readonly stripeService: StripeService,
   ) {}
 
   async create(userId: string, dto: CreateSubscriptionDto): Promise<ServiceResponse<Subscription>> {
@@ -25,6 +29,24 @@ export class SubscriptionsService {
     subscription.userId = userId;
     subscription.status = SubscriptionStatus.ACTIVE;
     subscription.nextDeliveryDate = this.calculateNextDeliveryDate(dto.frequency || SubscriptionFrequency.MONTHLY);
+
+    // If Stripe Billing params are provided, create a Stripe Subscription
+    if ((dto as any).stripePriceId && (dto as any).stripeCustomerId) {
+      try {
+        const stripeSub = await this.stripeService.createSubscription({
+          customerId: (dto as any).stripeCustomerId,
+          priceId: (dto as any).stripePriceId,
+          metadata: { userId, productId: dto.productId || '' },
+        });
+        subscription.stripeSubscriptionId = stripeSub.id;
+        subscription.stripeCustomerId = (dto as any).stripeCustomerId;
+        subscription.stripePriceId = (dto as any).stripePriceId;
+      } catch (err) {
+        this.logger.warn(`Stripe subscription creation failed: ${err.message}`);
+        // Continue with local subscription even if Stripe fails
+      }
+    }
+
     const saved = await this.subscriptionRepository.save(subscription);
 
     // Send subscription created email (fire-and-forget)
@@ -68,6 +90,16 @@ export class SubscriptionsService {
   async cancel(id: string, reason?: string): Promise<ServiceResponse<Subscription>> {
     const subscription = await this.subscriptionRepository.findOne({ where: { id } });
     if (!subscription) throw new NotFoundException('Subscription not found');
+
+    // Cancel Stripe subscription if linked
+    if (subscription.stripeSubscriptionId) {
+      try {
+        await this.stripeService.cancelSubscription(subscription.stripeSubscriptionId, true);
+      } catch (err) {
+        this.logger.warn(`Failed to cancel Stripe subscription: ${err.message}`);
+      }
+    }
+
     subscription.status = SubscriptionStatus.CANCELLED;
     subscription.cancelledAt = new Date();
     subscription.cancellationReason = reason || null;
@@ -83,6 +115,16 @@ export class SubscriptionsService {
     const subscription = await this.subscriptionRepository.findOne({ where: { id } });
     if (!subscription) throw new NotFoundException('Subscription not found');
     if (subscription.status !== SubscriptionStatus.ACTIVE) throw new BadRequestException('Can only pause active subscriptions');
+
+    // Pause Stripe subscription if linked
+    if (subscription.stripeSubscriptionId) {
+      try {
+        await this.stripeService.pauseSubscription(subscription.stripeSubscriptionId);
+      } catch (err) {
+        this.logger.warn(`Failed to pause Stripe subscription: ${err.message}`);
+      }
+    }
+
     subscription.status = SubscriptionStatus.PAUSED;
     subscription.pausedAt = new Date();
     const updated = await this.subscriptionRepository.save(subscription);
@@ -97,6 +139,16 @@ export class SubscriptionsService {
     const subscription = await this.subscriptionRepository.findOne({ where: { id } });
     if (!subscription) throw new NotFoundException('Subscription not found');
     if (subscription.status !== SubscriptionStatus.PAUSED) throw new BadRequestException('Only paused subscriptions can be resumed');
+
+    // Resume Stripe subscription if linked
+    if (subscription.stripeSubscriptionId) {
+      try {
+        await this.stripeService.resumeSubscription(subscription.stripeSubscriptionId);
+      } catch (err) {
+        this.logger.warn(`Failed to resume Stripe subscription: ${err.message}`);
+      }
+    }
+
     subscription.status = SubscriptionStatus.ACTIVE;
     subscription.pausedAt = null;
     subscription.nextDeliveryDate = this.calculateNextDeliveryDate(subscription.frequency);

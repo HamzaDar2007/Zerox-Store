@@ -18,9 +18,14 @@ interface ReturnQueryParams {
 interface CreateReturnRequestDto {
   orderId: string;
   orderItemId: string;
-  reasonId: string;
+  userId: string;
+  reasonId?: string;
+  reasonDetails?: string;
+  type: string;
   quantity: number;
-  description?: string;
+  refundAmount?: number;
+  resolution?: string;
+  customerNotes?: string;
 }
 
 interface CreateReturnReasonDto {

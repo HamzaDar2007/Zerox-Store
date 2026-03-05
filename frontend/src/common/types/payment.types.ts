@@ -81,8 +81,17 @@ export interface SavedPaymentMethod {
 // ─── DTOs ───────────────────────────────────────────────────────────
 export interface ProcessPaymentDto {
   orderId: string;
+  userId: string;
+  amount: number;
+  currencyCode?: string;
   paymentMethod: PaymentMethodEnum;
+  status?: PaymentStatus;
   gatewayName?: string;
+  gatewayTransactionId?: string;
+  gatewayResponse?: Record<string, unknown>;
+  stripePaymentMethodId?: string;
+  stripeCustomerId?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface CreateRefundDto {

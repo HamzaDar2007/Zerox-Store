@@ -7,6 +7,7 @@ export enum PaymentMethod {
   BANK_TRANSFER = 'bank_transfer',
   WALLET = 'wallet',
   LOYALTY_POINTS = 'loyalty_points',
+  STRIPE = 'stripe',
 }
 
 export enum PaymentStatus {

@@ -6,9 +6,12 @@ import type {
 } from '@/common/types';
 
 interface CreateConversationDto {
-  participantId: string;
-  type?: string;
+  type: string;
+  customerId: string;
+  storeId?: string;
+  orderId?: string;
   subject?: string;
+  status?: string;
 }
 
 interface CreateMessageDto {

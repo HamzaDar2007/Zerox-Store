@@ -366,6 +366,9 @@ export interface CreateSubscriptionDto {
   frequency: SubscriptionFrequency;
   deliveryAddressId: string;
   paymentMethodId?: string;
+  unitPrice: number;
+  discountPercentage?: number;
+  nextDeliveryDate: string;
 }
 
 export interface UpdateSubscriptionDto {

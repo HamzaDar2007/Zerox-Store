@@ -136,17 +136,25 @@ export interface CheckoutSession {
 
 // ─── DTOs ───────────────────────────────────────────────────────────
 export interface CreateOrderDto {
-  cartId?: string;
-  shippingAddressId: string;
-  billingAddressId?: string;
-  shippingMethodId?: string;
-  paymentMethod: string;
+  userId: string;
+  storeId: string;
+  subtotal: number;
+  totalAmount: number;
+  shippingAddress: Record<string, unknown>;
+  billingAddress?: Record<string, unknown>;
+  currencyCode?: string;
+  discountAmount?: number;
+  taxAmount?: number;
+  shippingAmount?: number;
+  paymentMethod?: string;
+  shippingMethod?: string;
   customerNotes?: string;
   isGift?: boolean;
   giftMessage?: string;
   giftWrapRequested?: boolean;
   loyaltyPointsUsed?: number;
   voucherCode?: string;
+  voucherId?: string;
 }
 
 export interface UpdateOrderStatusDto {

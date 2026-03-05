@@ -15,11 +15,18 @@ interface NotificationQueryParams {
 }
 
 interface CreateNotificationTemplateDto {
+  code: string;
   name: string;
   type: string;
+  channels?: string[];
   subject?: string;
-  body: string;
+  body?: string;
+  htmlBody?: string;
+  smsBody?: string;
+  pushTitle?: string;
+  pushBody?: string;
   variables?: string[];
+  isActive?: boolean;
 }
 
 export const notificationsApi = baseApi.injectEndpoints({

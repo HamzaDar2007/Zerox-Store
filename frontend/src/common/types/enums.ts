@@ -129,6 +129,7 @@ export enum PaymentMethod {
   COD = 'cod',
   CREDIT_CARD = 'credit_card',
   DEBIT_CARD = 'debit_card',
+  STRIPE = 'stripe',
   JAZZCASH = 'jazzcash',
   EASYPAISA = 'easypaisa',
   BANK_TRANSFER = 'bank_transfer',
@@ -574,6 +575,77 @@ export enum JobStatus {
   COMPLETED = 'completed',
   FAILED = 'failed',
   CANCELLED = 'cancelled',
+}
+
+// ─── Chat Enums (typed) ─────────────────────────────────────────────
+export enum ConversationType {
+  CUSTOMER_SELLER = 'customer_seller',
+  CUSTOMER_SUPPORT = 'customer_support',
+  SELLER_SUPPORT = 'seller_support',
+}
+
+// ─── Marketing Enums (extended) ─────────────────────────────────────
+export enum VoucherStatus {
+  DRAFT = 'draft',
+  ACTIVE = 'active',
+  EXPIRED = 'expired',
+  DEPLETED = 'depleted',
+  CANCELLED = 'cancelled',
+}
+
+export enum DiscountType {
+  PERCENTAGE = 'percentage',
+  FIXED_AMOUNT = 'fixed_amount',
+}
+
+export enum CampaignStatus {
+  DRAFT = 'draft',
+  SCHEDULED = 'scheduled',
+  ACTIVE = 'active',
+  PAUSED = 'paused',
+  ENDED = 'ended',
+  CANCELLED = 'cancelled',
+}
+
+export enum FlashSaleStatus {
+  SCHEDULED = 'scheduled',
+  ACTIVE = 'active',
+  ENDED = 'ended',
+  CANCELLED = 'cancelled',
+}
+
+// ─── Wallet Enums (extended) ────────────────────────────────────────
+export enum WalletTransactionStatus {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  REVERSED = 'reversed',
+}
+
+// ─── Dispute Enums (extended) ───────────────────────────────────────
+export enum DisputePriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent',
+}
+
+export enum DisputeEvidenceType {
+  IMAGE = 'image',
+  VIDEO = 'video',
+  DOCUMENT = 'document',
+  RECEIPT = 'receipt',
+  TRACKING_INFO = 'tracking_info',
+  COMMUNICATION = 'communication',
+  OTHER = 'other',
+}
+
+// ─── Payment Enums (extended) ───────────────────────────────────────
+export enum RefundMethod {
+  ORIGINAL_PAYMENT = 'original_payment',
+  WALLET = 'wallet',
+  BANK_TRANSFER = 'bank_transfer',
+  MANUAL = 'manual',
 }
 
 // ─── Search & Recommendation Enums ──────────────────────────────────

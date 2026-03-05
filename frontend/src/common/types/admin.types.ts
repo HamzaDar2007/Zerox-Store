@@ -1,6 +1,8 @@
 import type {
   VoucherType,
   VoucherScope,
+  DiscountType,
+  VoucherStatus,
   CampaignType,
   BannerPosition,
   BannerLinkType,
@@ -307,20 +309,21 @@ export interface ImportExportJob {
 // ─── DTOs ───────────────────────────────────────────────────────────
 export interface CreateVoucherDto {
   code: string;
-  name?: string;
+  name: string;
   description?: string;
   type: VoucherType;
+  discountType: DiscountType;
   discountValue: number;
+  maxDiscountAmount?: number;
   minOrderAmount?: number;
-  maxDiscount?: number;
-  applicableTo?: VoucherScope;
-  totalLimit?: number;
-  perUserLimit?: number;
-  firstOrderOnly?: boolean;
-  stackable?: boolean;
-  displayOnStore?: boolean;
+  usageLimit?: number;
+  usageLimitPerUser?: number;
+  storeId?: string;
+  status?: VoucherStatus;
   startsAt: string;
-  expiresAt: string;
+  endsAt: string;
+  isStackable?: boolean;
+  appliesToSaleItems?: boolean;
 }
 
 export type UpdateVoucherDto = Partial<CreateVoucherDto>;

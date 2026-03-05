@@ -5,6 +5,7 @@ import { GlobalValidationPipe } from './common/pipes/global-validation.pipe';
 // import { SecurityConfig } from './config/security.config';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import * as express from 'express';
 
 function getAllowedOrigins() {
   // FRONTEND_URLS as comma-separated list
@@ -29,6 +30,17 @@ function getAllowedOrigins() {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Raw body middleware for Stripe webhooks (must be before any body parser)
+  app.use('/stripe/webhook', express.raw({ type: 'application/json' }));
+  // Attach rawBody on all JSON requests so the webhook controller can read it
+  app.use(
+    express.json({
+      verify: (req: any, _res, buf) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
 
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
   // Security middleware

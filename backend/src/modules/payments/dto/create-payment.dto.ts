@@ -66,4 +66,16 @@ export class CreatePaymentDto {
   @IsOptional()
   @IsObject()
   metadata?: Record<string, any>;
+
+  @ApiPropertyOptional({ description: 'Stripe PaymentMethod ID (pm_xxx) for Stripe payments' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  stripePaymentMethodId?: string;
+
+  @ApiPropertyOptional({ description: 'Stripe Customer ID (cus_xxx) for returning customers' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  stripeCustomerId?: string;
 }

@@ -5,6 +5,7 @@ import {
   useGetPermissionsQuery,
   useCreatePermissionMutation,
   useDeletePermissionMutation,
+  useGetRolesQuery,
 } from '@/store/api';
 import {
   createPermissionSchema,
@@ -42,13 +43,16 @@ const CRUD_ACTIONS = ['create', 'read', 'update', 'delete', 'manage', 'export'];
 export default function SAPermissionsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [bulkModule, setBulkModule] = useState('');
+  const [bulkRoleId, setBulkRoleId] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const { data: permData, isLoading } = useGetPermissionsQuery();
+  const { data: rolesData } = useGetRolesQuery();
   const [createPermission, { isLoading: creating }] = useCreatePermissionMutation();
   const [deletePermission] = useDeletePermissionMutation();
 
   const allPermissions: Permission[] = permData?.data ?? [];
+  const roles = rolesData?.data ?? [];
 
   const byModule = useMemo(() => {
     const map: Record<string, Permission[]> = {};
@@ -71,20 +75,19 @@ export default function SAPermissionsPage() {
     formState: { errors },
   } = useForm<CreatePermissionFormValues>({
     resolver: zodResolver(createPermissionSchema),
-    defaultValues: { name: '', module: '', action: '', description: '' },
+    defaultValues: { roleId: '', module: '', action: '' },
   });
 
   const selectedAction = watch('action');
+  const selectedRoleId = watch('roleId');
 
   const onSubmitPermission = async (data: CreatePermissionFormValues) => {
     try {
-      const body: Record<string, string> = {
-        name: data.name || `${data.module}:${data.action}`,
+      await createPermission({
+        roleId: data.roleId,
         module: data.module,
         action: data.action,
-      };
-      if (data.description) body.description = data.description;
-      await createPermission(body as { name: string; module: string; action: string; description?: string }).unwrap();
+      }).unwrap();
       toast.success('Permission created');
       reset();
       setCreateOpen(false);
@@ -95,8 +98,8 @@ export default function SAPermissionsPage() {
   };
 
   const handleBulkCreate = async () => {
-    if (!bulkModule.trim()) {
-      toast.error('Enter a module name');
+    if (!bulkModule.trim() || !bulkRoleId) {
+      toast.error('Enter a module name and select a role');
       return;
     }
     const mod = bulkModule.trim().toLowerCase();
@@ -109,7 +112,7 @@ export default function SAPermissionsPage() {
       if (exists) continue;
       try {
         await createPermission({
-          name: `${mod}:${action}`,
+          roleId: bulkRoleId,
           module: mod,
           action,
         }).unwrap();
@@ -164,7 +167,20 @@ export default function SAPermissionsPage() {
                 onChange={(e) => setBulkModule(e.target.value)}
               />
             </div>
-            <Button onClick={handleBulkCreate} disabled={!bulkModule.trim()}>
+            <div className="flex-1 space-y-2">
+              <Label>Role</Label>
+              <Select value={bulkRoleId} onValueChange={setBulkRoleId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>{r.displayName || r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleBulkCreate} disabled={!bulkModule.trim() || !bulkRoleId}>
               Add CRUD Permissions
             </Button>
           </div>
@@ -229,6 +245,20 @@ export default function SAPermissionsPage() {
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmitPermission)} className="space-y-4">
             <div className="space-y-2">
+              <Label>Role *</Label>
+              <Select value={selectedRoleId} onValueChange={(v) => setValue('roleId', v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>{r.displayName || r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.roleId && <p className="text-xs text-destructive">{errors.roleId.message}</p>}
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="perm-module">Module *</Label>
               <Input id="perm-module" placeholder="e.g. products" {...register('module')} />
               {errors.module && <p className="text-xs text-destructive">{errors.module.message}</p>}
@@ -248,14 +278,6 @@ export default function SAPermissionsPage() {
                 </SelectContent>
               </Select>
               {errors.action && <p className="text-xs text-destructive">{errors.action.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="perm-name">Name</Label>
-              <Input id="perm-name" placeholder="Optional – auto-generated if blank" {...register('name')} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="perm-desc">Description</Label>
-              <Input id="perm-desc" placeholder="Brief description" {...register('description')} />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>

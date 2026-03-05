@@ -129,6 +129,7 @@ export interface WalletTransaction {
 
 // ─── Seller DTOs ────────────────────────────────────────────────────
 export interface BecomeSellerDto {
+  userId: string;
   businessName: string;
   businessNameAr?: string;
   cnic?: string;
@@ -138,9 +139,13 @@ export interface BecomeSellerDto {
   bankAccountNumber?: string;
   bankAccountTitle?: string;
   bankIban?: string;
+  bankSwift?: string;
+  payoutFrequency?: PayoutFrequency;
+  commissionRate?: number;
 }
 
 export interface CreateStoreDto {
+  sellerId: string;
   name: string;
   slug?: string;
   logoUrl?: string;
@@ -148,6 +153,7 @@ export interface CreateStoreDto {
   description?: string;
   returnPolicy?: string;
   shippingPolicy?: string;
+  isActive?: boolean;
 }
 
 export type UpdateStoreDto = Partial<CreateStoreDto>;

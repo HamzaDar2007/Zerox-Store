@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGetReturnsQuery, useCreateReturnMutation, useGetReturnReasonsQuery, useGetMyOrdersQuery } from '@/store/api';
+import { useAppSelector } from '@/store';
 import { PageHeader } from '@/common/components/PageHeader';
 import { StatusBadge } from '@/common/components/StatusBadge';
 import { EmptyState } from '@/common/components/EmptyState';
@@ -38,7 +39,8 @@ export default function CustomerReturnsPage() {
   const { data: ordersData } = useGetMyOrdersQuery({ page: 1, limit: 50 });
   const [createReturn, { isLoading: creating }] = useCreateReturnMutation();
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ orderId: '', orderItemId: '', reasonId: '', quantity: 1, description: '' });
+  const [form, setForm] = useState({ orderId: '', orderItemId: '', reasonId: '', quantity: 1, reasonDetails: '', type: 'return' });
+  const user = useAppSelector((s) => s.auth.user);
 
   const reasons = reasonsData?.data ?? [];
   const orders = ordersData?.data?.items ?? [];
@@ -177,7 +179,7 @@ export default function CustomerReturnsPage() {
             </div>
             <div>
               <label className="text-sm font-medium">Description (optional)</label>
-              <Textarea placeholder="Describe the issue..." value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+              <Textarea placeholder="Describe the issue..." value={form.reasonDetails} onChange={(e) => setForm((f) => ({ ...f, reasonDetails: e.target.value }))} />
             </div>
           </div>
           <DialogFooter>
@@ -192,13 +194,15 @@ export default function CustomerReturnsPage() {
                   await createReturn({
                     orderId: form.orderId,
                     orderItemId: form.orderItemId,
-                    reasonId: form.reasonId,
+                    userId: user?.id ?? '',
+                    reasonId: form.reasonId || undefined,
                     quantity: form.quantity,
-                    description: form.description || undefined,
+                    type: form.type,
+                    reasonDetails: form.reasonDetails || undefined,
                   }).unwrap();
                   toast.success('Return request submitted');
                   setShowCreate(false);
-                  setForm({ orderId: '', orderItemId: '', reasonId: '', quantity: 1, description: '' });
+                  setForm({ orderId: '', orderItemId: '', reasonId: '', quantity: 1, reasonDetails: '', type: 'return' });
                 } catch {
                   toast.error('Failed to submit return request');
                 }

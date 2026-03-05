@@ -131,6 +131,7 @@ export interface PriceHistory {
 
 // ─── DTOs ───────────────────────────────────────────────────────────
 export interface CreateProductDto {
+  sellerId: string;
   categoryId: string;
   brandId?: string;
   name: string;

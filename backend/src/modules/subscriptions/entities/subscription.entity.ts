@@ -116,6 +116,15 @@ export class Subscription {
   })
   totalSpent: number;
 
+  @Column({ name: 'stripe_subscription_id', type: 'varchar', length: 255, nullable: true })
+  stripeSubscriptionId: string | null;
+
+  @Column({ name: 'stripe_customer_id', type: 'varchar', length: 255, nullable: true })
+  stripeCustomerId: string | null;
+
+  @Column({ name: 'stripe_price_id', type: 'varchar', length: 255, nullable: true })
+  stripePriceId: string | null;
+
   @OneToMany(() => SubscriptionOrder, (order) => order.subscription)
   subscriptionOrders: SubscriptionOrder[];
 

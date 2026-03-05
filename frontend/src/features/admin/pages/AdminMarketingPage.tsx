@@ -11,7 +11,7 @@ import { formatCurrency, formatDate } from '@/lib/format';
 import { Megaphone, Plus, Tag, Zap } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { Campaign, Voucher, FlashSale } from '@/common/types';
-import { CampaignType, VoucherType } from '@/common/types/enums';
+import { CampaignType, VoucherType, DiscountType } from '@/common/types/enums';
 import {
   useGetCampaignsQuery,
   useCreateCampaignMutation,
@@ -35,7 +35,7 @@ export default function AdminMarketingPage() {
   const [showCreate, setShowCreate] = useState(false);
 
   const [campaignForm, setCampaignForm] = useState({ name: '', description: '', type: CampaignType.SEASONAL as CampaignType, discountPercentage: 0, startsAt: '', endsAt: '' });
-  const [voucherForm, setVoucherForm] = useState({ code: '', name: '', type: VoucherType.PERCENTAGE as VoucherType, discountValue: 0, minOrderAmount: 0, totalLimit: 100, perUserLimit: 1, startsAt: '', expiresAt: '' });
+  const [voucherForm, setVoucherForm] = useState({ code: '', name: '', type: VoucherType.PERCENTAGE as VoucherType, discountType: DiscountType.PERCENTAGE as DiscountType, discountValue: 0, minOrderAmount: 0, usageLimit: 100, usageLimitPerUser: 1, startsAt: '', endsAt: '' });
   const [flashForm, setFlashForm] = useState({ name: '', discountPercentage: 0, startDate: '', endDate: '', maxQuantity: 100 });
 
   const { data: campaignsData, isLoading } = useGetCampaignsQuery({});
@@ -155,12 +155,12 @@ export default function AdminMarketingPage() {
                 <Input type="number" placeholder="Min order" value={voucherForm.minOrderAmount} onChange={(e) => setVoucherForm((f) => ({ ...f, minOrderAmount: parseFloat(e.target.value) || 0 }))} />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Input type="number" placeholder="Total limit" value={voucherForm.totalLimit} onChange={(e) => setVoucherForm((f) => ({ ...f, totalLimit: parseInt(e.target.value) || 0 }))} />
-                <Input type="number" placeholder="Per user limit" value={voucherForm.perUserLimit} onChange={(e) => setVoucherForm((f) => ({ ...f, perUserLimit: parseInt(e.target.value) || 0 }))} />
+                <Input type="number" placeholder="Usage limit" value={voucherForm.usageLimit} onChange={(e) => setVoucherForm((f) => ({ ...f, usageLimit: parseInt(e.target.value) || 0 }))} />
+                <Input type="number" placeholder="Per user limit" value={voucherForm.usageLimitPerUser} onChange={(e) => setVoucherForm((f) => ({ ...f, usageLimitPerUser: parseInt(e.target.value) || 0 }))} />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Input type="datetime-local" value={voucherForm.startsAt} onChange={(e) => setVoucherForm((f) => ({ ...f, startsAt: e.target.value }))} />
-                <Input type="datetime-local" value={voucherForm.expiresAt} onChange={(e) => setVoucherForm((f) => ({ ...f, expiresAt: e.target.value }))} />
+                <Input type="datetime-local" value={voucherForm.endsAt} onChange={(e) => setVoucherForm((f) => ({ ...f, endsAt: e.target.value }))} />
               </div>
             </div>
           )}
