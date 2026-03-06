@@ -1,10 +1,6 @@
 export enum RoleEnum {
+  CUSTOMER = 'customer',
+  SELLER = 'seller',
   ADMIN = 'admin',
-  GUEST = 'guest',
-  CLIENT = 'client',
-  EMPLOYEE = 'employee',
-  PROJECT_MANAGER = 'project_manager',
-  DEVELOPER = 'developer',
-  SUPPORT = 'support',
-  ASSISTANT = 'assistant',
+  SUPER_ADMIN = 'super_admin',
 }

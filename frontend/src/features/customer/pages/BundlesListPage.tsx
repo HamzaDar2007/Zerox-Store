@@ -34,7 +34,7 @@ export default function BundlesListPage() {
               <Card className="transition-shadow hover:shadow-lg">
                 <CardContent className="p-0">
                   {b.imageUrl ? (
-                    <img src={b.imageUrl} alt={b.name} className="h-48 w-full rounded-t-lg object-cover" />
+                    <img src={b.imageUrl} alt={b.name} loading="lazy" decoding="async" className="h-48 w-full rounded-t-lg object-cover" />
                   ) : (
                     <div className="flex h-48 items-center justify-center rounded-t-lg bg-muted">
                       <Package className="h-12 w-12 text-muted-foreground" />

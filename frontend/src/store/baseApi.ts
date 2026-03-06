@@ -9,6 +9,7 @@ import { Mutex } from 'async-mutex';
 
 import { STORAGE_KEYS } from '@/lib/constants';
 import type { ApiResponse } from '@/common/types';
+import { logout } from './slices/authSlice';
 
 const mutex = new Mutex();
 
@@ -64,18 +65,12 @@ const baseQueryWithReauth: BaseQueryFn<
             // Retry the original query
             result = await baseQuery(args, api, extraOptions);
           } else {
-            // Refresh failed — clear tokens and redirect
-            localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-            localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-            localStorage.removeItem(STORAGE_KEYS.USER);
-            window.location.href = '/login';
+            // Refresh failed — dispatch logout to clean state and redirect via React Router
+            api.dispatch(logout());
           }
         } else {
-          // No refresh token — clear everything
-          localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.USER);
-          window.location.href = '/login';
+          // No refresh token — dispatch logout
+          api.dispatch(logout());
         }
       } finally {
         release();
@@ -93,6 +88,10 @@ const baseQueryWithReauth: BaseQueryFn<
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
+  // Cache data for 5 minutes by default (reduces unnecessary re-fetches)
+  keepUnusedDataFor: 300,
+  // Refetch on mount if data is older than 5 minutes
+  refetchOnMountOrArgChange: 300,
   tagTypes: [
     'Auth',
     'User',

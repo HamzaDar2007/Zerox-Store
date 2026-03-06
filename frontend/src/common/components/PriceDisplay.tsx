@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/format';
 
@@ -18,7 +19,7 @@ const sizeStyles = {
 /**
  * Displays price with optional compare-at (strikethrough) price.
  */
-export function PriceDisplay({
+export const PriceDisplay = memo(function PriceDisplay({
   price,
   compareAtPrice,
   currency,
@@ -47,4 +48,4 @@ export function PriceDisplay({
       )}
     </div>
   );
-}
+});

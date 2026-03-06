@@ -41,6 +41,8 @@ export interface Order {
   deliveredAt: string | null;
   cancelledAt: string | null;
   cancellationReason: string | null;
+  deviceType: string | null;
+  ipAddress: string | null;
   items?: OrderItem[];
   statusHistory?: OrderStatusHistory[];
   shipments?: Shipment[];

@@ -1,6 +1,13 @@
 import { useState } from 'react';
+import {
+  useGetMyAddressesQuery,
+  useCreateAddressMutation,
+  useUpdateAddressMutation,
+  useDeleteAddressMutation,
+} from '@/store/api';
 import { PageHeader } from '@/common/components/PageHeader';
-import { EmptyState } from '@/common/components/EmptyState';
+import { EmptyState, ErrorState } from '@/common/components/EmptyState';
+import { LoadingSpinner } from '@/common/components/LoadingSpinner';
 import { Button } from '@/common/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/common/components/ui/card';
 import { Badge } from '@/common/components/ui/badge';
@@ -18,9 +25,6 @@ import { MapPin, Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Address, CreateAddressDto } from '@/common/types';
 
-// Backend doesn't expose address CRUD endpoints yet.
-// We use local state as a placeholder until endpoints are available.
-
 const EMPTY_FORM: CreateAddressDto = {
   fullName: '',
   phone: '',
@@ -37,10 +41,16 @@ const EMPTY_FORM: CreateAddressDto = {
 };
 
 export default function AddressesPage() {
-  const [addresses, setAddresses] = useState<Address[]>([]);
+  const { data, isLoading, isError, refetch } = useGetMyAddressesQuery();
+  const [createAddress, { isLoading: isCreating }] = useCreateAddressMutation();
+  const [updateAddress, { isLoading: isUpdating }] = useUpdateAddressMutation();
+  const [deleteAddress] = useDeleteAddressMutation();
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CreateAddressDto>(EMPTY_FORM);
+
+  const addresses: Address[] = data?.data ?? [];
 
   const openCreate = () => {
     setEditingId(null);
@@ -67,62 +77,54 @@ export default function AddressesPage() {
     setDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.fullName || !form.phone || !form.city || !form.streetAddress) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    if (editingId) {
-      setAddresses((prev) =>
-        prev.map((a) =>
-          a.id === editingId
-            ? {
-                ...a,
-                ...form,
-                label: form.label ?? null,
-                area: form.area ?? null,
-                postalCode: form.postalCode ?? null,
-                deliveryInstructions: form.deliveryInstructions ?? null,
-                isDefaultShipping: form.isDefaultShipping ?? false,
-                isDefaultBilling: form.isDefaultBilling ?? false,
-                updatedAt: new Date().toISOString(),
-              }
-            : a,
-        ),
-      );
-      toast.success('Address updated');
-    } else {
-      const newAddr: Address = {
-        id: crypto.randomUUID(),
-        userId: '',
-        ...form,
-        label: form.label ?? null,
-        area: form.area ?? null,
-        postalCode: form.postalCode ?? null,
-        latitude: null,
-        longitude: null,
-        deliveryInstructions: form.deliveryInstructions ?? null,
-        isDefaultShipping: form.isDefaultShipping ?? false,
-        isDefaultBilling: form.isDefaultBilling ?? false,
-        country: form.country ?? 'Pakistan',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setAddresses((prev) => [...prev, newAddr]);
-      toast.success('Address added');
+    try {
+      if (editingId) {
+        await updateAddress({ id: editingId, data: form }).unwrap();
+        toast.success('Address updated');
+      } else {
+        await createAddress(form).unwrap();
+        toast.success('Address added');
+      }
+      setDialogOpen(false);
+    } catch {
+      toast.error(editingId ? 'Failed to update address' : 'Failed to add address');
     }
-    setDialogOpen(false);
   };
 
-  const handleDelete = (id: string) => {
-    setAddresses((prev) => prev.filter((a) => a.id !== id));
-    toast.success('Address removed');
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteAddress(id).unwrap();
+      toast.success('Address removed');
+    } catch {
+      toast.error('Failed to remove address');
+    }
   };
 
   const updateField = <K extends keyof CreateAddressDto>(key: K, value: CreateAddressDto[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
+
+  const isSaving = isCreating || isUpdating;
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Failed to load addresses"
+        message="Something went wrong while fetching your addresses."
+        onRetry={refetch}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -280,10 +282,12 @@ export default function AddressesPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={isSaving}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>{editingId ? 'Update' : 'Add'} Address</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'Saving...' : editingId ? 'Update' : 'Add'} {!isSaving && 'Address'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

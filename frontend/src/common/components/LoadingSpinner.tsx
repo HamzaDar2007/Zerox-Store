@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingSpinnerProps {
@@ -15,7 +16,7 @@ const sizeMap = {
   lg: 'h-12 w-12',
 };
 
-export function LoadingSpinner({
+export const LoadingSpinner = memo(function LoadingSpinner({
   fullScreen = false,
   size = 'md',
   label,
@@ -40,4 +41,4 @@ export function LoadingSpinner({
   return (
     <div className="flex items-center justify-center py-12">{spinner}</div>
   );
-}
+});

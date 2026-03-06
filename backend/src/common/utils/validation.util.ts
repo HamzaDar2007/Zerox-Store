@@ -192,24 +192,4 @@ export class ValidationUtil {
       ...(details && { details }),
     };
   }
-
-  static createPaginatedResponse(
-    message: string,
-    data: any[],
-    total: number,
-    page: number,
-    limit: number,
-  ) {
-    return {
-      success: true,
-      message,
-      data,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
 }

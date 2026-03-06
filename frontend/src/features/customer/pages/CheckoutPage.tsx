@@ -35,6 +35,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { shippingSchema } from '@/common/schemas/checkout.schema';
 
 // ── Stripe imports ──────────────────────────────────────────────────
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -204,13 +205,10 @@ export default function CheckoutPage() {
 
   // ── Step handlers ─────────────────────────────────────────────────
   const handleShippingNext = () => {
-    if (
-      !shippingForm.fullName ||
-      !shippingForm.phone ||
-      !shippingForm.streetAddress ||
-      !shippingForm.city
-    ) {
-      toast.error('Please fill in all required shipping fields');
+    const result = shippingSchema.safeParse(shippingForm);
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
     setCurrentStep('Payment');
@@ -680,6 +678,8 @@ export default function CheckoutPage() {
                           <img
                             src={item.product.images[0].url}
                             alt={item.product.name}
+                            loading="lazy"
+                            decoding="async"
                             className="h-12 w-12 rounded object-cover"
                           />
                         ) : (

@@ -3,10 +3,11 @@ import { useGetProductsQuery } from '@/store/api';
 import { SearchFilterBar } from '@/common/components/SearchFilterBar';
 import { PaginationControls } from '@/common/components/PaginationControls';
 import { LoadingSpinner } from '@/common/components/LoadingSpinner';
-import { EmptyState } from '@/common/components/EmptyState';
+import { EmptyState, ErrorState } from '@/common/components/EmptyState';
 import { PriceDisplay } from '@/common/components/PriceDisplay';
 import { RatingStars } from '@/common/components/RatingStars';
 import { Card, CardContent } from '@/common/components/ui/card';
+import { OptimizedImage } from '@/common/components/OptimizedImage';
 import { Separator } from '@/common/components/ui/separator';
 import { DEFAULT_PAGE } from '@/lib/constants';
 import { ShoppingBag, Package } from 'lucide-react';
@@ -18,7 +19,7 @@ export default function ProductListPage() {
   const search = searchParams.get('search') || '';
   const categoryId = searchParams.get('categoryId') || '';
 
-  const { data, isLoading, isFetching } = useGetProductsQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useGetProductsQuery({
     page,
     limit,
     search: search || undefined,
@@ -90,6 +91,12 @@ export default function ProductListPage() {
 
       {isLoading ? (
         <LoadingSpinner label="Loading products..." />
+      ) : isError ? (
+        <ErrorState
+          title="Failed to load products"
+          message="Something went wrong while fetching products. Please try again."
+          onRetry={refetch}
+        />
       ) : products.length === 0 ? (
         <EmptyState
           title="No products found"
@@ -118,11 +125,10 @@ export default function ProductListPage() {
                   <Card className="overflow-hidden h-full hover:shadow-lg transition-all border-transparent hover:border-primary/20">
                     <div className="relative aspect-square overflow-hidden bg-white dark:bg-muted">
                       {product.images?.[0]?.url ? (
-                        <img
+                        <OptimizedImage
                           src={product.images[0].url}
                           alt={product.name}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-muted-foreground">

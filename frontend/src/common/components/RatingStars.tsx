@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Star, StarHalf } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -15,7 +16,7 @@ const sizeMap = {
   md: 'h-4 w-4',
 };
 
-export function RatingStars({
+export const RatingStars = memo(function RatingStars({
   rating: rawRating,
   maxStars = 5,
   showValue = false,
@@ -59,4 +60,4 @@ export function RatingStars({
       )}
     </div>
   );
-}
+});

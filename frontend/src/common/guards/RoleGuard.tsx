@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAppSelector } from '@/store';
-import type { UserRole } from '@/common/types/enums';
+import { UserRole } from '@/common/types/enums';
 
 interface RoleGuardProps {
   children: React.ReactNode;
@@ -20,6 +20,11 @@ export function RoleGuard({
   fallback = '/',
 }: RoleGuardProps) {
   const { user } = useAppSelector((state) => state.auth);
+
+  // Super admin bypasses all role checks (mirrors backend RolesGuard behavior)
+  if (user?.role === UserRole.SUPER_ADMIN) {
+    return <>{children}</>;
+  }
 
   if (!user || !allowedRoles.includes(user.role)) {
     return <Navigate to={fallback} replace />;

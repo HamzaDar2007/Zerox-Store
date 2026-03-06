@@ -4,6 +4,7 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
 import { UserRole } from './entities/user-role.entity';
+import { Address } from './entities/address.entity';
 import { Role } from '../roles/entities/role.entity';
 import { Permission } from '../permissions/entities/permission.entity';
 import { TokenUtil } from 'src/common/utils/jwt.util';
@@ -15,6 +16,7 @@ import { GuardsModule } from '../../common/modules/guards.module';
     TypeOrmModule.forFeature([
       User,
       UserRole,
+      Address,
       Role,
       Permission,
     ]),

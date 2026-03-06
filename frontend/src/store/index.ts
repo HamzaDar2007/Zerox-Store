@@ -5,36 +5,10 @@ import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
 import cartReducer from './slices/cartSlice';
 
-// Import all API slices so they register their endpoints with baseApi
-import './api/authApi';
-import './api/usersApi';
-import './api/categoriesApi';
-import './api/productsApi';
-import './api/ordersApi';
-import './api/cartApi';
-import './api/paymentsApi';
-import './api/sellersApi';
-import './api/inventoryApi';
-import './api/reviewsApi';
-import './api/notificationsApi';
-import './api/chatApi';
-import './api/returnsApi';
-import './api/ticketsApi';
-import './api/disputesApi';
-import './api/rolesApi';
-import './api/shippingApi';
-import './api/taxApi';
-import './api/marketingApi';
-import './api/loyaltyApi';
-import './api/searchApi';
-import './api/cmsApi';
-import './api/auditApi';
-import './api/bundlesApi';
-import './api/i18nApi';
-import './api/seoApi';
-import './api/subscriptionsApi';
-import './api/systemApi';
-import './api/operationsApi';
+// API slices use baseApi.injectEndpoints() and are imported colocated
+// with the lazy-loaded pages that use them (via @/store/api barrel).
+// Do NOT add side-effect imports here — it pulls all 29 API slices
+// into the main bundle.
 
 export const store = configureStore({
   reducer: {
@@ -44,12 +18,7 @@ export const store = configureStore({
     cart: cartReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        // Ignore RTK Query internal actions for serializable check
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
-      },
-    }).concat(baseApi.middleware),
+    getDefaultMiddleware().concat(baseApi.middleware),
   devTools: import.meta.env.DEV,
 });
 

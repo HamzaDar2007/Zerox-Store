@@ -20,7 +20,7 @@ import {
 import { Checkbox } from '@/common/components/ui/checkbox';
 import { Skeleton } from '@/common/components/ui/skeleton';
 import { PaginationControls } from '@/common/components/PaginationControls';
-import { EmptyState } from '@/common/components/EmptyState';
+import { EmptyState, ErrorState } from '@/common/components/EmptyState';
 import { cn } from '@/lib/utils';
 
 interface DataTableProps<TData> {
@@ -39,6 +39,12 @@ interface DataTableProps<TData> {
   onSortChange?: (sortBy: string, sortOrder: 'ASC' | 'DESC') => void;
   /** Whether the data is loading */
   isLoading?: boolean;
+  /** Whether there was an error fetching data */
+  isError?: boolean;
+  /** Error message to display */
+  errorMessage?: string;
+  /** Callback to retry when error state is shown */
+  onRetry?: () => void;
   /** Enable row selection */
   selectable?: boolean;
   /** Callback when selection changes */
@@ -58,6 +64,9 @@ export function DataTable<TData>({
   pagination,
   onSortChange,
   isLoading = false,
+  isError = false,
+  errorMessage,
+  onRetry,
   selectable = false,
   onSelectionChange,
   emptyTitle = 'No results found',
@@ -142,6 +151,16 @@ export function DataTable<TData>({
     },
     [sorting],
   );
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Failed to load data"
+        message={errorMessage ?? 'An error occurred while fetching data. Please try again.'}
+        onRetry={onRetry}
+      />
+    );
+  }
 
   if (isLoading) {
     return (

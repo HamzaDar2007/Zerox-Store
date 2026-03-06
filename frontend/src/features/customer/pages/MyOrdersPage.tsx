@@ -56,7 +56,7 @@ export default function MyOrdersPage() {
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [limit, setLimit] = useState(DEFAULT_LIMIT);
 
-  const { data, isLoading } = useGetMyOrdersQuery({ page, limit });
+  const { data, isLoading, isError, refetch } = useGetMyOrdersQuery({ page, limit });
 
   const orders = data?.data?.items ?? [];
   const total = data?.data?.total ?? 0;
@@ -70,6 +70,8 @@ export default function MyOrdersPage() {
         columns={columns}
         data={orders}
         isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyTitle="No orders yet"
         emptyDescription="When you place an order, it will appear here."
         pagination={{

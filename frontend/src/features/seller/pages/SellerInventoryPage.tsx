@@ -5,8 +5,6 @@ import { StatusBadge } from '@/common/components/StatusBadge';
 import { EmptyState } from '@/common/components/EmptyState';
 import { LoadingSpinner } from '@/common/components/LoadingSpinner';
 import { Button } from '@/common/components/ui/button';
-import { Input } from '@/common/components/ui/input';
-import { Textarea } from '@/common/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/common/components/ui/card';
 import { Warehouse, Package, Plus, ArrowRightLeft } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -22,13 +20,7 @@ import {
   useGetStockMovementsQuery,
   useAdjustStockMutation,
 } from '@/store/api';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/common/components/ui/dialog';
+import { CreateWarehouseDialog, AdjustStockDialog } from '../components/InventoryDialogs';
 
 type Tab = 'warehouses' | 'inventory' | 'movements';
 
@@ -37,8 +29,6 @@ export default function SellerInventoryPage() {
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string | null>(null);
   const [showCreateWarehouse, setShowCreateWarehouse] = useState(false);
   const [showAdjust, setShowAdjust] = useState(false);
-  const [adjustForm, setAdjustForm] = useState({ productId: '', adjustment: 0, reason: '' });
-  const [warehouseForm, setWarehouseForm] = useState({ name: '', code: '', addressLine1: '', city: '', state: '', countryCode: '', postalCode: '' });
   const [movementPage, setMovementPage] = useState(1);
 
   const { data: warehousesData, isLoading: loadingWarehouses } = useGetWarehousesQuery({});
@@ -51,7 +41,7 @@ export default function SellerInventoryPage() {
   const inventory = inventoryData?.data ?? [];
 
   const { data: movementsData } = useGetStockMovementsQuery(
-    { productId: adjustForm.productId || 'all', warehouseId: selectedWarehouseId ?? undefined, page: movementPage, limit: 10 },
+    { productId: 'all', warehouseId: selectedWarehouseId ?? undefined, page: movementPage, limit: 10 },
     { skip: !selectedWarehouseId },
   );
   const movements = movementsData?.data?.items ?? [];
@@ -101,23 +91,20 @@ export default function SellerInventoryPage() {
     { accessorKey: 'createdAt', header: 'Date' },
   ];
 
-  const handleCreateWarehouse = async () => {
-    if (!warehouseForm.name) return;
-    await createWarehouse(warehouseForm);
+  const handleCreateWarehouse = async (data: { name: string; code: string; addressLine1?: string; city?: string; state?: string; countryCode?: string; postalCode?: string }) => {
+    await createWarehouse(data);
     setShowCreateWarehouse(false);
-    setWarehouseForm({ name: '', code: '', addressLine1: '', city: '', state: '', countryCode: '', postalCode: '' });
   };
 
-  const handleAdjust = async () => {
-    if (!adjustForm.productId || !adjustForm.reason || !selectedWarehouseId) return;
+  const handleAdjust = async (data: { productId: string; adjustment: number; reason: string }) => {
+    if (!selectedWarehouseId) return;
     await adjustStock({
-      productId: adjustForm.productId,
+      productId: data.productId,
       warehouseId: selectedWarehouseId,
-      adjustment: adjustForm.adjustment,
-      reason: adjustForm.reason,
+      adjustment: data.adjustment,
+      reason: data.reason,
     });
     setShowAdjust(false);
-    setAdjustForm({ productId: '', adjustment: 0, reason: '' });
   };
 
   if (loadingWarehouses) return <LoadingSpinner label="Loading inventory..." />;
@@ -195,45 +182,17 @@ export default function SellerInventoryPage() {
         </div>
       )}
 
-      {/* Create Warehouse Dialog */}
-      <Dialog open={showCreateWarehouse} onOpenChange={setShowCreateWarehouse}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>New Warehouse</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <Input placeholder="Name" value={warehouseForm.name} onChange={(e) => setWarehouseForm((f) => ({ ...f, name: e.target.value }))} />
-            <Input placeholder="Code" value={warehouseForm.code} onChange={(e) => setWarehouseForm((f) => ({ ...f, code: e.target.value }))} />
-            <Input placeholder="Address" value={warehouseForm.addressLine1} onChange={(e) => setWarehouseForm((f) => ({ ...f, addressLine1: e.target.value }))} />
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="City" value={warehouseForm.city} onChange={(e) => setWarehouseForm((f) => ({ ...f, city: e.target.value }))} />
-              <Input placeholder="State" value={warehouseForm.state} onChange={(e) => setWarehouseForm((f) => ({ ...f, state: e.target.value }))} />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="Country Code" value={warehouseForm.countryCode} onChange={(e) => setWarehouseForm((f) => ({ ...f, countryCode: e.target.value }))} />
-              <Input placeholder="Postal Code" value={warehouseForm.postalCode} onChange={(e) => setWarehouseForm((f) => ({ ...f, postalCode: e.target.value }))} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateWarehouse(false)}>Cancel</Button>
-            <Button onClick={handleCreateWarehouse}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CreateWarehouseDialog
+        open={showCreateWarehouse}
+        onOpenChange={setShowCreateWarehouse}
+        onSubmit={handleCreateWarehouse}
+      />
 
-      {/* Adjust Stock Dialog */}
-      <Dialog open={showAdjust} onOpenChange={setShowAdjust}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Adjust Stock</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <Input placeholder="Product ID" value={adjustForm.productId} onChange={(e) => setAdjustForm((f) => ({ ...f, productId: e.target.value }))} />
-            <Input type="number" placeholder="Adjustment (+/-)" value={adjustForm.adjustment} onChange={(e) => setAdjustForm((f) => ({ ...f, adjustment: parseInt(e.target.value) || 0 }))} />
-            <Textarea placeholder="Reason for adjustment" value={adjustForm.reason} onChange={(e) => setAdjustForm((f) => ({ ...f, reason: e.target.value }))} />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAdjust(false)}>Cancel</Button>
-            <Button onClick={handleAdjust}>Adjust</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AdjustStockDialog
+        open={showAdjust}
+        onOpenChange={setShowAdjust}
+        onSubmit={handleAdjust}
+      />
     </div>
   );
 }

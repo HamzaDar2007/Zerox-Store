@@ -14,8 +14,35 @@ export interface CartState {
   isSynced: boolean;
 }
 
+const CART_STORAGE_KEY = 'labverse_guest_cart';
+
+function loadCartFromStorage(): LocalCartItem[] {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {
+    // Ignore corrupt data
+  }
+  return [];
+}
+
+function saveCartToStorage(items: LocalCartItem[]) {
+  try {
+    if (items.length === 0) {
+      localStorage.removeItem(CART_STORAGE_KEY);
+    } else {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    }
+  } catch {
+    // Ignore storage errors (quota exceeded, etc.)
+  }
+}
+
 const initialState: CartState = {
-  items: [],
+  items: loadCartFromStorage(),
   isSynced: false,
 };
 
@@ -35,6 +62,7 @@ const cartSlice = createSlice({
         state.items.push(action.payload);
       }
       state.isSynced = false;
+      saveCartToStorage(state.items);
     },
     updateLocalCartItem: (
       state,
@@ -53,6 +81,7 @@ const cartSlice = createSlice({
         item.quantity = action.payload.quantity;
       }
       state.isSynced = false;
+      saveCartToStorage(state.items);
     },
     removeFromLocalCart: (
       state,
@@ -66,10 +95,12 @@ const cartSlice = createSlice({
           ),
       );
       state.isSynced = false;
+      saveCartToStorage(state.items);
     },
     clearLocalCart: (state) => {
       state.items = [];
       state.isSynced = false;
+      saveCartToStorage(state.items);
     },
     setCartSynced: (state, action: PayloadAction<boolean>) => {
       state.isSynced = action.payload;
@@ -77,6 +108,7 @@ const cartSlice = createSlice({
     setLocalCart: (state, action: PayloadAction<LocalCartItem[]>) => {
       state.items = action.payload;
       state.isSynced = true;
+      saveCartToStorage(state.items);
     },
   },
 });

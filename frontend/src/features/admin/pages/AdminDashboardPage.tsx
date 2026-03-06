@@ -3,19 +3,40 @@ import { useGetUsersQuery, useGetOrdersQuery, useGetSellersQuery } from '@/store
 import { StatCard } from '@/common/components/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/common/components/ui/card';
 import { StatusBadge } from '@/common/components/StatusBadge';
+import { ErrorState } from '@/common/components/EmptyState';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { Users, Package, Store, DollarSign } from 'lucide-react';
+import { Skeleton } from '@/common/components/ui/skeleton';
 
 export default function AdminDashboardPage() {
-  const { data: usersData } = useGetUsersQuery({ page: 1, limit: 1 });
-  const { data: ordersData } = useGetOrdersQuery({ page: 1, limit: 5 });
-  const { data: sellersData } = useGetSellersQuery();
+  const { data: usersData, isLoading: usersLoading, isError: usersError, refetch: refetchUsers } = useGetUsersQuery({ page: 1, limit: 1 });
+  const { data: ordersData, isLoading: ordersLoading, isError: ordersError, refetch: refetchOrders } = useGetOrdersQuery({ page: 1, limit: 5 });
+  const { data: sellersData, isLoading: sellersLoading, isError: sellersError, refetch: refetchSellers } = useGetSellersQuery();
+
+  const isLoading = usersLoading || ordersLoading || sellersLoading;
+  const isError = usersError || ordersError || sellersError;
 
   const totalUsers = usersData?.data?.total ?? 0;
   const orders = ordersData?.data?.items ?? [];
   const totalOrders = ordersData?.data?.total ?? 0;
   const sellers = sellersData?.data ?? [];
   const revenue = orders.reduce((sum, o) => sum + (o.totalAmount ?? 0), 0);
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+          <p className="text-muted-foreground">Platform overview, key metrics, and recent activity.</p>
+        </div>
+        <ErrorState
+          title="Failed to load dashboard"
+          message="Could not fetch dashboard data. Please try again."
+          onRetry={() => { refetchUsers(); refetchOrders(); refetchSellers(); }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -27,10 +48,18 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Users" value={totalUsers} icon={Users} />
-        <StatCard title="Total Orders" value={totalOrders} icon={Package} />
-        <StatCard title="Active Sellers" value={sellers.length} icon={Store} />
-        <StatCard title="Recent Revenue" value={formatCurrency(revenue)} icon={DollarSign} />
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-6"><Skeleton className="h-4 w-24 mb-2" /><Skeleton className="h-8 w-16" /></div>
+          ))
+        ) : (
+          <>
+            <StatCard title="Total Users" value={totalUsers} icon={Users} />
+            <StatCard title="Total Orders" value={totalOrders} icon={Package} />
+            <StatCard title="Active Sellers" value={sellers.length} icon={Store} />
+            <StatCard title="Recent Revenue" value={formatCurrency(revenue)} icon={DollarSign} />
+          </>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

@@ -656,3 +656,28 @@ export enum RecommendationType {
   TRENDING_IN_CATEGORY = 'trending_in_category',
   PERSONALIZED = 'personalized',
 }
+
+// ─── Moderation Enums (backend-only, added for completeness) ────────
+export enum ModerationStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  FLAGGED = 'flagged',
+}
+
+// ─── Notification Priority ──────────────────────────────────────────
+export enum NotificationPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent',
+}
+
+// ─── Voucher Condition Types ────────────────────────────────────────
+export enum VoucherConditionType {
+  MINIMUM_ORDER_AMOUNT = 'minimum_order_amount',
+  MINIMUM_ITEMS = 'minimum_items',
+  SPECIFIC_PRODUCTS = 'specific_products',
+  SPECIFIC_CATEGORIES = 'specific_categories',
+  FIRST_ORDER = 'first_order',
+}

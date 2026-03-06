@@ -2,18 +2,39 @@ import { useGetAuditLogsQuery, useGetUsersQuery, useGetFeatureFlagsQuery } from 
 import { StatCard } from '@/common/components/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/common/components/ui/card';
 import { StatusBadge } from '@/common/components/StatusBadge';
+import { ErrorState } from '@/common/components/EmptyState';
 import { formatRelative } from '@/lib/format';
 import { Shield, Users, Flag, Activity } from 'lucide-react';
+import { Skeleton } from '@/common/components/ui/skeleton';
 
 export default function SuperAdminDashboardPage() {
-  const { data: auditData } = useGetAuditLogsQuery({ page: 1, limit: 10 });
-  const { data: usersData } = useGetUsersQuery({ page: 1, limit: 1 });
-  const { data: flagsData } = useGetFeatureFlagsQuery();
+  const { data: auditData, isLoading: auditLoading, isError: auditError, refetch: refetchAudit } = useGetAuditLogsQuery({ page: 1, limit: 10 });
+  const { data: usersData, isLoading: usersLoading, isError: usersError, refetch: refetchUsers } = useGetUsersQuery({ page: 1, limit: 1 });
+  const { data: flagsData, isLoading: flagsLoading, isError: flagsError, refetch: refetchFlags } = useGetFeatureFlagsQuery();
+
+  const isLoading = auditLoading || usersLoading || flagsLoading;
+  const isError = auditError || usersError || flagsError;
 
   const auditLogs = auditData?.data?.items ?? [];
   const totalUsers = usersData?.data?.total ?? 0;
   const flags = flagsData?.data ?? [];
   const enabledFlags = flags.filter((f) => f.isEnabled).length;
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Super Admin Dashboard</h1>
+          <p className="text-muted-foreground">Full platform control: system health, audit trail, and configuration.</p>
+        </div>
+        <ErrorState
+          title="Failed to load dashboard"
+          message="Could not fetch dashboard data. Please try again."
+          onRetry={() => { refetchAudit(); refetchUsers(); refetchFlags(); }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -27,10 +48,18 @@ export default function SuperAdminDashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="System Status" value="Healthy" icon={Shield} />
-        <StatCard title="Total Users" value={totalUsers} icon={Users} />
-        <StatCard title="Feature Flags" value={`${enabledFlags}/${flags.length}`} icon={Flag} />
-        <StatCard title="Audit Events" value={auditData?.data?.total ?? 0} icon={Activity} />
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-6"><Skeleton className="h-4 w-24 mb-2" /><Skeleton className="h-8 w-16" /></div>
+          ))
+        ) : (
+          <>
+            <StatCard title="System Status" value="Healthy" icon={Shield} />
+            <StatCard title="Total Users" value={totalUsers} icon={Users} />
+            <StatCard title="Feature Flags" value={`${enabledFlags}/${flags.length}`} icon={Flag} />
+            <StatCard title="Audit Events" value={auditData?.data?.total ?? 0} icon={Activity} />
+          </>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

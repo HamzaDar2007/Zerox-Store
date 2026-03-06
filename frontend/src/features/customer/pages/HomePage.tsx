@@ -7,6 +7,7 @@ import { PriceDisplay } from '@/common/components/PriceDisplay';
 import { RatingStars } from '@/common/components/RatingStars';
 import { Skeleton } from '@/common/components/ui/skeleton';
 import { Badge } from '@/common/components/ui/badge';
+import { OptimizedImage } from '@/common/components/OptimizedImage';
 import {
   ArrowRight, ShoppingBag, Truck, Shield, Headphones,
   Zap, Tag, TrendingUp, ChevronRight,
@@ -108,7 +109,7 @@ export default function HomePage() {
                   <Card className="group overflow-hidden hover:shadow-lg transition-all h-full border-[hsl(var(--deal-red))]/20">
                     <div className="relative aspect-square bg-white dark:bg-muted flex items-center justify-center overflow-hidden">
                       {product.images?.[0]?.url ? (
-                        <img
+                        <OptimizedImage
                           src={product.images[0].url}
                           alt={product.name}
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -156,7 +157,7 @@ export default function HomePage() {
                 <Card className="group hover:shadow-md hover:border-primary/30 transition-all h-full">
                   <CardContent className="flex items-center gap-3 py-4 px-4">
                     {cat.imageUrl ? (
-                      <img
+                      <OptimizedImage
                         src={cat.imageUrl}
                         alt={cat.name}
                         className="h-14 w-14 rounded-lg object-cover ring-1 ring-border"
@@ -207,7 +208,7 @@ export default function HomePage() {
                 <Card className="group overflow-hidden hover:shadow-lg transition-all h-full">
                   <div className="relative aspect-square bg-white dark:bg-muted flex items-center justify-center overflow-hidden">
                     {product.images?.[0]?.url ? (
-                      <img
+                      <OptimizedImage
                         src={product.images[0].url}
                         alt={product.name}
                         className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"

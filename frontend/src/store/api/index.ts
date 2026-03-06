@@ -31,6 +31,7 @@ export { operationsApi } from './operationsApi';
 // Re-export all hooks for convenience
 export * from './authApi';
 export * from './usersApi';
+export * from './addressesApi';
 export * from './categoriesApi';
 export * from './productsApi';
 export * from './ordersApi';

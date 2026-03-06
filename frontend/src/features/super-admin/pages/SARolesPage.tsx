@@ -43,8 +43,15 @@ export default function SARolesPage() {
   const rolePermissions: Permission[] = rolePermsData?.data ?? [];
   const rolePermissionIds = new Set(rolePermissions.map((p) => p.id));
 
+  // Filter to only show permissions that belong to the selected role
+  // (backend schema: permissions are created with a role_id and cannot be reassigned)
+  const selectedRolePermissions = selectedRole
+    ? allPermissions.filter((p) => p.roleId === selectedRole)
+    : [];
+
   const handleTogglePermission = async (permissionId: string) => {
     if (!selectedRole) return;
+    // Only send permissionIds that belong to this role
     const currentIds = rolePermissions.map((p) => p.id);
     const newIds = currentIds.includes(permissionId)
       ? currentIds.filter((id) => id !== permissionId)
@@ -239,12 +246,12 @@ export default function SARolesPage() {
               Permission Matrix — {roles.find((r) => r.id === selectedRole)?.displayName || roles.find((r) => r.id === selectedRole)?.name}
             </CardTitle>
             <CardDescription>
-              {rolePermissionIds.size} of {allPermissions.length} permissions assigned
+              {rolePermissionIds.size} of {selectedRolePermissions.length} permissions active
             </CardDescription>
           </CardHeader>
           <CardContent>
             <PermissionMatrix
-              allPermissions={allPermissions}
+              allPermissions={selectedRolePermissions}
               activePermissionIds={rolePermissionIds}
               onToggle={handleTogglePermission}
               onBulkToggle={handleBulkToggle}

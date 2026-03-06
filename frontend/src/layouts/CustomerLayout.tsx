@@ -400,7 +400,7 @@ function MobileMenu({
   onClose,
   logout,
 }: {
-  user: any;
+  user: { name?: string; email?: string; role?: string } | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;

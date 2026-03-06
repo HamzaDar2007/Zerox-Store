@@ -27,7 +27,7 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [cancelId, setCancelId] = useState<string | null>(null);
 
-  const { data, isLoading } = useGetOrdersQuery({
+  const { data, isLoading, isError, refetch } = useGetOrdersQuery({
     page,
     limit,
     ...(statusFilter !== 'all' && { status: statusFilter }),
@@ -136,6 +136,8 @@ export default function AdminOrdersPage() {
         columns={columns}
         data={orders}
         isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyTitle="No orders found"
         pagination={{
           page, limit, total, totalPages,

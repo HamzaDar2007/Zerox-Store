@@ -48,6 +48,8 @@ export default function SellerProductsPage() {
               <img
                 src={row.original.images[0].url}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full rounded object-cover"
               />
             ) : (

@@ -39,10 +39,10 @@ export default function AdminMarketingPage() {
   const [flashForm, setFlashForm] = useState({ name: '', discountPercentage: 0, startDate: '', endDate: '', maxQuantity: 100 });
 
   const { data: campaignsData, isLoading } = useGetCampaignsQuery({});
-  const campaigns = campaignsData?.data ?? [];
+  const campaigns = campaignsData?.data?.items ?? [];
 
   const { data: vouchersData } = useGetVouchersQuery({});
-  const vouchers = vouchersData?.data ?? [];
+  const vouchers = vouchersData?.data?.items ?? [];
 
   const { data: flashData } = useGetActiveFlashSalesQuery();
   const flashSales = flashData?.data ?? [];

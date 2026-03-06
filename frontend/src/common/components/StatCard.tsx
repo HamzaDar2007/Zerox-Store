@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/common/components/ui/card';
@@ -17,7 +18,7 @@ interface StatCardProps {
 /**
  * KPI stat card used across all dashboard pages.
  */
-export function StatCard({
+export const StatCard = memo(function StatCard({
   title,
   value,
   description,
@@ -54,4 +55,4 @@ export function StatCard({
       </CardContent>
     </Card>
   );
-}
+});

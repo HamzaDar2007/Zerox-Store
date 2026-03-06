@@ -7,12 +7,14 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { Address } from './entities/address.entity';
 import { Role } from '../roles/entities/role.entity';
 import { Permission } from '../permissions/entities/permission.entity';
 import { UserRole } from './entities/user-role.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateUserWithPermissionsDto } from './dto/create-user-with-permissions.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateAddressDto } from './dto/create-address.dto';
 import {
   AssignmentActionEnum,
   AssignPermissionsDto,
@@ -26,6 +28,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Address)
+    private addressRepository: Repository<Address>,
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
     @InjectRepository(Permission)
@@ -412,25 +416,61 @@ export class UsersService {
     }
   }
 
-  async findAll(): Promise<ServiceResponse<User[]>> {
+  async findAll(options?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+    sortBy?: string;
+    sortOrder?: 'ASC' | 'DESC';
+  }): Promise<ServiceResponse<User[]>> {
     try {
-      const users = await this.userRepository
+      const query = this.userRepository
         .createQueryBuilder('user')
         .select([
           'user.id',
           'user.email',
           'user.name',
           'user.role',
+          'user.isActive',
+          'user.isEmailVerified',
           'user.createdAt',
           'user.updatedAt',
-        ])
-        .orderBy('user.createdAt', 'DESC')
-        .getMany();
+        ]);
+
+      if (options?.search) {
+        query.andWhere(
+          '(user.name ILIKE :search OR user.email ILIKE :search)',
+          { search: `%${options.search}%` },
+        );
+      }
+
+      if (options?.role) {
+        query.andWhere('user.role = :role', { role: options.role });
+      }
+
+      // Sorting
+      const allowedSortFields: Record<string, string> = {
+        name: 'user.name',
+        email: 'user.email',
+        role: 'user.role',
+        createdAt: 'user.createdAt',
+      };
+      const sortField = allowedSortFields[options?.sortBy || ''] || 'user.createdAt';
+      const sortOrder = options?.sortOrder === 'ASC' ? 'ASC' : 'DESC';
+      query.orderBy(sortField, sortOrder);
+
+      const page = options?.page || 1;
+      const limit = options?.limit || 20;
+      query.skip((page - 1) * limit).take(limit);
+
+      const [users, total] = await query.getManyAndCount();
 
       return {
         success: true,
         message: 'Users retrieved successfully',
         data: users,
+        meta: { total, page, limit },
       };
     } catch (error) {
       throw new Error(`Failed to retrieve users: ${error.message}`);
@@ -517,5 +557,67 @@ export class UsersService {
       }
       throw new Error(`Failed to delete user: ${error.message}`);
     }
+  }
+
+  // ==================== ADDRESS MANAGEMENT ====================
+
+  async getUserAddresses(userId: string): Promise<ServiceResponse<Address[]>> {
+    const addresses = await this.addressRepository.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+    return {
+      success: true,
+      message: 'Addresses retrieved successfully',
+      data: addresses,
+    };
+  }
+
+  async createAddress(userId: string, dto: CreateAddressDto): Promise<ServiceResponse<Address>> {
+    const address = this.addressRepository.create({
+      ...dto,
+      userId,
+    });
+    const saved = await this.addressRepository.save(address);
+    return {
+      success: true,
+      message: 'Address created successfully',
+      data: saved,
+    };
+  }
+
+  async updateAddress(
+    userId: string,
+    addressId: string,
+    dto: Partial<CreateAddressDto>,
+  ): Promise<ServiceResponse<Address>> {
+    const address = await this.addressRepository.findOne({
+      where: { id: addressId, userId },
+    });
+    if (!address) {
+      throw new NotFoundException('Address not found');
+    }
+    Object.assign(address, dto);
+    const updated = await this.addressRepository.save(address);
+    return {
+      success: true,
+      message: 'Address updated successfully',
+      data: updated,
+    };
+  }
+
+  async deleteAddress(userId: string, addressId: string): Promise<ServiceResponse<void>> {
+    const address = await this.addressRepository.findOne({
+      where: { id: addressId, userId },
+    });
+    if (!address) {
+      throw new NotFoundException('Address not found');
+    }
+    await this.addressRepository.remove(address);
+    return {
+      success: true,
+      message: 'Address deleted successfully',
+      data: undefined,
+    };
   }
 }

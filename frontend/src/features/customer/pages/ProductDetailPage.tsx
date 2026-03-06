@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import {
   useGetProductBySlugQuery,
   useGetProductQuestionsQuery,
@@ -322,7 +323,10 @@ export default function ProductDetailPage() {
           <div
             className="prose max-w-none dark:prose-invert"
             dangerouslySetInnerHTML={{
-              __html: product.description ?? 'No description available.',
+              __html: DOMPurify.sanitize(
+                product.description ?? 'No description available.',
+                { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'span', 'div', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img', 'blockquote', 'code', 'pre'], ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'class', 'style'] },
+              ),
             }}
           />
         </TabsContent>

@@ -25,7 +25,7 @@ export default function SellerOrdersPage() {
   const [limit, setLimit] = useState(DEFAULT_LIMIT);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
 
-  const { data, isLoading } = useGetOrdersQuery({
+  const { data, isLoading, isError, refetch } = useGetOrdersQuery({
     page,
     limit,
     ...(statusFilter !== 'all' && { status: statusFilter }),
@@ -118,6 +118,8 @@ export default function SellerOrdersPage() {
         columns={columns}
         data={orders}
         isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyTitle="No orders yet"
         emptyDescription="Orders from customers will appear here."
         pagination={{

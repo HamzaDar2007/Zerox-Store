@@ -4,17 +4,17 @@ import { AuthGuard, GuestGuard, RoleGuard } from '@/common/guards';
 import { LoadingSpinner } from '@/common/components/LoadingSpinner';
 import { UserRole } from '@/common/types/enums';
 
-// ── Layouts ──
-import CustomerLayout from '@/layouts/CustomerLayout';
-import SellerLayout from '@/layouts/SellerLayout';
-import AdminLayout from '@/layouts/AdminLayout';
-import SuperAdminLayout from '@/layouts/SuperAdminLayout';
+// ── Layouts (lazy — only load the portal the user actually visits) ──
+const CustomerLayout = lazy(() => import('@/layouts/CustomerLayout'));
+const SellerLayout = lazy(() => import('@/layouts/SellerLayout'));
+const AdminLayout = lazy(() => import('@/layouts/AdminLayout'));
+const SuperAdminLayout = lazy(() => import('@/layouts/SuperAdminLayout'));
 
-// ── Auth Pages (eager — small, critical path) ──
-import LoginPage from '@/features/auth/pages/LoginPage';
-import RegisterPage from '@/features/auth/pages/RegisterPage';
-import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
-import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
+// ── Auth Pages (lazy — small, but no need to block initial paint) ──
+const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
+const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
 
 // ── Lazy Pages — Customer ──
 const HomePage = lazy(() => import('@/features/customer/pages/HomePage'));
@@ -76,6 +76,7 @@ const AdminMarketingPage = lazy(() => import('@/features/admin/pages/AdminMarket
 const AdminInventoryPage = lazy(() => import('@/features/admin/pages/AdminInventoryPage'));
 const AdminDisputesPage = lazy(() => import('@/features/admin/pages/AdminDisputesPage'));
 const AdminBundlesPage = lazy(() => import('@/features/admin/pages/AdminBundlesPage'));
+const AdminAnalyticsPage = lazy(() => import('@/features/admin/pages/AdminAnalyticsPage'));
 
 // ── Lazy Pages — Super Admin ──
 const SuperAdminDashboardPage = lazy(() => import('@/features/super-admin/pages/SuperAdminDashboardPage'));
@@ -90,6 +91,7 @@ const SALoyaltyPage = lazy(() => import('@/features/super-admin/pages/SALoyaltyP
 const SARolesPage = lazy(() => import('@/features/super-admin/pages/SARolesPage'));
 const SAPermissionsPage = lazy(() => import('@/features/super-admin/pages/SAPermissionsPage'));
 const SARoleAssignmentsPage = lazy(() => import('@/features/super-admin/pages/SARoleAssignmentsPage'));
+const SAAnalyticsPage = lazy(() => import('@/features/super-admin/pages/SAAnalyticsPage'));
 
 function SuspenseWrap({ children }: { children: React.ReactNode }) {
   return (
@@ -107,7 +109,7 @@ export function AppRouter() {
         path="/login"
         element={
           <GuestGuard>
-            <LoginPage />
+            <SuspenseWrap><LoginPage /></SuspenseWrap>
           </GuestGuard>
         }
       />
@@ -115,7 +117,7 @@ export function AppRouter() {
         path="/register"
         element={
           <GuestGuard>
-            <RegisterPage />
+            <SuspenseWrap><RegisterPage /></SuspenseWrap>
           </GuestGuard>
         }
       />
@@ -123,7 +125,7 @@ export function AppRouter() {
         path="/forgot-password"
         element={
           <GuestGuard>
-            <ForgotPasswordPage />
+            <SuspenseWrap><ForgotPasswordPage /></SuspenseWrap>
           </GuestGuard>
         }
       />
@@ -131,13 +133,13 @@ export function AppRouter() {
         path="/reset-password"
         element={
           <GuestGuard>
-            <ResetPasswordPage />
+            <SuspenseWrap><ResetPasswordPage /></SuspenseWrap>
           </GuestGuard>
         }
       />
 
       {/* ═══════════════════ Customer Storefront (Public) ═══════════════ */}
-      <Route element={<CustomerLayout />}>
+      <Route element={<SuspenseWrap><CustomerLayout /></SuspenseWrap>}>
         <Route
           index
           element={
@@ -231,7 +233,7 @@ export function AppRouter() {
         element={
           <AuthGuard>
             <RoleGuard allowedRoles={[UserRole.SELLER, UserRole.SUPER_ADMIN]}>
-              <SellerLayout />
+              <SuspenseWrap><SellerLayout /></SuspenseWrap>
             </RoleGuard>
           </AuthGuard>
         }
@@ -247,6 +249,7 @@ export function AppRouter() {
         <Route path="disputes" element={<SuspenseWrap><SellerDisputesPage /></SuspenseWrap>} />
         <Route path="bundles" element={<SuspenseWrap><SellerBundlesPage /></SuspenseWrap>} />
         <Route path="subscriptions" element={<SuspenseWrap><SellerSubscriptionsPage /></SuspenseWrap>} />
+        <Route path="settings" element={<SuspenseWrap><SellerStoreSettingsPage /></SuspenseWrap>} />
       </Route>
 
       {/* ═══════════════════ Admin Portal (Auth + Admin) ═══════════════ */}
@@ -258,7 +261,7 @@ export function AppRouter() {
               allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]}
               fallback="/"
             >
-              <AdminLayout />
+              <SuspenseWrap><AdminLayout /></SuspenseWrap>
             </RoleGuard>
           </AuthGuard>
         }
@@ -289,6 +292,7 @@ export function AppRouter() {
         <Route path="inventory" element={<SuspenseWrap><AdminInventoryPage /></SuspenseWrap>} />
         <Route path="disputes" element={<SuspenseWrap><AdminDisputesPage /></SuspenseWrap>} />
         <Route path="bundles" element={<SuspenseWrap><AdminBundlesPage /></SuspenseWrap>} />
+        <Route path="analytics" element={<SuspenseWrap><AdminAnalyticsPage /></SuspenseWrap>} />
       </Route>
 
       {/* ═══════════════════ Super Admin Portal ════════════════════════ */}
@@ -300,7 +304,7 @@ export function AppRouter() {
               allowedRoles={[UserRole.SUPER_ADMIN]}
               fallback="/"
             >
-              <SuperAdminLayout />
+              <SuspenseWrap><SuperAdminLayout /></SuspenseWrap>
             </RoleGuard>
           </AuthGuard>
         }
@@ -313,17 +317,32 @@ export function AppRouter() {
             </SuspenseWrap>
           }
         />
+
+        {/* ── Admin-equivalent pages (SA has full access) ── */}
+        <Route path="users" element={<SuspenseWrap><AdminUsersPage /></SuspenseWrap>} />
+        <Route path="sellers" element={<SuspenseWrap><AdminSellersPage /></SuspenseWrap>} />
+        <Route path="products" element={<SuspenseWrap><AdminProductsPage /></SuspenseWrap>} />
+        <Route path="categories" element={<SuspenseWrap><AdminCategoriesPage /></SuspenseWrap>} />
+        <Route path="orders" element={<SuspenseWrap><AdminOrdersPage /></SuspenseWrap>} />
+        <Route path="reviews" element={<SuspenseWrap><AdminReviewsPage /></SuspenseWrap>} />
+        <Route path="tickets" element={<SuspenseWrap><AdminTicketsPage /></SuspenseWrap>} />
+        <Route path="notifications" element={<SuspenseWrap><AdminNotificationsPage /></SuspenseWrap>} />
+        <Route path="cms" element={<SuspenseWrap><AdminCMSPage /></SuspenseWrap>} />
+
+        {/* ── SA-specific pages ── */}
         <Route path="i18n" element={<SuspenseWrap><SAI18nPage /></SuspenseWrap>} />
         <Route path="seo" element={<SuspenseWrap><SASeoPage /></SuspenseWrap>} />
         <Route path="feature-flags" element={<SuspenseWrap><SAFeatureFlagsPage /></SuspenseWrap>} />
         <Route path="operations" element={<SuspenseWrap><SAOperationsPage /></SuspenseWrap>} />
         <Route path="audit" element={<SuspenseWrap><SAAuditPage /></SuspenseWrap>} />
         <Route path="system" element={<SuspenseWrap><SASystemSettingsPage /></SuspenseWrap>} />
+        <Route path="settings" element={<SuspenseWrap><SASystemSettingsPage /></SuspenseWrap>} />
         <Route path="subscriptions" element={<SuspenseWrap><SASubscriptionsPage /></SuspenseWrap>} />
         <Route path="loyalty" element={<SuspenseWrap><SALoyaltyPage /></SuspenseWrap>} />
         <Route path="roles" element={<SuspenseWrap><SARolesPage /></SuspenseWrap>} />
         <Route path="permissions" element={<SuspenseWrap><SAPermissionsPage /></SuspenseWrap>} />
         <Route path="role-assignments" element={<SuspenseWrap><SARoleAssignmentsPage /></SuspenseWrap>} />
+        <Route path="analytics" element={<SuspenseWrap><SAAnalyticsPage /></SuspenseWrap>} />
       </Route>
 
       {/* ═══════════════════ Catch-all 404 ═════════════════════════════ */}

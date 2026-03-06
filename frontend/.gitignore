@@ -6,3 +6,5 @@ dist
 *.local
 coverage
 .vite
+.env.development.local
+.env.example

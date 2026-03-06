@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { ProductStatus } from '@/common/types/enums';
 import type { CreateProductDto } from '@/common/types';
 import { useAppSelector } from '@/store';
+import { productSchema } from '@/common/schemas/product.schema';
 
 const defaultForm: CreateProductDto = {
   sellerId: '',
@@ -94,12 +95,10 @@ export default function SellerProductFormPage() {
   );
 
   const handleSubmit = async () => {
-    if (!form.name.trim()) {
-      toast.error('Product name is required');
-      return;
-    }
-    if (form.price <= 0) {
-      toast.error('Price must be greater than 0');
+    const result = productSchema.safeParse(form);
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 

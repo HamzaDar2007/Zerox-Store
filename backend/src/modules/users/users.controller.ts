@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Delete,
+  Query,
   UseGuards,
   NotFoundException,
   Request,
@@ -13,6 +14,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateAddressDto } from './dto/create-address.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -58,6 +60,44 @@ export class UsersController extends BaseController {
     };
   }
 
+  // ==================== USER ADDRESSES ====================
+
+  @Get('me/addresses')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get current user addresses' })
+  getMyAddresses(@CurrentUser() user: User) {
+    return this.handleAsyncOperation(this.usersService.getUserAddresses(user.id));
+  }
+
+  @Post('me/addresses')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Create a new address for current user' })
+  createAddress(@CurrentUser() user: User, @Body() dto: CreateAddressDto) {
+    return this.handleAsyncOperation(this.usersService.createAddress(user.id, dto));
+  }
+
+  @Patch('me/addresses/:addressId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Update an address for current user' })
+  updateAddress(
+    @CurrentUser() user: User,
+    @Param('addressId') addressId: string,
+    @Body() dto: Partial<CreateAddressDto>,
+  ) {
+    return this.handleAsyncOperation(this.usersService.updateAddress(user.id, addressId, dto));
+  }
+
+  @Delete('me/addresses/:addressId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Delete an address for current user' })
+  deleteAddress(@CurrentUser() user: User, @Param('addressId') addressId: string) {
+    return this.handleAsyncOperation(this.usersService.deleteAddress(user.id, addressId));
+  }
+
   // ====================  PERMISSIONS ====================
 
   @Get(':id/permissions')
@@ -75,8 +115,24 @@ export class UsersController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get users' })
   @Permissions('users.read')
-  findAll() {
-    return this.handleAsyncOperation(this.usersService.findAll());
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('role') role?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
+  ) {
+    return this.handleAsyncOperation(
+      this.usersService.findAll({
+        page: page ? parseInt(page, 10) : undefined,
+        limit: limit ? parseInt(limit, 10) : undefined,
+        search,
+        role,
+        sortBy,
+        sortOrder,
+      }),
+    );
   }
 
   @Get(':id')

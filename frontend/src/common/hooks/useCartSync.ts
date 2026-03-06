@@ -4,6 +4,7 @@ import {
   useGetCartQuery,
   useAddToCartMutation,
 } from '@/store/api';
+import { toast } from 'sonner';
 import type { CartItem } from '@/common/types';
 
 /**
@@ -45,8 +46,8 @@ export function useCartSync() {
         dispatch(setLocalCart([]));
         dispatch(setCartSynced(true));
       } catch {
-        // If sync fails, keep local items available
-        console.error('Cart sync failed');
+        // Surface sync failure to user
+        toast.error('Failed to sync your cart. Some items may not have been saved.');
       } finally {
         syncingRef.current = false;
       }

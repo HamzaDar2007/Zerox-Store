@@ -6,6 +6,7 @@ import { PriceDisplay } from '@/common/components/PriceDisplay';
 import { RatingStars } from '@/common/components/RatingStars';
 import { Button } from '@/common/components/ui/button';
 import { Card, CardContent } from '@/common/components/ui/card';
+import { OptimizedImage } from '@/common/components/OptimizedImage';
 import { Skeleton } from '@/common/components/ui/skeleton';
 import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -85,7 +86,7 @@ export default function WishlistPage() {
                 <Link to={`/products/${product.slug}`}>
                   <div className="aspect-square bg-muted flex items-center justify-center">
                     {product.images?.[0] ? (
-                      <img
+                      <OptimizedImage
                         src={product.images[0].url}
                         alt={product.name}
                         className="h-full w-full object-cover"

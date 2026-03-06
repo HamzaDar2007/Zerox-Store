@@ -165,7 +165,14 @@ export default function AdminCMSPage() {
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           {row.original.imageUrl && (
-            <img src={row.original.imageUrl} alt="" className="h-10 w-16 rounded object-cover" />
+            <img
+              src={row.original.imageUrl}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="h-10 w-16 rounded object-cover bg-muted"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
           )}
           <div>
             <p className="font-medium">{row.original.title}</p>

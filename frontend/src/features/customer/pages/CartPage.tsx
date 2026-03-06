@@ -7,7 +7,8 @@ import {
 } from '@/store/api';
 import { useAppSelector, useAppDispatch, removeFromLocalCart, updateLocalCartItem, clearLocalCart } from '@/store';
 import { LoadingSpinner } from '@/common/components/LoadingSpinner';
-import { EmptyState } from '@/common/components/EmptyState';
+import { EmptyState, ErrorState } from '@/common/components/EmptyState';
+import { OptimizedImage } from '@/common/components/OptimizedImage';
 import { Button } from '@/common/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/common/components/ui/card';
 import { Separator } from '@/common/components/ui/separator';
@@ -20,7 +21,7 @@ export default function CartPage() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { items: localItems } = useAppSelector((state) => state.cart);
 
-  const { data: cartResponse, isLoading } = useGetCartQuery(undefined, {
+  const { data: cartResponse, isLoading, isError, refetch } = useGetCartQuery(undefined, {
     skip: !isAuthenticated,
   });
 
@@ -104,6 +105,16 @@ export default function CartPage() {
 
   if (isLoading) return <LoadingSpinner label="Loading cart..." />;
 
+  if (isError && isAuthenticated) {
+    return (
+      <ErrorState
+        title="Failed to load cart"
+        message="Could not fetch your cart items. Please try again."
+        onRetry={refetch}
+      />
+    );
+  }
+
   if (displayItems.length === 0) {
     return (
       <EmptyState
@@ -148,7 +159,7 @@ export default function CartPage() {
                     className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md bg-white dark:bg-muted ring-1 ring-border"
                   >
                     {item.imageUrl ? (
-                      <img
+                      <OptimizedImage
                         src={item.imageUrl}
                         alt={item.name}
                         className="h-full w-full object-cover"

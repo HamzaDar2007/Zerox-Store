@@ -39,6 +39,8 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
         <img
           src={currentImage.url}
           alt={currentImage.alt ?? 'Product image'}
+          loading="lazy"
+          decoding="async"
           className="aspect-square w-full object-cover transition-transform group-hover:scale-105"
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/10">
@@ -63,6 +65,8 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
               <img
                 src={img.url}
                 alt={img.alt ?? `Thumbnail ${idx + 1}`}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
             </button>
@@ -82,6 +86,8 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
           <img
             src={currentImage.url}
             alt={currentImage.alt ?? 'Product image'}
+            loading="lazy"
+            decoding="async"
             className="w-full rounded-lg object-contain"
           />
         </DialogContent>

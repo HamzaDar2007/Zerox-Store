@@ -3,18 +3,39 @@ import { useGetOrdersQuery, useGetProductsQuery } from '@/store/api';
 import { StatCard } from '@/common/components/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/common/components/ui/card';
 import { StatusBadge } from '@/common/components/StatusBadge';
+import { ErrorState } from '@/common/components/EmptyState';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { ShoppingBag, Package, DollarSign, TrendingUp } from 'lucide-react';
+import { Skeleton } from '@/common/components/ui/skeleton';
 
 export default function SellerDashboardPage() {
-  const { data: ordersData } = useGetOrdersQuery({ page: 1, limit: 5 });
-  const { data: productsData } = useGetProductsQuery({ page: 1, limit: 100 });
+  const { data: ordersData, isLoading: ordersLoading, isError: ordersError, refetch: refetchOrders } = useGetOrdersQuery({ page: 1, limit: 5 });
+  const { data: productsData, isLoading: productsLoading, isError: productsError, refetch: refetchProducts } = useGetProductsQuery({ page: 1, limit: 100 });
+
+  const isLoading = ordersLoading || productsLoading;
+  const isError = ordersError || productsError;
 
   const orders = ordersData?.data?.items ?? [];
   const totalOrders = ordersData?.data?.total ?? 0;
   const products = productsData?.data?.items ?? [];
   const totalProducts = productsData?.data?.total ?? 0;
   const revenue = orders.reduce((sum, o) => sum + (o.totalAmount ?? 0), 0);
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Seller Dashboard</h1>
+          <p className="text-muted-foreground">Overview of your store performance and recent activity.</p>
+        </div>
+        <ErrorState
+          title="Failed to load dashboard"
+          message="Could not fetch your dashboard data. Please try again."
+          onRetry={() => { refetchOrders(); refetchProducts(); }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -26,10 +47,18 @@ export default function SellerDashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Orders" value={totalOrders} icon={Package} />
-        <StatCard title="Total Products" value={totalProducts} icon={ShoppingBag} />
-        <StatCard title="Recent Revenue" value={formatCurrency(revenue)} icon={DollarSign} />
-        <StatCard title="Active Products" value={products.filter((p) => p.status === 'active').length} icon={TrendingUp} />
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-6"><Skeleton className="h-4 w-24 mb-2" /><Skeleton className="h-8 w-16" /></div>
+          ))
+        ) : (
+          <>
+            <StatCard title="Total Orders" value={totalOrders} icon={Package} />
+            <StatCard title="Total Products" value={totalProducts} icon={ShoppingBag} />
+            <StatCard title="Recent Revenue" value={formatCurrency(revenue)} icon={DollarSign} />
+            <StatCard title="Active Products" value={products.filter((p) => p.status === 'active').length} icon={TrendingUp} />
+          </>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -75,7 +104,7 @@ export default function SellerDashboardPage() {
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded bg-muted flex items-center justify-center text-xs">
                         {product.images?.[0]?.url ? (
-                          <img src={product.images[0].url} alt="" className="h-full w-full object-cover rounded" />
+                          <img src={product.images[0].url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover rounded" />
                         ) : (
                           product.name.slice(0, 2).toUpperCase()
                         )}

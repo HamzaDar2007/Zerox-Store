@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/common/components/ui/button';
 
@@ -14,7 +15,7 @@ interface EmptyStateProps {
 /**
  * Empty state placeholder for lists, tables, pages with no data.
  */
-export function EmptyState({
+export const EmptyState = memo(function EmptyState({
   icon,
   title,
   description,
@@ -38,7 +39,7 @@ export function EmptyState({
       )}
     </div>
   );
-}
+});
 
 interface ErrorStateProps {
   title?: string;
@@ -49,7 +50,7 @@ interface ErrorStateProps {
 /**
  * Error state with optional retry button.
  */
-export function ErrorState({
+export const ErrorState = memo(function ErrorState({
   title = 'Something went wrong',
   message = 'An unexpected error occurred. Please try again.',
   onRetry,
@@ -67,4 +68,4 @@ export function ErrorState({
       )}
     </div>
   );
-}
+});

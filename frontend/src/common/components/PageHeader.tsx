@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface PageHeaderProps {
@@ -10,7 +11,7 @@ interface PageHeaderProps {
 /**
  * Standard page header with title, description, and optional action buttons.
  */
-export function PageHeader({
+export const PageHeader = memo(function PageHeader({
   title,
   description,
   children,
@@ -32,4 +33,4 @@ export function PageHeader({
       {children && <div className="flex items-center gap-2">{children}</div>}
     </div>
   );
-}
+});

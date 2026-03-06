@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/common/components/ui/badge';
 
@@ -54,7 +55,7 @@ const statusVariantMap: Record<string, StatusVariant> = {
   new: 'info',
 };
 
-export function StatusBadge({ status, variant, className }: StatusBadgeProps) {
+export const StatusBadge = memo(function StatusBadge({ status, variant, className }: StatusBadgeProps) {
   const resolvedVariant = variant ?? statusVariantMap[status.toLowerCase()] ?? 'default';
   const displayText = status
     .replace(/_/g, ' ')
@@ -72,4 +73,4 @@ export function StatusBadge({ status, variant, className }: StatusBadgeProps) {
       {displayText}
     </Badge>
   );
-}
+});

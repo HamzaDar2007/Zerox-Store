@@ -1,6 +1,7 @@
 import { baseApi } from '../baseApi';
 import type {
   ApiResponse,
+  PaginatedResponse,
   Voucher,
   Campaign,
   FlashSale,
@@ -28,18 +29,20 @@ interface VoucherValidationResult {
 export const marketingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // ── Vouchers ──
-    getVouchers: builder.query<ApiResponse<Voucher[]>, { isActive?: boolean }>({
+    getVouchers: builder.query<ApiResponse<PaginatedResponse<Voucher>>, { isActive?: boolean; page?: number; limit?: number }>({
       query: (params) => ({
         url: '/marketing/vouchers',
         params,
       }),
-      providesTags: (result) =>
-        result?.data
+      providesTags: (result) => {
+        const items = result?.data?.items;
+        return items
           ? [
-              ...result.data.map(({ id }) => ({ type: 'Voucher' as const, id })),
+              ...items.map(({ id }) => ({ type: 'Voucher' as const, id })),
               { type: 'Voucher', id: 'LIST' },
             ]
-          : [{ type: 'Voucher', id: 'LIST' }],
+          : [{ type: 'Voucher', id: 'LIST' }];
+      },
     }),
 
     getVoucherByCode: builder.query<ApiResponse<Voucher>, string>({
@@ -76,18 +79,20 @@ export const marketingApi = baseApi.injectEndpoints({
     }),
 
     // ── Campaigns ──
-    getCampaigns: builder.query<ApiResponse<Campaign[]>, { isActive?: boolean }>({
+    getCampaigns: builder.query<ApiResponse<PaginatedResponse<Campaign>>, { isActive?: boolean; page?: number; limit?: number }>({
       query: (params) => ({
         url: '/marketing/campaigns',
         params,
       }),
-      providesTags: (result) =>
-        result?.data
+      providesTags: (result) => {
+        const items = result?.data?.items;
+        return items
           ? [
-              ...result.data.map(({ id }) => ({ type: 'Campaign' as const, id })),
+              ...items.map(({ id }) => ({ type: 'Campaign' as const, id })),
               { type: 'Campaign', id: 'LIST' },
             ]
-          : [{ type: 'Campaign', id: 'LIST' }],
+          : [{ type: 'Campaign', id: 'LIST' }];
+      },
     }),
 
     getCampaignById: builder.query<ApiResponse<Campaign>, string>({

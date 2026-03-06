@@ -28,7 +28,7 @@ export default function AdminUsersPage() {
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [deactivateId, setDeactivateId] = useState<string | null>(null);
 
-  const { data, isLoading } = useGetUsersQuery({ page, limit });
+  const { data, isLoading, isError, refetch } = useGetUsersQuery({ page, limit });
   const [deleteUser] = useDeleteUserMutation();
   const [updateUser] = useUpdateUserMutation();
 
@@ -139,6 +139,8 @@ export default function AdminUsersPage() {
         columns={columns}
         data={users}
         isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         emptyTitle="No users found"
         pagination={{
           page, limit, total, totalPages,
