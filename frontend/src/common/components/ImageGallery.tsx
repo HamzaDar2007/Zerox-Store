@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { X, ZoomIn } from 'lucide-react';
-import { Dialog, DialogContent } from '@/common/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/common/components/ui/dialog';
+import { VisuallyHidden } from '@/common/components/ui/visually-hidden';
 import { cn } from '@/lib/utils';
 
 interface ImageGalleryProps {
@@ -77,6 +78,9 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
       {/* Lightbox */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-3xl border-none bg-transparent p-0 shadow-none">
+          <VisuallyHidden>
+            <DialogTitle>Product Image</DialogTitle>
+          </VisuallyHidden>
           <button
             onClick={() => setLightboxOpen(false)}
             className="absolute right-4 top-4 z-50 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"

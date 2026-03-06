@@ -8,7 +8,7 @@ import App from './App';
 import './styles/globals.css';
 
 // Apply theme immediately to avoid flash of wrong theme
-const storedTheme = localStorage.getItem('labverse_theme') || 'light';
+const storedTheme = localStorage.getItem('labverse_theme') || 'system';
 if (
   storedTheme === 'dark' ||
   (storedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
