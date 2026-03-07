@@ -9,13 +9,13 @@ export default defineConfig({
     react(),
     // Gzip pre-compression for production builds
     compression({
-      algorithm: 'gzip',
+      algorithms: ['gzip'],
       exclude: [/\.(br)$/, /\.(gz)$/],
       threshold: 1024, // Only compress files > 1KB
     }),
     // Brotli pre-compression for modern browsers
     compression({
-      algorithm: 'brotliCompress',
+      algorithms: ['brotliCompress'],
       exclude: [/\.(br)$/, /\.(gz)$/],
       threshold: 1024,
     }),
@@ -72,7 +72,6 @@ export default defineConfig({
             'lucide-react',
           ],
           // Heavy third-party libs split into separate chunks
-          charts: ['recharts'],
           table: ['@tanstack/react-table'],
           // Form handling
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
@@ -82,7 +81,6 @@ export default defineConfig({
           dates: ['date-fns'],
           // Radix UI primitives (shared UI components)
           radix: [
-            '@radix-ui/react-accordion',
             '@radix-ui/react-alert-dialog',
             '@radix-ui/react-dialog',
             '@radix-ui/react-dropdown-menu',
@@ -91,7 +89,6 @@ export default defineConfig({
             '@radix-ui/react-select',
             '@radix-ui/react-tabs',
             '@radix-ui/react-tooltip',
-            '@radix-ui/react-popover',
             '@radix-ui/react-scroll-area',
             '@radix-ui/react-separator',
             '@radix-ui/react-slot',

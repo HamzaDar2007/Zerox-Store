@@ -55,15 +55,16 @@ export class CartController extends BaseController {
   updateItem(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCartItemDto,
+    @CurrentUser() user: User,
   ) {
-    return this.handleAsyncOperation(this.cartService.updateItem(id, dto));
+    return this.handleAsyncOperation(this.cartService.updateItem(id, dto, user.id));
   }
 
   @Delete('items/:id')
   @ApiOperation({ summary: 'Remove item from cart' })
   @ApiResponse({ status: 200, description: 'Item removed from cart' })
-  removeItem(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.cartService.removeItem(id));
+  removeItem(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.handleAsyncOperation(this.cartService.removeItem(id, user.id));
   }
 
   @Delete()

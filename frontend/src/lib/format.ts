@@ -1,28 +1,32 @@
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 
 /** Format a date string to "Jan 15, 2024" */
-export function formatDate(date: string | Date): string {
+export function formatDate(date: string | Date | null | undefined): string {
+  if (!date) return '—';
   const d = typeof date === 'string' ? parseISO(date) : date;
   return format(d, 'MMM d, yyyy');
 }
 
 /** Format a date string to "Jan 15, 2024 2:30 PM" */
-export function formatDateTime(date: string | Date): string {
+export function formatDateTime(date: string | Date | null | undefined): string {
+  if (!date) return '—';
   const d = typeof date === 'string' ? parseISO(date) : date;
   return format(d, 'MMM d, yyyy h:mm a');
 }
 
 /** Format to relative time "2 hours ago" */
-export function formatRelative(date: string | Date): string {
+export function formatRelative(date: string | Date | null | undefined): string {
+  if (!date) return '—';
   const d = typeof date === 'string' ? parseISO(date) : date;
   return formatDistanceToNow(d, { addSuffix: true });
 }
 
 /** Format currency (default PKR) */
 export function formatCurrency(
-  amount: number,
+  amount: number | null | undefined,
   currency: string = 'PKR',
 ): string {
+  if (amount == null) return 'Rs 0';
   return new Intl.NumberFormat('en-PK', {
     style: 'currency',
     currency,
@@ -32,7 +36,8 @@ export function formatCurrency(
 }
 
 /** Format a number with commas */
-export function formatNumber(n: number): string {
+export function formatNumber(n: number | null | undefined): string {
+  if (n == null) return '0';
   return new Intl.NumberFormat('en-US').format(n);
 }
 

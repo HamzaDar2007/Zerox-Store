@@ -18,6 +18,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateProductVariantDto } from './dto/create-product-variant.dto';
 import { UpdateProductVariantDto } from './dto/update-product-variant.dto';
 import { CreateProductImageDto } from './dto/create-product-image.dto';
+import { Seller } from '../sellers/entities/seller.entity';
 import { ServiceResponse } from '../../common/interfaces/service-response.interface';
 import { ProductStatus } from '@common/enums';
 
@@ -38,6 +39,8 @@ export class ProductsService {
     private answerRepository: Repository<ProductAnswer>,
     @InjectRepository(PriceHistory)
     private priceHistoryRepository: Repository<PriceHistory>,
+    @InjectRepository(Seller)
+    private sellerRepository: Repository<Seller>,
   ) {}
 
   // ==================== PRODUCT CRUD ====================
@@ -57,9 +60,13 @@ export class ProductsService {
       status: ProductStatus.DRAFT,
     });
 
-    // Use sellerId from DTO if provided (admin flow), otherwise lookup by userId
+    // Use sellerId from DTO if provided (admin flow), otherwise lookup seller by auth userId
     if (!product.sellerId) {
-      product.sellerId = userId;
+      const seller = await this.sellerRepository.findOne({ where: { userId } });
+      if (!seller) {
+        throw new BadRequestException('No seller profile found for this user. Please create a seller profile first.');
+      }
+      product.sellerId = seller.id;
     }
 
     const savedProduct = await this.productRepository.save(product);

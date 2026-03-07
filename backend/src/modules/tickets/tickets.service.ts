@@ -50,9 +50,13 @@ export class TicketsService {
     return { success: true, message: 'Tickets retrieved', data: tickets, meta: { total, page, limit } };
   }
 
-  async findOne(id: string): Promise<ServiceResponse<Ticket>> {
+  async findOne(id: string, userId?: string, userRole?: string): Promise<ServiceResponse<Ticket>> {
     const ticket = await this.ticketRepository.findOne({ where: { id }, relations: ['category', 'messages', 'user', 'assignedToUser'] });
     if (!ticket) throw new NotFoundException('Ticket not found');
+    // Non-admin users can only view their own tickets
+    if (userId && userRole !== 'admin' && userRole !== 'super_admin' && ticket.userId !== userId) {
+      throw new NotFoundException('Ticket not found');
+    }
     return { success: true, message: 'Ticket retrieved', data: ticket };
   }
 

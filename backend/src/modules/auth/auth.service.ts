@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -111,6 +112,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    // Check if account is deactivated
+    if (user.isActive === false) {
+      throw new ForbiddenException('Account is deactivated. Please contact support.');
+    }
+
+    // Check if account is temporarily locked
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      throw new ForbiddenException('Account is temporarily locked. Please try again later.');
+    }
+
     const { password: _pw, twoFactorSecret: _tfs, twoFactorBackupCodes: _tbc, ...userSafe } = user;
     const payload = { sub: user.id, email: user.email };
 
@@ -191,22 +202,22 @@ export class AuthService {
     const user = await this.usersService.findByEmail(
       dto.email.toLowerCase().trim(),
     );
-    if (!user) {
-      throw new NotFoundException('No user found with this email address');
+
+    // Always return the same response to prevent email enumeration
+    if (user) {
+      const resetToken = await this.jwtService.signAsync(
+        { sub: user.id, type: 'password-reset' },
+        { expiresIn: '1h' },
+      );
+
+      SafeLogger.log(
+        `Password reset token generated for: ${dto.email}`,
+        'AuthService',
+      );
+
+      // Send password reset email with the token link
+      this.mailService.sendPasswordResetEmail(user.email, user.name || 'User', resetToken).catch(() => {});
     }
-
-    const resetToken = await this.jwtService.signAsync(
-      { sub: user.id, type: 'password-reset' },
-      { expiresIn: '1h' },
-    );
-
-    SafeLogger.log(
-      `Password reset token generated for: ${dto.email}`,
-      'AuthService',
-    );
-
-    // Send password reset email with the token link
-    this.mailService.sendPasswordResetEmail(user.email, user.name || 'User', resetToken).catch(() => {});
 
     return {
       success: true,

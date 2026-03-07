@@ -249,7 +249,6 @@ export function AppRouter() {
         <Route path="disputes" element={<SuspenseWrap><SellerDisputesPage /></SuspenseWrap>} />
         <Route path="bundles" element={<SuspenseWrap><SellerBundlesPage /></SuspenseWrap>} />
         <Route path="subscriptions" element={<SuspenseWrap><SellerSubscriptionsPage /></SuspenseWrap>} />
-        <Route path="settings" element={<SuspenseWrap><SellerStoreSettingsPage /></SuspenseWrap>} />
       </Route>
 
       {/* ═══════════════════ Admin Portal (Auth + Admin) ═══════════════ */}
@@ -336,7 +335,6 @@ export function AppRouter() {
         <Route path="operations" element={<SuspenseWrap><SAOperationsPage /></SuspenseWrap>} />
         <Route path="audit" element={<SuspenseWrap><SAAuditPage /></SuspenseWrap>} />
         <Route path="system" element={<SuspenseWrap><SASystemSettingsPage /></SuspenseWrap>} />
-        <Route path="settings" element={<SuspenseWrap><SASystemSettingsPage /></SuspenseWrap>} />
         <Route path="subscriptions" element={<SuspenseWrap><SASubscriptionsPage /></SuspenseWrap>} />
         <Route path="loyalty" element={<SuspenseWrap><SALoyaltyPage /></SuspenseWrap>} />
         <Route path="roles" element={<SuspenseWrap><SARolesPage /></SuspenseWrap>} />

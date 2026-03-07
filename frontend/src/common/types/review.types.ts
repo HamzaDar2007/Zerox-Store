@@ -1,4 +1,4 @@
-import type { ReviewStatus, ReviewReportReason, ReviewReportStatus } from './enums';
+import type { ReviewStatus, ReviewReportReason } from './enums';
 
 export interface Review {
   id: string;
@@ -20,28 +20,6 @@ export interface Review {
   moderatedBy: string | null;
   moderatedAt: string | null;
   moderationNotes: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ReviewHelpfulness {
-  id: string;
-  reviewId: string;
-  userId: string;
-  isHelpful: boolean;
-  createdAt: string;
-}
-
-export interface ReviewReport {
-  id: string;
-  reviewId: string;
-  reportedBy: string;
-  reason: ReviewReportReason;
-  details: string | null;
-  status: ReviewReportStatus;
-  reviewedBy: string | null;
-  reviewedAt: string | null;
-  resolutionNotes: string | null;
   createdAt: string;
   updatedAt: string;
 }

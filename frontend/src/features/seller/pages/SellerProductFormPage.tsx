@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useGetProductByIdQuery,
@@ -62,10 +62,15 @@ export default function SellerProductFormPage() {
   const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
   const user = useAppSelector((s) => s.auth.user);
 
-  const [form, setForm] = useState<CreateProductDto>(() => {
+  const [form, setForm] = useState<CreateProductDto>(defaultForm);
+
+  const [status, setStatus] = useState<ProductStatus>(ProductStatus.DRAFT);
+
+  // Populate form when product data loads (edit mode)
+  useEffect(() => {
     if (productData?.data) {
       const p = productData.data;
-      return {
+      setForm({
         sellerId: p.sellerId ?? '',
         categoryId: p.categoryId ?? '',
         name: p.name,
@@ -85,14 +90,10 @@ export default function SellerProductFormPage() {
         tags: p.tags ?? [],
         metaTitle: p.metaTitle ?? '',
         metaDescription: p.metaDescription ?? '',
-      };
+      });
+      setStatus(p.status ?? ProductStatus.DRAFT);
     }
-    return defaultForm;
-  });
-
-  const [status, setStatus] = useState<ProductStatus>(
-    productData?.data?.status ?? ProductStatus.DRAFT,
-  );
+  }, [productData]);
 
   const handleSubmit = async () => {
     const result = productSchema.safeParse(form);

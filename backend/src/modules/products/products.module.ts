@@ -9,6 +9,7 @@ import { ProductAttribute } from './entities/product-attribute.entity';
 import { ProductQuestion } from './entities/product-question.entity';
 import { ProductAnswer } from './entities/product-answer.entity';
 import { PriceHistory } from './entities/price-history.entity';
+import { Seller } from '../sellers/entities/seller.entity';
 import { SharedModule } from '../shared/shared.module';
 import { GuardsModule } from '../../common/modules/guards.module';
 
@@ -22,6 +23,7 @@ import { GuardsModule } from '../../common/modules/guards.module';
       ProductQuestion,
       ProductAnswer,
       PriceHistory,
+      Seller,
     ]),
     SharedModule,
     GuardsModule,

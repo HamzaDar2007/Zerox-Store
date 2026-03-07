@@ -79,17 +79,19 @@ export class SubscriptionsService {
     return { success: true, message: 'Subscriptions retrieved', data: subscriptions };
   }
 
-  async update(id: string, dto: UpdateSubscriptionDto): Promise<ServiceResponse<Subscription>> {
+  async update(id: string, dto: UpdateSubscriptionDto, userId?: string): Promise<ServiceResponse<Subscription>> {
     const subscription = await this.subscriptionRepository.findOne({ where: { id } });
     if (!subscription) throw new NotFoundException('Subscription not found');
+    if (userId && subscription.userId !== userId) throw new NotFoundException('Subscription not found');
     Object.assign(subscription, dto);
     const updated = await this.subscriptionRepository.save(subscription);
     return { success: true, message: 'Subscription updated', data: updated };
   }
 
-  async cancel(id: string, reason?: string): Promise<ServiceResponse<Subscription>> {
+  async cancel(id: string, reason?: string, userId?: string): Promise<ServiceResponse<Subscription>> {
     const subscription = await this.subscriptionRepository.findOne({ where: { id } });
     if (!subscription) throw new NotFoundException('Subscription not found');
+    if (userId && subscription.userId !== userId) throw new NotFoundException('Subscription not found');
 
     // Cancel Stripe subscription if linked
     if (subscription.stripeSubscriptionId) {
@@ -111,9 +113,10 @@ export class SubscriptionsService {
     return { success: true, message: 'Subscription cancelled', data: updated };
   }
 
-  async pause(id: string): Promise<ServiceResponse<Subscription>> {
+  async pause(id: string, userId?: string): Promise<ServiceResponse<Subscription>> {
     const subscription = await this.subscriptionRepository.findOne({ where: { id } });
     if (!subscription) throw new NotFoundException('Subscription not found');
+    if (userId && subscription.userId !== userId) throw new NotFoundException('Subscription not found');
     if (subscription.status !== SubscriptionStatus.ACTIVE) throw new BadRequestException('Can only pause active subscriptions');
 
     // Pause Stripe subscription if linked
@@ -135,9 +138,10 @@ export class SubscriptionsService {
     return { success: true, message: 'Subscription paused', data: updated };
   }
 
-  async resume(id: string): Promise<ServiceResponse<Subscription>> {
+  async resume(id: string, userId?: string): Promise<ServiceResponse<Subscription>> {
     const subscription = await this.subscriptionRepository.findOne({ where: { id } });
     if (!subscription) throw new NotFoundException('Subscription not found');
+    if (userId && subscription.userId !== userId) throw new NotFoundException('Subscription not found');
     if (subscription.status !== SubscriptionStatus.PAUSED) throw new BadRequestException('Only paused subscriptions can be resumed');
 
     // Resume Stripe subscription if linked

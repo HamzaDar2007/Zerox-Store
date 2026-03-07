@@ -150,9 +150,9 @@ export class UsersController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'update user by id' })
   @Permissions('users.update')
-  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto, @CurrentUser() caller: User) {
     const validId = SecurityUtil.validateId(id);
-    return this.handleAsyncOperation(this.usersService.update(validId, dto));
+    return this.handleAsyncOperation(this.usersService.update(validId, dto, caller.role));
   }
 
   @Delete(':id')

@@ -486,7 +486,7 @@ export class UsersService {
     };
   }
 
-  async update(id: string, dto: UpdateUserDto): Promise<ServiceResponse<User>> {
+  async update(id: string, dto: UpdateUserDto, callerRole?: string): Promise<ServiceResponse<User>> {
     try {
       const validId = SecurityUtil.validateId(id);
       SecurityUtil.validateObject(dto);
@@ -511,8 +511,18 @@ export class UsersService {
       // The enum value will be set directly on the user entity
 
       const updateData: any = { ...dto };
+
+      // Only super_admin can change roles or set passwords via update
+      if (callerRole !== 'super_admin' && callerRole !== 'admin') {
+        delete updateData.role;
+      }
+
       if (dto.password) {
-        updateData.password = await bcrypt.hash(dto.password, 10);
+        if (callerRole !== 'super_admin') {
+          delete updateData.password;
+        } else {
+          updateData.password = await bcrypt.hash(dto.password, 10);
+        }
       }
 
       await this.userRepository.update(validId, updateData);

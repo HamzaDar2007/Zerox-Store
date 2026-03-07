@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
-import { CreateNotificationTemplateDto, UpdateNotificationTemplateDto } from './dto';
+import { CreateNotificationTemplateDto, UpdateNotificationTemplateDto, UpdateNotificationPreferenceDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
@@ -40,8 +40,8 @@ export class NotificationsController extends BaseController {
 
   @Patch(':id/read')
   @ApiOperation({ summary: 'Mark notification as read' })
-  markAsRead(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.notificationsService.markAsRead(id));
+  markAsRead(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.handleAsyncOperation(this.notificationsService.markAsRead(id, user.id));
   }
 
   @Patch('read-all')
@@ -52,8 +52,8 @@ export class NotificationsController extends BaseController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete notification' })
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.notificationsService.remove(id));
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.handleAsyncOperation(this.notificationsService.remove(id, user.id));
   }
 
   @Get('preferences')
@@ -64,7 +64,7 @@ export class NotificationsController extends BaseController {
 
   @Patch('preferences/:type')
   @ApiOperation({ summary: 'Update notification preference' })
-  updatePreference(@CurrentUser() user: User, @Param('type') type: string, @Body() dto: any) {
+  updatePreference(@CurrentUser() user: User, @Param('type') type: string, @Body() dto: UpdateNotificationPreferenceDto) {
     return this.handleAsyncOperation(this.notificationsService.updatePreference(user.id, type, dto));
   }
 }

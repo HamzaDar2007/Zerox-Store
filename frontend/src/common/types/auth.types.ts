@@ -47,19 +47,6 @@ export interface Address {
   updatedAt: string;
 }
 
-export interface LoginHistory {
-  id: string;
-  userId: string;
-  loginAt: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  deviceFingerprint: string | null;
-  status: string;
-  failureReason: string | null;
-  locationCountry: string | null;
-  locationCity: string | null;
-}
-
 export interface Role {
   id: string;
   name: string;
@@ -75,18 +62,6 @@ export interface Permission {
   roleId: string;
   module: string;
   action: string;
-  createdAt: string;
-}
-
-export interface Session {
-  id: string;
-  userId: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  deviceFingerprint: string | null;
-  isValid: boolean;
-  lastActivityAt: string;
-  expiresAt: string;
   createdAt: string;
 }
 

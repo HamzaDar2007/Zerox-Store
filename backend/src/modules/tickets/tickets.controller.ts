@@ -48,8 +48,8 @@ export class TicketsController extends BaseController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get ticket by ID' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.ticketsService.findOne(id));
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.handleAsyncOperation(this.ticketsService.findOne(id, user.id, user.role));
   }
 
   @Patch(':id')

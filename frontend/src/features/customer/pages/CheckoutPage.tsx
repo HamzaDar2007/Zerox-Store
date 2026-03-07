@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   useGetCartQuery,
@@ -188,13 +188,16 @@ export default function CheckoutPage() {
   const user = profileData?.data;
 
   // Pre-fill name from profile
-  if (user && !shippingForm.fullName && user.name) {
-    setShippingForm((prev) => ({
-      ...prev,
-      fullName: user.name ?? '',
-      phone: user.phone ?? '',
-    }));
-  }
+  useEffect(() => {
+    if (user && !shippingForm.fullName && user.name) {
+      setShippingForm((prev) => ({
+        ...prev,
+        fullName: user.name ?? '',
+        phone: user.phone ?? '',
+      }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.priceAtAddition * item.quantity,

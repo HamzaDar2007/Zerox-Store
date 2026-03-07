@@ -47,9 +47,10 @@ export class NotificationsService {
     return { success: true, message: 'Notifications retrieved', data: notifications, meta: { total, page, limit } };
   }
 
-  async markAsRead(id: string): Promise<ServiceResponse<Notification>> {
+  async markAsRead(id: string, userId?: string): Promise<ServiceResponse<Notification>> {
     const notification = await this.notificationRepository.findOne({ where: { id } });
     if (!notification) throw new NotFoundException('Notification not found');
+    if (userId && notification.userId !== userId) throw new NotFoundException('Notification not found');
     notification.readAt = new Date();
     const updated = await this.notificationRepository.save(notification);
     return { success: true, message: 'Notification marked as read', data: updated };
@@ -60,9 +61,10 @@ export class NotificationsService {
     return { success: true, message: 'All notifications marked as read' };
   }
 
-  async remove(id: string): Promise<ServiceResponse<void>> {
+  async remove(id: string, userId?: string): Promise<ServiceResponse<void>> {
     const notification = await this.notificationRepository.findOne({ where: { id } });
     if (!notification) throw new NotFoundException('Notification not found');
+    if (userId && notification.userId !== userId) throw new NotFoundException('Notification not found');
     await this.notificationRepository.remove(notification);
     return { success: true, message: 'Notification deleted' };
   }

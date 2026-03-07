@@ -3,8 +3,6 @@ import type {
   PayoutFrequency,
   SellerDocType,
   DocStatus,
-  ViolationSeverity,
-  ViolationPenalty,
   WalletTransactionType,
 } from './enums';
 
@@ -62,13 +60,6 @@ export interface Store {
   updatedAt: string;
 }
 
-export interface StoreFollower {
-  id: string;
-  storeId: string;
-  userId: string;
-  followedAt: string;
-}
-
 export interface SellerDocument {
   id: string;
   sellerId: string;
@@ -81,22 +72,6 @@ export interface SellerDocument {
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface SellerViolation {
-  id: string;
-  sellerId: string;
-  violationType: string;
-  severity: ViolationSeverity;
-  description: string | null;
-  evidenceUrls: string[] | null;
-  penaltyAction: ViolationPenalty | null;
-  fineAmount: number | null;
-  issuedBy: string | null;
-  appealedAt: string | null;
-  appealNote: string | null;
-  resolvedAt: string | null;
-  createdAt: string;
 }
 
 export interface SellerWallet {

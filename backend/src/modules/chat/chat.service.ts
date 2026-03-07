@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { Conversation } from './entities/conversation.entity';
 import { Message } from './entities/message.entity';
 import { ServiceResponse } from '../../common/interfaces/service-response.interface';
@@ -71,7 +71,7 @@ export class ChatService {
 
   async markAsRead(conversationId: string, userId: string): Promise<ServiceResponse<void>> {
     await this.messageRepository.update(
-      { conversationId, isRead: false },
+      { conversationId, isRead: false, senderId: Not(userId) },
       { isRead: true, readAt: new Date() },
     );
     return { success: true, message: 'Messages marked as read' };

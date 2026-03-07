@@ -54,26 +54,26 @@ export class SubscriptionsController extends BaseController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update subscription' })
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateSubscriptionDto) {
-    return this.handleAsyncOperation(this.subscriptionsService.update(id, dto));
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateSubscriptionDto, @CurrentUser() user: User) {
+    return this.handleAsyncOperation(this.subscriptionsService.update(id, dto, user.id));
   }
 
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancel subscription' })
-  cancel(@Param('id', ParseUUIDPipe) id: string, @Body('reason') reason?: string) {
-    return this.handleAsyncOperation(this.subscriptionsService.cancel(id, reason));
+  cancel(@Param('id', ParseUUIDPipe) id: string, @Body('reason') reason?: string, @CurrentUser() user?: User) {
+    return this.handleAsyncOperation(this.subscriptionsService.cancel(id, reason, user?.id));
   }
 
   @Post(':id/pause')
   @ApiOperation({ summary: 'Pause subscription' })
-  pause(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.subscriptionsService.pause(id));
+  pause(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.handleAsyncOperation(this.subscriptionsService.pause(id, user.id));
   }
 
   @Post(':id/resume')
   @ApiOperation({ summary: 'Resume subscription' })
-  resume(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.subscriptionsService.resume(id));
+  resume(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.handleAsyncOperation(this.subscriptionsService.resume(id, user.id));
   }
 
   @Post(':id/renew')
