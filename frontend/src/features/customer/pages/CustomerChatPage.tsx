@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { EmptyState } from '@/common/components/EmptyState';
 import { LoadingSpinner } from '@/common/components/LoadingSpinner';
@@ -52,16 +53,21 @@ export default function CustomerChatPage() {
 
   const handleSend = async () => {
     if (!messageText.trim() || !selectedId) return;
-    await sendMessage({ conversationId: selectedId, data: { content: messageText } });
-    setMessageText('');
+    try {
+      await sendMessage({ conversationId: selectedId, data: { content: messageText } }).unwrap();
+      setMessageText('');
+    } catch { toast.error('Failed to send message'); }
   };
 
   const handleCreate = async () => {
     if (!newStoreId.trim()) return;
-    await createConvo({ type: 'customer_seller', customerId: user?.id ?? '', storeId: newStoreId, subject: newSubject || undefined });
-    setShowNew(false);
-    setNewSubject('');
-    setNewStoreId('');
+    try {
+      await createConvo({ type: 'customer_seller', customerId: user?.id ?? '', storeId: newStoreId, subject: newSubject || undefined }).unwrap();
+      toast.success('Conversation created');
+      setShowNew(false);
+      setNewSubject('');
+      setNewStoreId('');
+    } catch { toast.error('Failed to create conversation'); }
   };
 
   if (loadingConvos) return <LoadingSpinner label="Loading conversations..." />;

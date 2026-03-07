@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -51,7 +52,7 @@ export default function SellerSubscriptionsPage() {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <Button size="sm" onClick={() => processRenewal(row.original.id)}>
+        <Button size="sm" onClick={async () => { try { await processRenewal(row.original.id).unwrap(); toast.success('Renewal processed'); } catch { toast.error('Failed to process renewal'); } }}>
           <RefreshCw className="mr-1 h-4 w-4" /> Process Renewal
         </Button>
       ),

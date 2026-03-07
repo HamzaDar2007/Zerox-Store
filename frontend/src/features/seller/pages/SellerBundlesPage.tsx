@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -66,7 +67,7 @@ export default function SellerBundlesPage() {
       header: '',
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button size="sm" variant="ghost" onClick={() => toggleActive(row.original.id)}>
+          <Button size="sm" variant="ghost" onClick={async () => { try { await toggleActive(row.original.id).unwrap(); } catch { toast.error('Failed to toggle bundle'); } }}>
             <ToggleRight className="h-4 w-4" />
           </Button>
           <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteId(row.original.id)}>
@@ -79,9 +80,12 @@ export default function SellerBundlesPage() {
 
   const handleCreate = async () => {
     if (!form.name || !form.slug) return;
-    await createBundle({ ...form, items: [] });
-    setShowCreate(false);
-    setForm({ name: '', slug: '', description: '', discountType: VoucherType.PERCENTAGE, discountValue: 0 });
+    try {
+      await createBundle({ ...form, items: [] }).unwrap();
+      toast.success('Bundle created');
+      setShowCreate(false);
+      setForm({ name: '', slug: '', description: '', discountType: VoucherType.PERCENTAGE, discountValue: 0 });
+    } catch { toast.error('Failed to create bundle'); }
   };
 
   if (isLoading) return <LoadingSpinner label="Loading bundles..." />;
@@ -142,7 +146,7 @@ export default function SellerBundlesPage() {
         onOpenChange={() => setDeleteId(null)}
         title="Delete Bundle"
         description="This will permanently delete the bundle. Continue?"
-        onConfirm={() => { if (deleteId) { deleteBundle(deleteId); setDeleteId(null); } }}
+        onConfirm={async () => { if (deleteId) { try { await deleteBundle(deleteId).unwrap(); toast.success('Bundle deleted'); } catch { toast.error('Failed to delete bundle'); } finally { setDeleteId(null); } } }}
       />
     </div>
   );

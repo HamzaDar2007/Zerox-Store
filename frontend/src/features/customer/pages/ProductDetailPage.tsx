@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import {
   useGetProductBySlugQuery,
+  useGetProductByIdQuery,
   useGetProductQuestionsQuery,
   useAddToCartMutation,
   useAddToWishlistMutation,
@@ -49,12 +50,27 @@ export default function ProductDetailPage() {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', content: '' });
 
+  // Detect if param is a UUID (from cart links etc.) vs a slug
+  const isUuid = slug ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug) : false;
+
   const {
-    data: productRes,
-    isLoading,
-    isError,
-    refetch,
-  } = useGetProductBySlugQuery(slug!, { skip: !slug });
+    data: slugRes,
+    isLoading: slugLoading,
+    isError: slugError,
+    refetch: slugRefetch,
+  } = useGetProductBySlugQuery(slug!, { skip: !slug || isUuid });
+
+  const {
+    data: idRes,
+    isLoading: idLoading,
+    isError: idError,
+    refetch: idRefetch,
+  } = useGetProductByIdQuery(slug!, { skip: !slug || !isUuid });
+
+  const productRes = isUuid ? idRes : slugRes;
+  const isLoading = isUuid ? idLoading : slugLoading;
+  const isError = isUuid ? idError : slugError;
+  const refetch = isUuid ? idRefetch : slugRefetch;
 
   const product = productRes?.data;
 
@@ -113,6 +129,7 @@ export default function ProductDetailPage() {
         addToLocalCart({
           productId: product.id,
           variantId: selectedVariantId,
+          slug: product.slug,
           quantity,
           name: product.name,
           price: displayPrice,

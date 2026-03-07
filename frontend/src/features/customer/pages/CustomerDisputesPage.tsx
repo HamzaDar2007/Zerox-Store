@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -52,15 +53,20 @@ export default function CustomerDisputesPage() {
 
   const handleCreate = async () => {
     if (!form.orderId || !form.type || !form.subject) return;
-    await createDispute({ orderId: form.orderId, customerId: user?.id ?? '', sellerId: form.sellerId, type: form.type as DisputeType, subject: form.subject, description: form.description });
-    setShowCreate(false);
-    setForm({ orderId: '', type: '', subject: '', description: '', sellerId: '' });
+    try {
+      await createDispute({ orderId: form.orderId, customerId: user?.id ?? '', sellerId: form.sellerId, type: form.type as DisputeType, subject: form.subject, description: form.description }).unwrap();
+      toast.success('Dispute created');
+      setShowCreate(false);
+      setForm({ orderId: '', type: '', subject: '', description: '', sellerId: '' });
+    } catch { toast.error('Failed to create dispute'); }
   };
 
   const handleSendMsg = async () => {
     if (!msgText.trim() || !selectedId) return;
-    await addMessage({ disputeId: selectedId, data: { content: msgText } });
-    setMsgText('');
+    try {
+      await addMessage({ disputeId: selectedId, data: { content: msgText } }).unwrap();
+      setMsgText('');
+    } catch { toast.error('Failed to send message'); }
   };
 
   const columns: ColumnDef<Dispute, unknown>[] = [

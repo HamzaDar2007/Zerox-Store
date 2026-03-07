@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { toast } from 'sonner';
 import { useGetReviewsQuery, useDeleteReviewMutation } from '@/store/api';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -79,7 +80,7 @@ export default function MyReviewsPage() {
     page,
     limit,
     userId: user?.id,
-  });
+  }, { skip: !user?.id });
 
   const reviews = data?.data?.items ?? [];
   const total = data?.data?.total ?? 0;
@@ -87,7 +88,10 @@ export default function MyReviewsPage() {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this review?')) {
-      await deleteReview(id);
+      try {
+        await deleteReview(id).unwrap();
+        toast.success('Review deleted');
+      } catch { toast.error('Failed to delete review'); }
     }
   };
 

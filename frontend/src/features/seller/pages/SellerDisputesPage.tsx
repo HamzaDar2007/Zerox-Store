@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -69,15 +70,20 @@ export default function SellerDisputesPage() {
 
   const handleSendMsg = async () => {
     if (!msgText.trim() || !selectedId) return;
-    await addMessage({ disputeId: selectedId, data: { content: msgText } });
-    setMsgText('');
+    try {
+      await addMessage({ disputeId: selectedId, data: { content: msgText } }).unwrap();
+      setMsgText('');
+    } catch { toast.error('Failed to send message'); }
   };
 
   const handleAddEvidence = async () => {
     if (!evidenceForm.type || !evidenceForm.fileUrl || !selectedId) return;
-    await addEvidence({ disputeId: selectedId, data: evidenceForm });
-    setShowEvidence(false);
-    setEvidenceForm({ type: '', description: '', fileUrl: '' });
+    try {
+      await addEvidence({ disputeId: selectedId, data: evidenceForm }).unwrap();
+      toast.success('Evidence added');
+      setShowEvidence(false);
+      setEvidenceForm({ type: '', description: '', fileUrl: '' });
+    } catch { toast.error('Failed to add evidence'); }
   };
 
   if (isLoading) return <LoadingSpinner label="Loading disputes..." />;

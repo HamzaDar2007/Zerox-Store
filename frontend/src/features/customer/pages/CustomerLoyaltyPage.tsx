@@ -55,16 +55,25 @@ export default function CustomerLoyaltyPage() {
   const handleRedeem = async () => {
     const pts = parseInt(redeemPoints);
     if (isNaN(pts) || pts <= 0) return;
-    await redeemPts({ points: pts });
-    setShowRedeem(false);
-    setRedeemPoints('');
+    try {
+      await redeemPts({ points: pts }).unwrap();
+      toast.success('Points redeemed successfully!');
+      setShowRedeem(false);
+      setRedeemPoints('');
+    } catch {
+      toast.error('Failed to redeem points');
+    }
   };
 
   const handleApplyReferral = async () => {
     if (!referralInput.trim()) return;
-    await applyRef(referralInput);
-    setReferralInput('');
-    toast.success('Referral code applied!');
+    try {
+      await applyRef(referralInput).unwrap();
+      setReferralInput('');
+      toast.success('Referral code applied!');
+    } catch {
+      toast.error('Failed to apply referral code');
+    }
   };
 
   const copyCode = () => {

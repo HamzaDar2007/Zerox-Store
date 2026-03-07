@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { EmptyState } from '@/common/components/EmptyState';
@@ -89,30 +90,45 @@ export default function AdminTaxPage() {
 
   const handleCreateZone = async () => {
     if (!zoneForm.name || !zoneForm.countryCode) return;
-    await createZone(zoneForm);
-    setShowCreate(false);
-    setZoneForm({ name: '', countryCode: '', stateCode: '' });
+    try {
+      await createZone(zoneForm).unwrap();
+      toast.success('Tax zone created');
+      setShowCreate(false);
+      setZoneForm({ name: '', countryCode: '', stateCode: '' });
+    } catch { toast.error('Failed to create tax zone'); }
   };
 
   const handleCreateRate = async () => {
     if (!rateForm.name || !rateForm.taxZoneId || !rateForm.taxClassId) return;
-    await createRate(rateForm);
-    setShowCreate(false);
-    setRateForm({ taxClassId: '', taxZoneId: '', name: '', rate: 0, priority: 0 });
+    try {
+      await createRate(rateForm).unwrap();
+      toast.success('Tax rate created');
+      setShowCreate(false);
+      setRateForm({ taxClassId: '', taxZoneId: '', name: '', rate: 0, priority: 0 });
+    } catch { toast.error('Failed to create tax rate'); }
   };
 
   const handleCreateClass = async () => {
     if (!classForm.name) return;
-    await createClass(classForm);
-    setShowCreate(false);
-    setClassForm({ name: '', description: '' });
+    try {
+      await createClass(classForm).unwrap();
+      toast.success('Tax class created');
+      setShowCreate(false);
+      setClassForm({ name: '', description: '' });
+    } catch { toast.error('Failed to create tax class'); }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteId) return;
-    if (deleteType === 'zone') deleteZone(deleteId);
-    else deleteRate(deleteId);
-    setDeleteId(null);
+    try {
+      if (deleteType === 'zone') await deleteZone(deleteId).unwrap();
+      else await deleteRate(deleteId).unwrap();
+      toast.success('Deleted successfully');
+    } catch {
+      toast.error('Failed to delete');
+    } finally {
+      setDeleteId(null);
+    }
   };
 
   if (isLoading) return <LoadingSpinner label="Loading tax config..." />;

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -79,20 +80,29 @@ export default function AdminMarketingPage() {
 
   const handleCreateCampaign = async () => {
     if (!campaignForm.name) return;
-    await createCampaign(campaignForm);
-    setShowCreate(false);
+    try {
+      await createCampaign(campaignForm).unwrap();
+      toast.success('Campaign created');
+      setShowCreate(false);
+    } catch { toast.error('Failed to create campaign'); }
   };
 
   const handleCreateVoucher = async () => {
     if (!voucherForm.code) return;
-    await createVoucher(voucherForm);
-    setShowCreate(false);
+    try {
+      await createVoucher(voucherForm).unwrap();
+      toast.success('Voucher created');
+      setShowCreate(false);
+    } catch { toast.error('Failed to create voucher'); }
   };
 
   const handleCreateFlash = async () => {
     if (!flashForm.name) return;
-    await createFlashSale({ name: flashForm.name, startDate: flashForm.startDate, endDate: flashForm.endDate, discountPercentage: flashForm.discountPercentage });
-    setShowCreate(false);
+    try {
+      await createFlashSale({ name: flashForm.name, startDate: flashForm.startDate, endDate: flashForm.endDate, discountPercentage: flashForm.discountPercentage }).unwrap();
+      toast.success('Flash sale created');
+      setShowCreate(false);
+    } catch { toast.error('Failed to create flash sale'); }
   };
 
   if (isLoading) return <LoadingSpinner label="Loading marketing..." />;

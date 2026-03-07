@@ -4,7 +4,7 @@ import { LoadingSpinner } from '@/common/components/LoadingSpinner';
 import { Button } from '@/common/components/ui/button';
 import { formatCurrency } from '@/lib/format';
 import { GitCompare, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { Product } from '@/common/types';
 import {
   useGetComparisonQuery,
@@ -23,6 +23,7 @@ export default function ComparisonPage() {
   const products = allProducts.filter((p: Product) => productIds.includes(p.id));
 
   const [removeFromComparison] = useRemoveFromComparisonMutation();
+  const navigate = useNavigate();
 
   if (isLoading) return <LoadingSpinner label="Loading comparison..." />;
 
@@ -34,16 +35,16 @@ export default function ComparisonPage() {
           icon={<GitCompare className="h-10 w-10" />}
           title="No products to compare"
           description="Add products to compare using the compare button on product pages."
-          action={{ label: 'Browse Products', onClick: () => window.location.href = '/products' }}
+          action={{ label: 'Browse Products', onClick: () => navigate('/products') }}
         />
       </div>
     );
   }
 
-  const attrs = ['price', 'averageRating', 'totalReviews', 'totalSales'] as const;
+  const attrs = ['price', 'avgRating', 'totalReviews', 'totalSales'] as const;
   const attrLabels: Record<string, string> = {
     price: 'Price',
-    averageRating: 'Rating',
+    avgRating: 'Rating',
     totalReviews: 'Reviews',
     totalSales: 'Sales',
   };
@@ -91,7 +92,7 @@ export default function ComparisonPage() {
             <tr>
               <td className="border p-3 font-medium">Category</td>
               {products.map((p: Product) => (
-                <td key={p.id} className="border p-3 text-center">{p.categoryId?.slice(0, 8)}…</td>
+                <td key={p.id} className="border p-3 text-center">{(p as any).category?.name ?? '—'}</td>
               ))}
             </tr>
           </tbody>

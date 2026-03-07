@@ -105,10 +105,10 @@ export default function SellerProductFormPage() {
 
     try {
       if (isEdit) {
-        await updateProduct({ id: productId!, data: form }).unwrap();
+        await updateProduct({ id: productId!, data: { ...form, status } }).unwrap();
         toast.success('Product updated');
       } else {
-        await createProduct({ ...form, sellerId: user?.id ?? '' }).unwrap();
+        await createProduct({ ...form, sellerId: user?.id ?? '', status }).unwrap();
         toast.success('Product created');
       }
       navigate('/seller/products');

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -69,7 +70,7 @@ export default function CustomerSubscriptionsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => pauseSub(s.id)}
+                onClick={async () => { try { await pauseSub(s.id).unwrap(); toast.success('Subscription paused'); } catch { toast.error('Failed to pause subscription'); } }}
                 title="Pause"
               >
                 <Pause className="h-4 w-4" />
@@ -79,7 +80,7 @@ export default function CustomerSubscriptionsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => resumeSub(s.id)}
+                onClick={async () => { try { await resumeSub(s.id).unwrap(); toast.success('Subscription resumed'); } catch { toast.error('Failed to resume subscription'); } }}
                 title="Resume"
               >
                 <Play className="h-4 w-4" />
@@ -123,7 +124,7 @@ export default function CustomerSubscriptionsPage() {
         title="Cancel Subscription"
         description="Are you sure you want to cancel this subscription? This cannot be undone."
         onConfirm={async () => {
-          if (cancelId) await cancelSub({ id: cancelId });
+          if (cancelId) { try { await cancelSub({ id: cancelId }).unwrap(); toast.success('Subscription cancelled'); } catch { toast.error('Failed to cancel subscription'); } }
           setCancelId(null);
         }}
       />

@@ -37,6 +37,7 @@ export default function CartPage() {
     ? items.map((item) => ({
         id: item.id,
         productId: item.productId,
+        slug: item.product?.slug ?? item.productId,
         name: item.product?.name ?? 'Product',
         price: item.priceAtAddition ?? item.product?.price ?? 0,
         quantity: item.quantity,
@@ -46,6 +47,7 @@ export default function CartPage() {
     : localItems.map((item, idx) => ({
         id: `local-${idx}`,
         productId: item.productId,
+        slug: item.slug ?? item.productId,
         name: item.name,
         price: item.price,
         quantity: item.quantity,
@@ -155,7 +157,7 @@ export default function CartPage() {
                   className="flex gap-4 py-4 first:pt-0 last:pb-0"
                 >
                   <Link
-                    to={`/products/${item.productId}`}
+                    to={`/products/${item.slug}`}
                     className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md bg-white dark:bg-muted ring-1 ring-border"
                   >
                     {item.imageUrl ? (

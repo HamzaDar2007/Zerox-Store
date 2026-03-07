@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -96,30 +97,42 @@ export default function AdminShippingPage() {
 
   const handleCreateZone = async () => {
     if (!zoneForm.name) return;
-    await createZone({ name: zoneForm.name, description: zoneForm.description, countries: zoneForm.countries.split(',').map((c) => c.trim()).filter(Boolean) });
-    setShowCreate(false);
-    setZoneForm({ name: '', description: '', countries: '' });
+    try {
+      await createZone({ name: zoneForm.name, description: zoneForm.description, countries: zoneForm.countries.split(',').map((c) => c.trim()).filter(Boolean) }).unwrap();
+      toast.success('Shipping zone created');
+      setShowCreate(false);
+      setZoneForm({ name: '', description: '', countries: '' });
+    } catch { toast.error('Failed to create shipping zone'); }
   };
 
   const handleCreateMethod = async () => {
     if (!methodForm.name || !methodForm.code) return;
-    await createMethod(methodForm);
-    setShowCreate(false);
-    setMethodForm({ name: '', code: '', description: '' });
+    try {
+      await createMethod(methodForm).unwrap();
+      toast.success('Shipping method created');
+      setShowCreate(false);
+      setMethodForm({ name: '', code: '', description: '' });
+    } catch { toast.error('Failed to create shipping method'); }
   };
 
   const handleCreateCarrier = async () => {
     if (!carrierForm.name || !carrierForm.code) return;
-    await createCarrier(carrierForm);
-    setShowCreate(false);
-    setCarrierForm({ name: '', code: '', trackingUrl: '' });
+    try {
+      await createCarrier(carrierForm).unwrap();
+      toast.success('Carrier created');
+      setShowCreate(false);
+      setCarrierForm({ name: '', code: '', trackingUrl: '' });
+    } catch { toast.error('Failed to create carrier'); }
   };
 
   const handleCreateRate = async () => {
     if (!rateForm.shippingMethodId || !rateForm.shippingZoneId) return;
-    await createRate(rateForm);
-    setShowCreate(false);
-    setRateForm({ shippingMethodId: '', shippingZoneId: '', rateType: ShippingRateType.FLAT, baseRate: 0 });
+    try {
+      await createRate(rateForm).unwrap();
+      toast.success('Shipping rate created');
+      setShowCreate(false);
+      setRateForm({ shippingMethodId: '', shippingZoneId: '', rateType: ShippingRateType.FLAT, baseRate: 0 });
+    } catch { toast.error('Failed to create shipping rate'); }
   };
 
   if (isLoading) return <LoadingSpinner label="Loading shipping..." />;
@@ -213,7 +226,7 @@ export default function AdminShippingPage() {
         onOpenChange={() => setDeleteId(null)}
         title="Delete Zone"
         description="Permanently delete this shipping zone?"
-        onConfirm={() => { if (deleteId) { deleteZone(deleteId); setDeleteId(null); } }}
+        onConfirm={async () => { if (deleteId) { try { await deleteZone(deleteId).unwrap(); toast.success('Zone deleted'); } catch { toast.error('Failed to delete zone'); } finally { setDeleteId(null); } } }}
       />
     </div>
   );

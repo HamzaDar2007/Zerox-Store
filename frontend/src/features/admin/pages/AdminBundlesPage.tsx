@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -43,7 +44,7 @@ export default function AdminBundlesPage() {
       header: '',
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button size="sm" variant="ghost" onClick={() => toggleActive(row.original.id)} title="Toggle active">
+          <Button size="sm" variant="ghost" onClick={async () => { try { await toggleActive(row.original.id).unwrap(); } catch { toast.error('Failed to toggle bundle'); } }} title="Toggle active">
             <ToggleRight className="h-4 w-4" />
           </Button>
           <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteId(row.original.id)}>
@@ -75,7 +76,7 @@ export default function AdminBundlesPage() {
         onOpenChange={() => setDeleteId(null)}
         title="Delete Bundle"
         description="Permanently delete this bundle?"
-        onConfirm={() => { if (deleteId) { deleteBundle(deleteId); setDeleteId(null); } }}
+        onConfirm={async () => { if (deleteId) { try { await deleteBundle(deleteId).unwrap(); toast.success('Bundle deleted'); } catch { toast.error('Failed to delete bundle'); } finally { setDeleteId(null); } } }}
       />
     </div>
   );

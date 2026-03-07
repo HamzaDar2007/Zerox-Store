@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -75,8 +76,8 @@ export default function AdminPaymentsPage() {
         if (r.status !== 'pending') return null;
         return (
           <div className="flex gap-1">
-            <Button size="sm" variant="outline" onClick={() => processRefund(r.id)}>Approve</Button>
-            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => rejectRefund({ id: r.id, reason: 'Rejected by admin' })}>Reject</Button>
+            <Button size="sm" variant="outline" onClick={async () => { try { await processRefund(r.id).unwrap(); toast.success('Refund approved'); } catch { toast.error('Failed to approve refund'); } }}>Approve</Button>
+            <Button size="sm" variant="ghost" className="text-destructive" onClick={async () => { try { await rejectRefund({ id: r.id, reason: 'Rejected by admin' }).unwrap(); toast.success('Refund rejected'); } catch { toast.error('Failed to reject refund'); } }}>Reject</Button>
           </div>
         );
       },
@@ -87,9 +88,14 @@ export default function AdminPaymentsPage() {
 
   const handleCreateRefund = async () => {
     if (!refundForm.paymentId || !refundForm.amount) return;
-    await createRefund(refundForm);
-    setShowCreateRefund(false);
-    setRefundForm({ paymentId: '', amount: 0, reason: RefundReason.OTHER });
+    try {
+      await createRefund(refundForm).unwrap();
+      toast.success('Refund created');
+      setShowCreateRefund(false);
+      setRefundForm({ paymentId: '', amount: 0, reason: RefundReason.OTHER });
+    } catch {
+      toast.error('Failed to create refund');
+    }
   };
 
   if (isLoading) return <LoadingSpinner label="Loading payments..." />;

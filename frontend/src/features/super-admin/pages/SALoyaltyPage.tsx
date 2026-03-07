@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -57,15 +58,18 @@ export default function SALoyaltyPage() {
 
   const handleCreateTier = async () => {
     if (!tierForm.name) return;
-    await createTier({
-      name: tierForm.name,
-      requiredPoints: tierForm.requiredPoints,
-      multiplier: tierForm.multiplier,
-      benefits: tierForm.benefits.split(',').map((b) => b.trim()).filter(Boolean),
-      sortOrder: tierForm.sortOrder,
-    });
-    setShowCreateTier(false);
-    setTierForm({ name: '', requiredPoints: 0, multiplier: 1, benefits: '', sortOrder: 0 });
+    try {
+      await createTier({
+        name: tierForm.name,
+        requiredPoints: tierForm.requiredPoints,
+        multiplier: tierForm.multiplier,
+        benefits: tierForm.benefits.split(',').map((b) => b.trim()).filter(Boolean),
+        sortOrder: tierForm.sortOrder,
+      }).unwrap();
+      toast.success('Tier created');
+      setShowCreateTier(false);
+      setTierForm({ name: '', requiredPoints: 0, multiplier: 1, benefits: '', sortOrder: 0 });
+    } catch { toast.error('Failed to create tier'); }
   };
 
   if (isLoading) return <LoadingSpinner label="Loading loyalty tiers..." />;
@@ -121,7 +125,7 @@ export default function SALoyaltyPage() {
         onOpenChange={() => setDeleteId(null)}
         title="Delete Tier"
         description="Permanently remove this loyalty tier?"
-        onConfirm={() => { if (deleteId) { deleteTier(deleteId); setDeleteId(null); } }}
+        onConfirm={async () => { if (deleteId) { try { await deleteTier(deleteId).unwrap(); toast.success('Tier deleted'); } catch { toast.error('Failed to delete tier'); } finally { setDeleteId(null); } } }}
       />
     </div>
   );

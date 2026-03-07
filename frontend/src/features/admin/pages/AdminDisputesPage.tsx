@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -59,12 +60,12 @@ export default function AdminDisputesPage() {
             <MessageSquare className="mr-1 h-4 w-4" /> View
           </Button>
           {row.original.status === 'open' && (
-            <Button size="sm" variant="outline" onClick={() => updateStatus({ id: row.original.id, status: 'under_review' as never })}>
+            <Button size="sm" variant="outline" onClick={async () => { try { await updateStatus({ id: row.original.id, status: 'under_review' as never }).unwrap(); toast.success('Dispute under review'); } catch { toast.error('Failed to update status'); } }}>
               Review
             </Button>
           )}
           {row.original.status === 'under_review' && (
-            <Button size="sm" variant="outline" onClick={() => updateStatus({ id: row.original.id, status: 'resolved' as never, resolution: 'Resolved by admin' })}>
+            <Button size="sm" variant="outline" onClick={async () => { try { await updateStatus({ id: row.original.id, status: 'resolved' as never, resolution: 'Resolved by admin' }).unwrap(); toast.success('Dispute resolved'); } catch { toast.error('Failed to resolve dispute'); } }}>
               Resolve
             </Button>
           )}
@@ -75,8 +76,12 @@ export default function AdminDisputesPage() {
 
   const handleSendMsg = async () => {
     if (!msgText.trim() || !selectedId) return;
-    await addMessage({ disputeId: selectedId, data: { content: msgText } });
-    setMsgText('');
+    try {
+      await addMessage({ disputeId: selectedId, data: { content: msgText } }).unwrap();
+      setMsgText('');
+    } catch {
+      toast.error('Failed to send message');
+    }
   };
 
   if (isLoading) return <LoadingSpinner label="Loading disputes..." />;

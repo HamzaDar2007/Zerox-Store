@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/common/components/PageHeader';
 import { DataTable } from '@/common/components/DataTable';
 import { StatusBadge } from '@/common/components/StatusBadge';
@@ -92,19 +93,25 @@ export default function SellerInventoryPage() {
   ];
 
   const handleCreateWarehouse = async (data: { name: string; code: string; addressLine1?: string; city?: string; state?: string; countryCode?: string; postalCode?: string }) => {
-    await createWarehouse(data);
-    setShowCreateWarehouse(false);
+    try {
+      await createWarehouse(data).unwrap();
+      toast.success('Warehouse created');
+      setShowCreateWarehouse(false);
+    } catch { toast.error('Failed to create warehouse'); }
   };
 
   const handleAdjust = async (data: { productId: string; adjustment: number; reason: string }) => {
     if (!selectedWarehouseId) return;
-    await adjustStock({
-      productId: data.productId,
-      warehouseId: selectedWarehouseId,
-      adjustment: data.adjustment,
-      reason: data.reason,
-    });
-    setShowAdjust(false);
+    try {
+      await adjustStock({
+        productId: data.productId,
+        warehouseId: selectedWarehouseId,
+        adjustment: data.adjustment,
+        reason: data.reason,
+      }).unwrap();
+      toast.success('Stock adjusted');
+      setShowAdjust(false);
+    } catch { toast.error('Failed to adjust stock'); }
   };
 
   if (loadingWarehouses) return <LoadingSpinner label="Loading inventory..." />;

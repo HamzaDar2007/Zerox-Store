@@ -87,7 +87,7 @@ export default function CategoriesPage() {
             return (
               <Link
                 key={cat.id}
-                to={childCount > 0 ? `/categories?parent=${cat.id}` : `/products?category=${cat.id}`}
+                to={childCount > 0 ? `/categories?parent=${cat.id}` : `/products?categoryId=${cat.id}`}
               >
                 <Card className="hover:border-primary/30 transition-colors h-full">
                   <CardContent className="flex items-center gap-4 py-6">
