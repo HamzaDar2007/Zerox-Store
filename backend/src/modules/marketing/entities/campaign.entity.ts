@@ -33,13 +33,29 @@ export class Campaign {
   @Column({ name: 'banner_url', type: 'varchar', length: 500, nullable: true })
   bannerUrl: string | null;
 
-  @Column({ name: 'mobile_banner_url', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'mobile_banner_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   mobileBannerUrl: string | null;
 
-  @Column({ name: 'thumbnail_url', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'thumbnail_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   thumbnailUrl: string | null;
 
-  @Column({ name: 'discount_percentage', type: 'decimal', precision: 5, scale: 2, nullable: true })
+  @Column({
+    name: 'discount_percentage',
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    nullable: true,
+  })
   discountPercentage: number | null;
 
   @Column({ name: 'starts_at', type: 'timestamptz' })
@@ -57,7 +73,12 @@ export class Campaign {
   @Column({ name: 'meta_title', type: 'varchar', length: 255, nullable: true })
   metaTitle: string | null;
 
-  @Column({ name: 'meta_description', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'meta_description',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   metaDescription: string | null;
 
   @OneToMany(() => CampaignProduct, (product) => product.campaign)

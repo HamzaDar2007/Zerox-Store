@@ -76,7 +76,10 @@ export class CreateBannerDto {
   @IsDateString()
   endsAt?: string;
 
-  @ApiPropertyOptional({ description: 'Whether the banner is active', default: true })
+  @ApiPropertyOptional({
+    description: 'Whether the banner is active',
+    default: true,
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

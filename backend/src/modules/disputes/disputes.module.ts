@@ -10,11 +10,7 @@ import { GuardsModule } from '../../common/modules/guards.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Dispute,
-      DisputeEvidence,
-      DisputeMessage,
-    ]),
+    TypeOrmModule.forFeature([Dispute, DisputeEvidence, DisputeMessage]),
     SharedModule,
     GuardsModule,
   ],

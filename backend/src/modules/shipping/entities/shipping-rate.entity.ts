@@ -21,7 +21,9 @@ export class ShippingRate {
   @Column({ name: 'shipping_method_id', type: 'uuid' })
   shippingMethodId: string;
 
-  @ManyToOne(() => ShippingMethod, (method) => method.rates, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ShippingMethod, (method) => method.rates, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'shipping_method_id' })
   shippingMethod: ShippingMethod;
 
@@ -43,19 +45,49 @@ export class ShippingRate {
   @Column({ name: 'base_rate', type: 'decimal', precision: 12, scale: 2 })
   baseRate: number;
 
-  @Column({ name: 'per_kg_rate', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'per_kg_rate',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   perKgRate: number | null;
 
-  @Column({ name: 'per_item_rate', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'per_item_rate',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   perItemRate: number | null;
 
-  @Column({ name: 'min_order_amount', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'min_order_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   minOrderAmount: number | null;
 
-  @Column({ name: 'max_order_amount', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'max_order_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   maxOrderAmount: number | null;
 
-  @Column({ name: 'free_shipping_threshold', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'free_shipping_threshold',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   freeShippingThreshold: number | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

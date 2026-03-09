@@ -30,25 +30,50 @@ export class Seller {
   @Column({ name: 'business_name', type: 'varchar', length: 200 })
   businessName: string;
 
-  @Column({ name: 'business_name_ar', type: 'varchar', length: 200, nullable: true })
+  @Column({
+    name: 'business_name_ar',
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+  })
   businessNameAr: string | null;
 
   @Column({ type: 'varchar', length: 15, nullable: true })
   cnic: string | null;
 
-  @Column({ name: 'cnic_front_image', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'cnic_front_image',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   cnicFrontImage: string | null;
 
-  @Column({ name: 'cnic_back_image', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'cnic_back_image',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   cnicBackImage: string | null;
 
   @Column({ name: 'bank_name', type: 'varchar', length: 100, nullable: true })
   bankName: string | null;
 
-  @Column({ name: 'bank_account_number', type: 'varchar', length: 30, nullable: true })
+  @Column({
+    name: 'bank_account_number',
+    type: 'varchar',
+    length: 30,
+    nullable: true,
+  })
   bankAccountNumber: string | null;
 
-  @Column({ name: 'bank_account_title', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'bank_account_title',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   bankAccountTitle: string | null;
 
   @Column({ name: 'bank_iban', type: 'varchar', length: 34, nullable: true })
@@ -65,7 +90,13 @@ export class Seller {
   })
   payoutFrequency: PayoutFrequency;
 
-  @Column({ name: 'commission_rate', type: 'decimal', precision: 5, scale: 2, default: 10.0 })
+  @Column({
+    name: 'commission_rate',
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    default: 10.0,
+  })
   commissionRate: number;
 
   @Column({
@@ -109,7 +140,13 @@ export class Seller {
   @Column({ name: 'total_orders', type: 'integer', default: 0 })
   totalOrders: number;
 
-  @Column({ name: 'total_revenue', type: 'decimal', precision: 16, scale: 2, default: 0 })
+  @Column({
+    name: 'total_revenue',
+    type: 'decimal',
+    precision: 16,
+    scale: 2,
+    default: 0,
+  })
   totalRevenue: number;
 
   @OneToMany(() => Store, (store) => store.seller)

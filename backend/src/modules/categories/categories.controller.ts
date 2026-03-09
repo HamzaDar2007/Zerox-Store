@@ -41,35 +41,51 @@ export class CategoriesController extends BaseController {
   @ApiResponse({ status: 201, description: 'Category created successfully' })
   @Permissions('categories.create')
   create(@Body() dto: CreateCategoryDto) {
-    return this.handleAsyncOperation(this.categoriesService.createCategory(dto));
+    return this.handleAsyncOperation(
+      this.categoriesService.createCategory(dto),
+    );
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all categories' })
-  @ApiResponse({ status: 200, description: 'Categories retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Categories retrieved successfully',
+  })
   findAll() {
-    return this.handleAsyncOperation(this.categoriesService.findAllCategories());
+    return this.handleAsyncOperation(
+      this.categoriesService.findAllCategories(),
+    );
   }
 
   @Get('root')
   @ApiOperation({ summary: 'Get root categories' })
-  @ApiResponse({ status: 200, description: 'Root categories retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Root categories retrieved successfully',
+  })
   findRoots() {
-    return this.handleAsyncOperation(this.categoriesService.findRootCategories());
+    return this.handleAsyncOperation(
+      this.categoriesService.findRootCategories(),
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get category by ID' })
   @ApiResponse({ status: 200, description: 'Category retrieved successfully' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.categoriesService.findOneCategory(id));
+    return this.handleAsyncOperation(
+      this.categoriesService.findOneCategory(id),
+    );
   }
 
   @Get('slug/:slug')
   @ApiOperation({ summary: 'Get category by slug' })
   @ApiResponse({ status: 200, description: 'Category retrieved successfully' })
   findBySlug(@Param('slug') slug: string) {
-    return this.handleAsyncOperation(this.categoriesService.findCategoryBySlug(slug));
+    return this.handleAsyncOperation(
+      this.categoriesService.findCategoryBySlug(slug),
+    );
   }
 
   @Patch(':id')
@@ -78,8 +94,13 @@ export class CategoriesController extends BaseController {
   @ApiOperation({ summary: 'Update category' })
   @ApiResponse({ status: 200, description: 'Category updated successfully' })
   @Permissions('categories.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateCategoryDto) {
-    return this.handleAsyncOperation(this.categoriesService.updateCategory(id, dto));
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCategoryDto,
+  ) {
+    return this.handleAsyncOperation(
+      this.categoriesService.updateCategory(id, dto),
+    );
   }
 
   @Delete(':id')
@@ -101,7 +122,9 @@ export class CategoriesController extends BaseController {
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
     @Param('brandId', ParseUUIDPipe) brandId: string,
   ) {
-    return this.handleAsyncOperation(this.categoriesService.assignBrandToCategory(categoryId, brandId));
+    return this.handleAsyncOperation(
+      this.categoriesService.assignBrandToCategory(categoryId, brandId),
+    );
   }
 
   @Delete(':categoryId/brands/:brandId')
@@ -113,7 +136,9 @@ export class CategoriesController extends BaseController {
     @Param('categoryId', ParseUUIDPipe) categoryId: string,
     @Param('brandId', ParseUUIDPipe) brandId: string,
   ) {
-    return this.handleAsyncOperation(this.categoriesService.removeBrandFromCategory(categoryId, brandId));
+    return this.handleAsyncOperation(
+      this.categoriesService.removeBrandFromCategory(categoryId, brandId),
+    );
   }
 }
 
@@ -152,7 +177,9 @@ export class BrandsController extends BaseController {
   @ApiOperation({ summary: 'Get brand by slug' })
   @ApiResponse({ status: 200, description: 'Brand retrieved successfully' })
   findBySlug(@Param('slug') slug: string) {
-    return this.handleAsyncOperation(this.categoriesService.findBrandBySlug(slug));
+    return this.handleAsyncOperation(
+      this.categoriesService.findBrandBySlug(slug),
+    );
   }
 
   @Patch(':id')
@@ -162,7 +189,9 @@ export class BrandsController extends BaseController {
   @ApiResponse({ status: 200, description: 'Brand updated successfully' })
   @Permissions('brands.update')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateBrandDto) {
-    return this.handleAsyncOperation(this.categoriesService.updateBrand(id, dto));
+    return this.handleAsyncOperation(
+      this.categoriesService.updateBrand(id, dto),
+    );
   }
 
   @Delete(':id')
@@ -190,29 +219,43 @@ export class AttributesController extends BaseController {
   @ApiResponse({ status: 201, description: 'Attribute created successfully' })
   @Permissions('attributes.create')
   create(@Body() dto: CreateAttributeDto) {
-    return this.handleAsyncOperation(this.categoriesService.createAttribute(dto));
+    return this.handleAsyncOperation(
+      this.categoriesService.createAttribute(dto),
+    );
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all attributes' })
-  @ApiResponse({ status: 200, description: 'Attributes retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Attributes retrieved successfully',
+  })
   findAll() {
-    return this.handleAsyncOperation(this.categoriesService.findAllAttributes());
+    return this.handleAsyncOperation(
+      this.categoriesService.findAllAttributes(),
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get attribute by ID' })
   @ApiResponse({ status: 200, description: 'Attribute retrieved successfully' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.categoriesService.findOneAttribute(id));
+    return this.handleAsyncOperation(
+      this.categoriesService.findOneAttribute(id),
+    );
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update attribute' })
   @ApiResponse({ status: 200, description: 'Attribute updated successfully' })
   @Permissions('attributes.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateAttributeDto) {
-    return this.handleAsyncOperation(this.categoriesService.updateAttribute(id, dto));
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateAttributeDto,
+  ) {
+    return this.handleAsyncOperation(
+      this.categoriesService.updateAttribute(id, dto),
+    );
   }
 
   @Delete(':id')
@@ -220,6 +263,8 @@ export class AttributesController extends BaseController {
   @ApiResponse({ status: 200, description: 'Attribute deleted successfully' })
   @Permissions('attributes.delete')
   remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.categoriesService.removeAttribute(id));
+    return this.handleAsyncOperation(
+      this.categoriesService.removeAttribute(id),
+    );
   }
 }

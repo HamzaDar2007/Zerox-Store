@@ -21,13 +21,19 @@ export class CreateSeoMetadataDto {
   @IsUuidString()
   entityId: string;
 
-  @ApiPropertyOptional({ description: 'Meta title for search engines', maxLength: 255 })
+  @ApiPropertyOptional({
+    description: 'Meta title for search engines',
+    maxLength: 255,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(255)
   metaTitle?: string;
 
-  @ApiPropertyOptional({ description: 'Meta description for search engines', maxLength: 500 })
+  @ApiPropertyOptional({
+    description: 'Meta description for search engines',
+    maxLength: 500,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)
@@ -51,7 +57,10 @@ export class CreateSeoMetadataDto {
   @MaxLength(255)
   ogTitle?: string;
 
-  @ApiPropertyOptional({ description: 'Open Graph description', maxLength: 500 })
+  @ApiPropertyOptional({
+    description: 'Open Graph description',
+    maxLength: 500,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)
@@ -63,7 +72,11 @@ export class CreateSeoMetadataDto {
   @MaxLength(500)
   ogImageUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Open Graph type (e.g., website, article)', maxLength: 50, default: 'website' })
+  @ApiPropertyOptional({
+    description: 'Open Graph type (e.g., website, article)',
+    maxLength: 50,
+    default: 'website',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(50)

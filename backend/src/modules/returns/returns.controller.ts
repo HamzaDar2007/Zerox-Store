@@ -42,7 +42,9 @@ export class ReturnsController extends BaseController {
   @ApiOperation({ summary: 'Create return request' })
   @ApiResponse({ status: 201, description: 'Return request created' })
   create(@Body() dto: CreateReturnRequestDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.returnsService.createReturn(dto, user.id));
+    return this.handleAsyncOperation(
+      this.returnsService.createReturn(dto, user.id),
+    );
   }
 
   @Get()
@@ -76,7 +78,10 @@ export class ReturnsController extends BaseController {
   @UseGuards(PermissionsGuard)
   @ApiOperation({ summary: 'Update return request' })
   @Permissions('returns.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateReturnRequestDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateReturnRequestDto,
+  ) {
     return this.handleAsyncOperation(this.returnsService.updateReturn(id, dto));
   }
 
@@ -88,7 +93,9 @@ export class ReturnsController extends BaseController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: { status: ReturnStatus; notes?: string },
   ) {
-    return this.handleAsyncOperation(this.returnsService.updateStatus(id, body.status, body.notes));
+    return this.handleAsyncOperation(
+      this.returnsService.updateStatus(id, body.status, body.notes),
+    );
   }
 
   @Post(':id/images')
@@ -97,7 +104,9 @@ export class ReturnsController extends BaseController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body('imageUrl') imageUrl: string,
   ) {
-    return this.handleAsyncOperation(this.returnsService.addReturnImage(id, imageUrl));
+    return this.handleAsyncOperation(
+      this.returnsService.addReturnImage(id, imageUrl),
+    );
   }
 }
 
@@ -128,7 +137,10 @@ export class ReturnReasonsController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update return reason' })
   @Permissions('returns.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateReturnReasonDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateReturnReasonDto,
+  ) {
     return this.handleAsyncOperation(this.returnsService.updateReason(id, dto));
   }
 }

@@ -11,7 +11,12 @@ import { GuardsModule } from '../../common/modules/guards.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([SearchHistory, RecentlyViewed, ProductComparison, ProductRecommendation]),
+    TypeOrmModule.forFeature([
+      SearchHistory,
+      RecentlyViewed,
+      ProductComparison,
+      ProductRecommendation,
+    ]),
     SharedModule,
     GuardsModule,
   ],

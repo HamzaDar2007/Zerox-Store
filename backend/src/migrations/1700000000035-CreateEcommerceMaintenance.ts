@@ -4,18 +4,38 @@ export class CreateEcommerceMaintenance1700000000035 implements MigrationInterfa
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Drop all functions first to avoid signature conflicts
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_daily_maintenance()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_escalate_sla_breached_tickets()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_close_stale_tickets(INT)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_deactivate_expired_banners()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_activate_scheduled_flash_sales()`);
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_escalate_sla_breached_tickets()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_close_stale_tickets(INT)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_deactivate_expired_banners()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_activate_scheduled_flash_sales()`,
+    );
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_expire_flash_sales()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_cleanup_old_notifications(INT)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_deactivate_expired_vouchers()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_cleanup_search_history(INT)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_cleanup_abandoned_carts(INT)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_cleanup_expired_sessions()`);
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_cleanup_old_notifications(INT)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_deactivate_expired_vouchers()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_cleanup_search_history(INT)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_cleanup_abandoned_carts(INT)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_cleanup_expired_sessions()`,
+    );
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_refresh_hot_views()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_refresh_all_materialized_views()`);
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_refresh_all_materialized_views()`,
+    );
 
     // 1. fn_refresh_all_materialized_views
     await queryRunner.query(`
@@ -253,17 +273,37 @@ export class CreateEcommerceMaintenance1700000000035 implements MigrationInterfa
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_daily_maintenance()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_escalate_sla_breached_tickets()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_close_stale_tickets(INT)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_deactivate_expired_banners()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_activate_scheduled_flash_sales()`);
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_escalate_sla_breached_tickets()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_close_stale_tickets(INT)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_deactivate_expired_banners()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_activate_scheduled_flash_sales()`,
+    );
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_expire_flash_sales()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_cleanup_old_notifications(INT)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_deactivate_expired_vouchers()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_cleanup_search_history(INT)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_cleanup_abandoned_carts(INT)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_cleanup_expired_sessions()`);
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_cleanup_old_notifications(INT)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_deactivate_expired_vouchers()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_cleanup_search_history(INT)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_cleanup_abandoned_carts(INT)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_cleanup_expired_sessions()`,
+    );
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_refresh_hot_views()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_refresh_all_materialized_views()`);
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_refresh_all_materialized_views()`,
+    );
   }
 }

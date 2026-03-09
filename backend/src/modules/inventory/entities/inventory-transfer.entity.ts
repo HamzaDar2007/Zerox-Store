@@ -18,7 +18,12 @@ export class InventoryTransfer {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'transfer_number', type: 'varchar', length: 50, unique: true })
+  @Column({
+    name: 'transfer_number',
+    type: 'varchar',
+    length: 50,
+    unique: true,
+  })
   transferNumber: string;
 
   @Column({ name: 'from_warehouse_id', type: 'uuid' })

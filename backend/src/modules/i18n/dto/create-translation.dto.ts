@@ -1,11 +1,6 @@
 import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsBoolean,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsOptional, IsBoolean, MaxLength } from 'class-validator';
 
 export class CreateTranslationDto {
   @ApiProperty({ description: 'Language ID' })

@@ -1,5 +1,21 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { SeoService } from './seo.service';
 import { CreateSeoMetadataDto } from './dto/create-seo-metadata.dto';
 import { UpdateSeoMetadataDto } from './dto/update-seo-metadata.dto';
@@ -15,7 +31,9 @@ import { BaseController } from '../../common/controllers/base.controller';
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class SeoMetadataController extends BaseController {
-  constructor(private readonly seoService: SeoService) { super(); }
+  constructor(private readonly seoService: SeoService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create SEO metadata' })
@@ -28,8 +46,14 @@ export class SeoMetadataController extends BaseController {
   @ApiOperation({ summary: 'Get all SEO metadata' })
   @ApiQuery({ name: 'entityType', required: false })
   @Permissions('seo.read')
-  findAll(@Query('entityType') entityType?: string, @Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.handleAsyncOperation(this.seoService.findAllMetadata({ entityType, page, limit }));
+  findAll(
+    @Query('entityType') entityType?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.handleAsyncOperation(
+      this.seoService.findAllMetadata({ entityType, page, limit }),
+    );
   }
 
   @Get(':id')
@@ -42,14 +66,22 @@ export class SeoMetadataController extends BaseController {
   @Get('entity/:entityType/:entityId')
   @ApiOperation({ summary: 'Get SEO metadata by entity' })
   @Permissions('seo.read')
-  findByEntity(@Param('entityType') entityType: string, @Param('entityId') entityId: string) {
-    return this.handleAsyncOperation(this.seoService.findMetadataByEntity(entityType, entityId));
+  findByEntity(
+    @Param('entityType') entityType: string,
+    @Param('entityId') entityId: string,
+  ) {
+    return this.handleAsyncOperation(
+      this.seoService.findMetadataByEntity(entityType, entityId),
+    );
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update SEO metadata' })
   @Permissions('seo.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateSeoMetadataDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateSeoMetadataDto,
+  ) {
     return this.handleAsyncOperation(this.seoService.updateMetadata(id, dto));
   }
 
@@ -63,8 +95,14 @@ export class SeoMetadataController extends BaseController {
   @Post('upsert/:entityType/:entityId')
   @ApiOperation({ summary: 'Upsert SEO metadata for entity' })
   @Permissions('seo.update')
-  upsert(@Param('entityType') entityType: string, @Param('entityId') entityId: string, @Body() dto: UpdateSeoMetadataDto) {
-    return this.handleAsyncOperation(this.seoService.upsertMetadata(entityType, entityId, dto));
+  upsert(
+    @Param('entityType') entityType: string,
+    @Param('entityId') entityId: string,
+    @Body() dto: UpdateSeoMetadataDto,
+  ) {
+    return this.handleAsyncOperation(
+      this.seoService.upsertMetadata(entityType, entityId, dto),
+    );
   }
 }
 
@@ -73,7 +111,9 @@ export class SeoMetadataController extends BaseController {
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class UrlRedirectsController extends BaseController {
-  constructor(private readonly seoService: SeoService) { super(); }
+  constructor(private readonly seoService: SeoService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create URL redirect' })
@@ -86,18 +126,28 @@ export class UrlRedirectsController extends BaseController {
   @ApiOperation({ summary: 'Bulk create URL redirects' })
   @Permissions('seo.create')
   bulkCreate(@Body() redirects: CreateUrlRedirectDto[]) {
-    return this.handleAsyncOperation(this.seoService.bulkCreateRedirects(redirects));
+    return this.handleAsyncOperation(
+      this.seoService.bulkCreateRedirects(redirects),
+    );
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all URL redirects' })
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   @Permissions('seo.read')
-  findAll(@Query('isActive') isActive?: string, @Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.handleAsyncOperation(this.seoService.findAllRedirects({
-      isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
-      page, limit
-    }));
+  findAll(
+    @Query('isActive') isActive?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.handleAsyncOperation(
+      this.seoService.findAllRedirects({
+        isActive:
+          isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+        page,
+        limit,
+      }),
+    );
   }
 
   @Get(':id')
@@ -110,7 +160,10 @@ export class UrlRedirectsController extends BaseController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update URL redirect' })
   @Permissions('seo.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateUrlRedirectDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateUrlRedirectDto,
+  ) {
     return this.handleAsyncOperation(this.seoService.updateRedirect(id, dto));
   }
 

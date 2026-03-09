@@ -53,7 +53,10 @@ export class CreatePageDto {
   @Min(0)
   sortOrder?: number;
 
-  @ApiPropertyOptional({ description: 'Whether the page is published', default: false })
+  @ApiPropertyOptional({
+    description: 'Whether the page is published',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isPublished?: boolean;

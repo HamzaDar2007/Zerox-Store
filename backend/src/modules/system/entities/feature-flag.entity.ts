@@ -36,10 +36,21 @@ export class FeatureFlag {
   @Column({ type: 'jsonb', nullable: true })
   conditions: Record<string, any> | null;
 
-  @Column({ name: 'enabled_for_roles', type: 'enum', enum: UserRole, array: true, nullable: true })
+  @Column({
+    name: 'enabled_for_roles',
+    type: 'enum',
+    enum: UserRole,
+    array: true,
+    nullable: true,
+  })
   enabledForRoles: UserRole[] | null;
 
-  @Column({ name: 'enabled_for_users', type: 'uuid', array: true, nullable: true })
+  @Column({
+    name: 'enabled_for_users',
+    type: 'uuid',
+    array: true,
+    nullable: true,
+  })
   enabledForUsers: string[] | null;
 
   @Column({ name: 'updated_by', type: 'uuid', nullable: true })

@@ -72,7 +72,17 @@ export class ProductsController extends BaseController {
     @Query('limit') limit?: number,
   ) {
     return this.handleAsyncOperation(
-      this.productsService.findAll({ categoryId, brandId, sellerId, status, search, sortBy, sortOrder, page, limit }),
+      this.productsService.findAll({
+        categoryId,
+        brandId,
+        sellerId,
+        status,
+        search,
+        sortBy,
+        sortOrder,
+        page,
+        limit,
+      }),
     );
   }
 
@@ -96,7 +106,10 @@ export class ProductsController extends BaseController {
   @ApiOperation({ summary: 'Update product' })
   @ApiResponse({ status: 200, description: 'Product updated successfully' })
   @Permissions('products.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateProductDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateProductDto,
+  ) {
     return this.handleAsyncOperation(this.productsService.update(id, dto));
   }
 
@@ -119,7 +132,9 @@ export class ProductsController extends BaseController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body('status') status: ProductStatus,
   ) {
-    return this.handleAsyncOperation(this.productsService.updateStatus(id, status));
+    return this.handleAsyncOperation(
+      this.productsService.updateStatus(id, status),
+    );
   }
 
   // ==================== VARIANTS ====================
@@ -133,13 +148,17 @@ export class ProductsController extends BaseController {
     @Param('productId', ParseUUIDPipe) productId: string,
     @Body() dto: CreateProductVariantDto,
   ) {
-    return this.handleAsyncOperation(this.productsService.createVariant(productId, dto));
+    return this.handleAsyncOperation(
+      this.productsService.createVariant(productId, dto),
+    );
   }
 
   @Get(':productId/variants')
   @ApiOperation({ summary: 'Get product variants' })
   getVariants(@Param('productId', ParseUUIDPipe) productId: string) {
-    return this.handleAsyncOperation(this.productsService.findAllVariants(productId));
+    return this.handleAsyncOperation(
+      this.productsService.findAllVariants(productId),
+    );
   }
 
   @Patch('variants/:id')
@@ -151,7 +170,9 @@ export class ProductsController extends BaseController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateProductVariantDto,
   ) {
-    return this.handleAsyncOperation(this.productsService.updateVariant(id, dto));
+    return this.handleAsyncOperation(
+      this.productsService.updateVariant(id, dto),
+    );
   }
 
   @Delete('variants/:id')
@@ -174,7 +195,9 @@ export class ProductsController extends BaseController {
     @Param('productId', ParseUUIDPipe) productId: string,
     @Body() dto: CreateProductImageDto,
   ) {
-    return this.handleAsyncOperation(this.productsService.addImage(productId, dto));
+    return this.handleAsyncOperation(
+      this.productsService.addImage(productId, dto),
+    );
   }
 
   @Delete('images/:id')
@@ -191,7 +214,9 @@ export class ProductsController extends BaseController {
   @Get(':productId/questions')
   @ApiOperation({ summary: 'Get product questions' })
   getQuestions(@Param('productId', ParseUUIDPipe) productId: string) {
-    return this.handleAsyncOperation(this.productsService.getProductQuestions(productId));
+    return this.handleAsyncOperation(
+      this.productsService.getProductQuestions(productId),
+    );
   }
 
   @Post(':productId/questions')
@@ -203,7 +228,9 @@ export class ProductsController extends BaseController {
     @Body('question') question: string,
     @CurrentUser() user: User,
   ) {
-    return this.handleAsyncOperation(this.productsService.askQuestion(productId, user.id, question));
+    return this.handleAsyncOperation(
+      this.productsService.askQuestion(productId, user.id, question),
+    );
   }
 
   @Post('questions/:questionId/answers')
@@ -217,7 +244,12 @@ export class ProductsController extends BaseController {
     @CurrentUser() user: User,
   ) {
     return this.handleAsyncOperation(
-      this.productsService.answerQuestion(questionId, user.id, answer, isSellerAnswer),
+      this.productsService.answerQuestion(
+        questionId,
+        user.id,
+        answer,
+        isSellerAnswer,
+      ),
     );
   }
 
@@ -226,6 +258,20 @@ export class ProductsController extends BaseController {
   @Get(':productId/price-history')
   @ApiOperation({ summary: 'Get product price history' })
   getPriceHistory(@Param('productId', ParseUUIDPipe) productId: string) {
-    return this.handleAsyncOperation(this.productsService.getPriceHistory(productId));
+    return this.handleAsyncOperation(
+      this.productsService.getPriceHistory(productId),
+    );
+  }
+
+  @Get(':productId/related')
+  @ApiOperation({ summary: 'Get related products' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  getRelated(
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Query('limit') limit?: number,
+  ) {
+    return this.handleAsyncOperation(
+      this.productsService.getRelatedProducts(productId, limit),
+    );
   }
 }

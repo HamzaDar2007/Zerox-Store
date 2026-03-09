@@ -36,13 +36,25 @@ export class CreateSystemSettingDto {
     description: 'Value type for validation/parsing',
     maxLength: 20,
     default: 'string',
-    enum: ['string', 'integer', 'decimal', 'boolean', 'json', 'text', 'url', 'email'],
+    enum: [
+      'string',
+      'integer',
+      'decimal',
+      'boolean',
+      'json',
+      'text',
+      'url',
+      'email',
+    ],
   })
   @IsString()
   @MaxLength(20)
   valueType: string;
 
-  @ApiPropertyOptional({ description: 'Human-readable display name', maxLength: 200 })
+  @ApiPropertyOptional({
+    description: 'Human-readable display name',
+    maxLength: 200,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(200)
@@ -53,12 +65,18 @@ export class CreateSystemSettingDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ description: 'Whether the setting is publicly accessible', default: false })
+  @ApiPropertyOptional({
+    description: 'Whether the setting is publicly accessible',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isPublic?: boolean;
 
-  @ApiPropertyOptional({ description: 'Whether the value is encrypted', default: false })
+  @ApiPropertyOptional({
+    description: 'Whether the value is encrypted',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isEncrypted?: boolean;

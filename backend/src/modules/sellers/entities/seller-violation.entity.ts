@@ -46,7 +46,13 @@ export class SellerViolation {
   })
   penaltyAction: ViolationPenalty | null;
 
-  @Column({ name: 'fine_amount', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'fine_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   fineAmount: number | null;
 
   @Column({ name: 'issued_by', type: 'uuid', nullable: true })

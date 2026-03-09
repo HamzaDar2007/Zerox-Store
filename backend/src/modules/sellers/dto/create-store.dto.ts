@@ -23,11 +23,16 @@ export class CreateStoreDto {
   @Transform(({ value }) => value?.trim())
   name: string;
 
-  @ApiPropertyOptional({ description: 'Store slug (auto-generated if not provided)', maxLength: 100 })
+  @ApiPropertyOptional({
+    description: 'Store slug (auto-generated if not provided)',
+    maxLength: 100,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(100)
-  @Matches(/^[a-z0-9-]+$/, { message: 'Slug must contain only lowercase letters, numbers, and hyphens' })
+  @Matches(/^[a-z0-9-]+$/, {
+    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+  })
   slug?: string;
 
   @ApiPropertyOptional({ description: 'Logo URL' })

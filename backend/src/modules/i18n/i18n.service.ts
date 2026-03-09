@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Language } from './entities/language.entity';
@@ -26,17 +30,24 @@ export class I18nService {
     private rateHistoryRepository: Repository<CurrencyRateHistory>,
   ) {}
 
-  async createLanguage(dto: CreateLanguageDto): Promise<ServiceResponse<Language>> {
+  async createLanguage(
+    dto: CreateLanguageDto,
+  ): Promise<ServiceResponse<Language>> {
     const language = new Language();
     Object.assign(language, dto);
     const saved = await this.languageRepository.save(language);
     return { success: true, message: 'Language created', data: saved };
   }
 
-  async findAllLanguages(options?: { isActive?: boolean }): Promise<ServiceResponse<Language[]>> {
+  async findAllLanguages(options?: {
+    isActive?: boolean;
+  }): Promise<ServiceResponse<Language[]>> {
     const where: any = {};
     if (options?.isActive !== undefined) where.isActive = options.isActive;
-    const languages = await this.languageRepository.find({ where, order: { sortOrder: 'ASC', name: 'ASC' } });
+    const languages = await this.languageRepository.find({
+      where,
+      order: { sortOrder: 'ASC', name: 'ASC' },
+    });
     return { success: true, message: 'Languages retrieved', data: languages };
   }
 
@@ -52,7 +63,10 @@ export class I18nService {
     return { success: true, message: 'Language retrieved', data: language };
   }
 
-  async updateLanguage(id: string, dto: UpdateLanguageDto): Promise<ServiceResponse<Language>> {
+  async updateLanguage(
+    id: string,
+    dto: UpdateLanguageDto,
+  ): Promise<ServiceResponse<Language>> {
     const language = await this.languageRepository.findOne({ where: { id } });
     if (!language) throw new NotFoundException('Language not found');
     Object.assign(language, dto);
@@ -62,7 +76,8 @@ export class I18nService {
 
   async deleteLanguage(id: string): Promise<ServiceResponse<void>> {
     const language = await this.languageRepository.findOne({ where: { id } });
-    if (language?.isDefault) throw new BadRequestException('Cannot delete default language');
+    if (language?.isDefault)
+      throw new BadRequestException('Cannot delete default language');
     const result = await this.languageRepository.delete(id);
     if (!result.affected) throw new NotFoundException('Language not found');
     return { success: true, message: 'Language deleted', data: undefined };
@@ -78,17 +93,24 @@ export class I18nService {
     return { success: true, message: 'Default language set', data: updated };
   }
 
-  async createCurrency(dto: CreateCurrencyDto): Promise<ServiceResponse<Currency>> {
+  async createCurrency(
+    dto: CreateCurrencyDto,
+  ): Promise<ServiceResponse<Currency>> {
     const currency = new Currency();
     Object.assign(currency, dto);
     const saved = await this.currencyRepository.save(currency);
     return { success: true, message: 'Currency created', data: saved };
   }
 
-  async findAllCurrencies(options?: { isActive?: boolean }): Promise<ServiceResponse<Currency[]>> {
+  async findAllCurrencies(options?: {
+    isActive?: boolean;
+  }): Promise<ServiceResponse<Currency[]>> {
     const where: any = {};
     if (options?.isActive !== undefined) where.isActive = options.isActive;
-    const currencies = await this.currencyRepository.find({ where, order: { code: 'ASC' } });
+    const currencies = await this.currencyRepository.find({
+      where,
+      order: { code: 'ASC' },
+    });
     return { success: true, message: 'Currencies retrieved', data: currencies };
   }
 
@@ -104,7 +126,10 @@ export class I18nService {
     return { success: true, message: 'Currency retrieved', data: currency };
   }
 
-  async updateCurrency(id: string, dto: UpdateCurrencyDto): Promise<ServiceResponse<Currency>> {
+  async updateCurrency(
+    id: string,
+    dto: UpdateCurrencyDto,
+  ): Promise<ServiceResponse<Currency>> {
     const currency = await this.currencyRepository.findOne({ where: { id } });
     if (!currency) throw new NotFoundException('Currency not found');
     if (dto.exchangeRate && dto.exchangeRate !== currency.exchangeRate) {
@@ -120,7 +145,8 @@ export class I18nService {
 
   async deleteCurrency(id: string): Promise<ServiceResponse<void>> {
     const currency = await this.currencyRepository.findOne({ where: { id } });
-    if (currency?.isDefault) throw new BadRequestException('Cannot delete default currency');
+    if (currency?.isDefault)
+      throw new BadRequestException('Cannot delete default currency');
     const result = await this.currencyRepository.delete(id);
     if (!result.affected) throw new NotFoundException('Currency not found');
     return { success: true, message: 'Currency deleted', data: undefined };
@@ -136,15 +162,30 @@ export class I18nService {
     return { success: true, message: 'Default currency set', data: updated };
   }
 
-  async convertAmount(amount: number, fromCurrency: string, toCurrency: string): Promise<ServiceResponse<{ amount: number; rate: number }>> {
-    const from = await this.currencyRepository.findOne({ where: { code: fromCurrency } });
-    const to = await this.currencyRepository.findOne({ where: { code: toCurrency } });
+  async convertAmount(
+    amount: number,
+    fromCurrency: string,
+    toCurrency: string,
+  ): Promise<ServiceResponse<{ amount: number; rate: number }>> {
+    const from = await this.currencyRepository.findOne({
+      where: { code: fromCurrency },
+    });
+    const to = await this.currencyRepository.findOne({
+      where: { code: toCurrency },
+    });
     if (!from || !to) throw new NotFoundException('Currency not found');
     const rate = Number(to.exchangeRate) / Number(from.exchangeRate);
-    return { success: true, message: 'Amount converted', data: { amount: amount * rate, rate } };
+    return {
+      success: true,
+      message: 'Amount converted',
+      data: { amount: amount * rate, rate },
+    };
   }
 
-  async getCurrencyRateHistory(currencyId: string, limit = 30): Promise<ServiceResponse<CurrencyRateHistory[]>> {
+  async getCurrencyRateHistory(
+    currencyId: string,
+    limit = 30,
+  ): Promise<ServiceResponse<CurrencyRateHistory[]>> {
     const history = await this.rateHistoryRepository.find({
       where: { currencyId },
       order: { recordedAt: 'DESC' },
@@ -153,24 +194,42 @@ export class I18nService {
     return { success: true, message: 'Rate history retrieved', data: history };
   }
 
-  async createTranslation(dto: CreateTranslationDto): Promise<ServiceResponse<Translation>> {
+  async createTranslation(
+    dto: CreateTranslationDto,
+  ): Promise<ServiceResponse<Translation>> {
     const translation = new Translation();
     Object.assign(translation, dto);
     const saved = await this.translationRepository.save(translation);
     return { success: true, message: 'Translation created', data: saved };
   }
 
-  async findTranslations(options?: { languageId?: string; entityType?: string; entityId?: string }): Promise<ServiceResponse<Translation[]>> {
+  async findTranslations(options?: {
+    languageId?: string;
+    entityType?: string;
+    entityId?: string;
+  }): Promise<ServiceResponse<Translation[]>> {
     const where: any = {};
     if (options?.languageId) where.languageId = options.languageId;
     if (options?.entityType) where.entityType = options.entityType;
     if (options?.entityId) where.entityId = options.entityId;
-    const translations = await this.translationRepository.find({ where, relations: ['language'] });
-    return { success: true, message: 'Translations retrieved', data: translations };
+    const translations = await this.translationRepository.find({
+      where,
+      relations: ['language'],
+    });
+    return {
+      success: true,
+      message: 'Translations retrieved',
+      data: translations,
+    };
   }
 
-  async updateTranslation(id: string, dto: UpdateTranslationDto): Promise<ServiceResponse<Translation>> {
-    const translation = await this.translationRepository.findOne({ where: { id } });
+  async updateTranslation(
+    id: string,
+    dto: UpdateTranslationDto,
+  ): Promise<ServiceResponse<Translation>> {
+    const translation = await this.translationRepository.findOne({
+      where: { id },
+    });
     if (!translation) throw new NotFoundException('Translation not found');
     Object.assign(translation, dto);
     const updated = await this.translationRepository.save(translation);
@@ -183,8 +242,16 @@ export class I18nService {
     return { success: true, message: 'Translation deleted', data: undefined };
   }
 
-  async upsertTranslation(languageId: string, entityType: string, entityId: string, fieldName: string, translatedValue: string): Promise<ServiceResponse<Translation>> {
-    let translation = await this.translationRepository.findOne({ where: { languageId, entityType, entityId, fieldName } });
+  async upsertTranslation(
+    languageId: string,
+    entityType: string,
+    entityId: string,
+    fieldName: string,
+    translatedValue: string,
+  ): Promise<ServiceResponse<Translation>> {
+    let translation = await this.translationRepository.findOne({
+      where: { languageId, entityType, entityId, fieldName },
+    });
     if (translation) {
       translation.translatedValue = translatedValue;
     } else {

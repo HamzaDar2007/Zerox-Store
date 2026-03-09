@@ -25,7 +25,10 @@ export class CreateTicketCategoryDto {
   @IsUuidString()
   parentId?: string;
 
-  @ApiPropertyOptional({ description: 'Whether the category is active', default: true })
+  @ApiPropertyOptional({
+    description: 'Whether the category is active',
+    default: true,
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

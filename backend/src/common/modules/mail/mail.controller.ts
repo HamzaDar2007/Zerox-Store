@@ -21,7 +21,11 @@ export class MailController {
     schema: {
       type: 'object',
       properties: {
-        to: { type: 'string', example: 'test@example.com', description: 'Recipient email address' },
+        to: {
+          type: 'string',
+          example: 'test@example.com',
+          description: 'Recipient email address',
+        },
       },
       required: ['to'],
     },

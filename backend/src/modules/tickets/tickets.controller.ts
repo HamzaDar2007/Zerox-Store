@@ -1,7 +1,27 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { TicketsService } from './tickets.service';
-import { CreateTicketDto, UpdateTicketDto, CreateTicketMessageDto, CreateTicketCategoryDto } from './dto';
+import {
+  CreateTicketDto,
+  UpdateTicketDto,
+  CreateTicketMessageDto,
+  CreateTicketCategoryDto,
+} from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
@@ -15,7 +35,9 @@ import { TicketStatus, TicketPriority } from '@common/enums';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class TicketsController extends BaseController {
-  constructor(private readonly ticketsService: TicketsService) { super(); }
+  constructor(private readonly ticketsService: TicketsService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create ticket' })
@@ -37,19 +59,29 @@ export class TicketsController extends BaseController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.handleAsyncOperation(this.ticketsService.findAll({ userId, status, priority, page, limit }));
+    return this.handleAsyncOperation(
+      this.ticketsService.findAll({ userId, status, priority, page, limit }),
+    );
   }
 
   @Get('my-tickets')
   @ApiOperation({ summary: 'Get my tickets' })
-  getMyTickets(@CurrentUser() user: User, @Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.handleAsyncOperation(this.ticketsService.findAll({ userId: user.id, page, limit }));
+  getMyTickets(
+    @CurrentUser() user: User,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.handleAsyncOperation(
+      this.ticketsService.findAll({ userId: user.id, page, limit }),
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get ticket by ID' })
   findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.ticketsService.findOne(id, user.id, user.role));
+    return this.handleAsyncOperation(
+      this.ticketsService.findOne(id, user.id, user.role),
+    );
   }
 
   @Patch(':id')
@@ -64,22 +96,38 @@ export class TicketsController extends BaseController {
   @UseGuards(PermissionsGuard)
   @ApiOperation({ summary: 'Update ticket status' })
   @Permissions('tickets.update')
-  updateStatus(@Param('id', ParseUUIDPipe) id: string, @Body('status') status: TicketStatus) {
-    return this.handleAsyncOperation(this.ticketsService.updateStatus(id, status));
+  updateStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('status') status: TicketStatus,
+  ) {
+    return this.handleAsyncOperation(
+      this.ticketsService.updateStatus(id, status),
+    );
   }
 
   @Patch(':id/assign')
   @UseGuards(PermissionsGuard)
   @ApiOperation({ summary: 'Assign ticket' })
   @Permissions('tickets.update')
-  assign(@Param('id', ParseUUIDPipe) id: string, @Body('assignedToId') assignedToId: string) {
-    return this.handleAsyncOperation(this.ticketsService.assignTicket(id, assignedToId));
+  assign(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('assignedToId') assignedToId: string,
+  ) {
+    return this.handleAsyncOperation(
+      this.ticketsService.assignTicket(id, assignedToId),
+    );
   }
 
   @Post(':id/messages')
   @ApiOperation({ summary: 'Add message to ticket' })
-  addMessage(@Param('id', ParseUUIDPipe) id: string, @Body() dto: CreateTicketMessageDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.ticketsService.addMessage(id, user.id, dto));
+  addMessage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateTicketMessageDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.handleAsyncOperation(
+      this.ticketsService.addMessage(id, user.id, dto),
+    );
   }
 
   @Get(':id/messages')

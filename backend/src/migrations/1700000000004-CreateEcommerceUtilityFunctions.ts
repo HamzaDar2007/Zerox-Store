@@ -118,14 +118,26 @@ export class CreateEcommerceUtilityFunctions1700000000004 implements MigrationIn
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_current_seller_id()`);
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_current_user_id()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_calc_percentage(DECIMAL, DECIMAL)`);
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_calc_percentage(DECIMAL, DECIMAL)`,
+    );
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_is_valid_email(TEXT)`);
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_update_timestamp()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_generate_dispute_number()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_generate_return_number()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_generate_ticket_number()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_generate_refund_number()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_generate_order_number()`);
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_generate_dispute_number()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_generate_return_number()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_generate_ticket_number()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_generate_refund_number()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_generate_order_number()`,
+    );
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_generate_slug(TEXT)`);
   }
 }

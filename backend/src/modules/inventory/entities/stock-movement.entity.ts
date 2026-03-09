@@ -37,13 +37,24 @@ export class StockMovement {
   @Column({ name: 'quantity_after', type: 'integer' })
   quantityAfter: number;
 
-  @Column({ name: 'reference_type', type: 'varchar', length: 50, nullable: true })
+  @Column({
+    name: 'reference_type',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   referenceType: string | null;
 
   @Column({ name: 'reference_id', type: 'uuid', nullable: true })
   referenceId: string | null;
 
-  @Column({ name: 'cost_per_unit', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'cost_per_unit',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   costPerUnit: number | null;
 
   @Column({ type: 'text', nullable: true })

@@ -5,7 +5,12 @@ import { Ticket } from './entities/ticket.entity';
 import { TicketMessage } from './entities/ticket-message.entity';
 import { TicketCategory } from './entities/ticket-category.entity';
 import { ServiceResponse } from '../../common/interfaces/service-response.interface';
-import { CreateTicketDto, UpdateTicketDto, CreateTicketMessageDto, CreateTicketCategoryDto } from './dto';
+import {
+  CreateTicketDto,
+  UpdateTicketDto,
+  CreateTicketMessageDto,
+  CreateTicketCategoryDto,
+} from './dto';
 import { TicketStatus, TicketPriority } from '@common/enums';
 import { MailService } from '../../common/modules/mail/mail.service';
 
@@ -21,7 +26,10 @@ export class TicketsService {
     private readonly mailService: MailService,
   ) {}
 
-  async create(userId: string, dto: CreateTicketDto): Promise<ServiceResponse<Ticket>> {
+  async create(
+    userId: string,
+    dto: CreateTicketDto,
+  ): Promise<ServiceResponse<Ticket>> {
     const ticketNumber = await this.generateTicketNumber();
     const ticket = new Ticket();
     Object.assign(ticket, dto);
@@ -37,30 +45,68 @@ export class TicketsService {
     return { success: true, message: 'Ticket created', data: saved };
   }
 
-  async findAll(options?: { userId?: string; status?: TicketStatus; priority?: TicketPriority; categoryId?: string; page?: number; limit?: number }): Promise<ServiceResponse<Ticket[]>> {
-    const query = this.ticketRepository.createQueryBuilder('ticket').leftJoinAndSelect('ticket.category', 'category').orderBy('ticket.createdAt', 'DESC');
-    if (options?.userId) query.andWhere('ticket.userId = :userId', { userId: options.userId });
-    if (options?.status) query.andWhere('ticket.status = :status', { status: options.status });
-    if (options?.priority) query.andWhere('ticket.priority = :priority', { priority: options.priority });
-    if (options?.categoryId) query.andWhere('ticket.categoryId = :categoryId', { categoryId: options.categoryId });
+  async findAll(options?: {
+    userId?: string;
+    status?: TicketStatus;
+    priority?: TicketPriority;
+    categoryId?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<ServiceResponse<Ticket[]>> {
+    const query = this.ticketRepository
+      .createQueryBuilder('ticket')
+      .leftJoinAndSelect('ticket.category', 'category')
+      .orderBy('ticket.createdAt', 'DESC');
+    if (options?.userId)
+      query.andWhere('ticket.userId = :userId', { userId: options.userId });
+    if (options?.status)
+      query.andWhere('ticket.status = :status', { status: options.status });
+    if (options?.priority)
+      query.andWhere('ticket.priority = :priority', {
+        priority: options.priority,
+      });
+    if (options?.categoryId)
+      query.andWhere('ticket.categoryId = :categoryId', {
+        categoryId: options.categoryId,
+      });
     const page = options?.page || 1;
     const limit = options?.limit || 20;
     query.skip((page - 1) * limit).take(limit);
     const [tickets, total] = await query.getManyAndCount();
-    return { success: true, message: 'Tickets retrieved', data: tickets, meta: { total, page, limit } };
+    return {
+      success: true,
+      message: 'Tickets retrieved',
+      data: tickets,
+      meta: { total, page, limit },
+    };
   }
 
-  async findOne(id: string, userId?: string, userRole?: string): Promise<ServiceResponse<Ticket>> {
-    const ticket = await this.ticketRepository.findOne({ where: { id }, relations: ['category', 'messages', 'user', 'assignedToUser'] });
+  async findOne(
+    id: string,
+    userId?: string,
+    userRole?: string,
+  ): Promise<ServiceResponse<Ticket>> {
+    const ticket = await this.ticketRepository.findOne({
+      where: { id },
+      relations: ['category', 'messages', 'user', 'assignedToUser'],
+    });
     if (!ticket) throw new NotFoundException('Ticket not found');
     // Non-admin users can only view their own tickets
-    if (userId && userRole !== 'admin' && userRole !== 'super_admin' && ticket.userId !== userId) {
+    if (
+      userId &&
+      userRole !== 'admin' &&
+      userRole !== 'super_admin' &&
+      ticket.userId !== userId
+    ) {
       throw new NotFoundException('Ticket not found');
     }
     return { success: true, message: 'Ticket retrieved', data: ticket };
   }
 
-  async update(id: string, dto: UpdateTicketDto): Promise<ServiceResponse<Ticket>> {
+  async update(
+    id: string,
+    dto: UpdateTicketDto,
+  ): Promise<ServiceResponse<Ticket>> {
     const ticket = await this.ticketRepository.findOne({ where: { id } });
     if (!ticket) throw new NotFoundException('Ticket not found');
     Object.assign(ticket, dto);
@@ -68,7 +114,10 @@ export class TicketsService {
     return { success: true, message: 'Ticket updated', data: updated };
   }
 
-  async updateStatus(id: string, status: TicketStatus): Promise<ServiceResponse<Ticket>> {
+  async updateStatus(
+    id: string,
+    status: TicketStatus,
+  ): Promise<ServiceResponse<Ticket>> {
     const ticket = await this.ticketRepository.findOne({ where: { id } });
     if (!ticket) throw new NotFoundException('Ticket not found');
     ticket.status = status;
@@ -79,10 +128,17 @@ export class TicketsService {
     // Send ticket status update email (fire-and-forget)
     this.sendTicketStatusEmail(updated).catch(() => {});
 
-    return { success: true, message: `Ticket ${status.toLowerCase()}`, data: updated };
+    return {
+      success: true,
+      message: `Ticket ${status.toLowerCase()}`,
+      data: updated,
+    };
   }
 
-  async assignTicket(id: string, assignedToId: string): Promise<ServiceResponse<Ticket>> {
+  async assignTicket(
+    id: string,
+    assignedToId: string,
+  ): Promise<ServiceResponse<Ticket>> {
     const ticket = await this.ticketRepository.findOne({ where: { id } });
     if (!ticket) throw new NotFoundException('Ticket not found');
     ticket.assignedTo = assignedToId;
@@ -95,8 +151,14 @@ export class TicketsService {
     return { success: true, message: 'Ticket assigned', data: updated };
   }
 
-  async addMessage(ticketId: string, senderId: string, dto: CreateTicketMessageDto): Promise<ServiceResponse<TicketMessage>> {
-    const ticket = await this.ticketRepository.findOne({ where: { id: ticketId } });
+  async addMessage(
+    ticketId: string,
+    senderId: string,
+    dto: CreateTicketMessageDto,
+  ): Promise<ServiceResponse<TicketMessage>> {
+    const ticket = await this.ticketRepository.findOne({
+      where: { id: ticketId },
+    });
     if (!ticket) throw new NotFoundException('Ticket not found');
     const message = new TicketMessage();
     Object.assign(message, dto);
@@ -110,17 +172,27 @@ export class TicketsService {
     return { success: true, message: 'Message added', data: saved };
   }
 
-  async getMessages(ticketId: string): Promise<ServiceResponse<TicketMessage[]>> {
-    const messages = await this.messageRepository.find({ where: { ticketId }, relations: ['sender'], order: { createdAt: 'ASC' } });
+  async getMessages(
+    ticketId: string,
+  ): Promise<ServiceResponse<TicketMessage[]>> {
+    const messages = await this.messageRepository.find({
+      where: { ticketId },
+      relations: ['sender'],
+      order: { createdAt: 'ASC' },
+    });
     return { success: true, message: 'Messages retrieved', data: messages };
   }
 
   async getCategories(): Promise<ServiceResponse<TicketCategory[]>> {
-    const categories = await this.categoryRepository.find({ where: { isActive: true } });
+    const categories = await this.categoryRepository.find({
+      where: { isActive: true },
+    });
     return { success: true, message: 'Categories retrieved', data: categories };
   }
 
-  async createCategory(dto: CreateTicketCategoryDto): Promise<ServiceResponse<TicketCategory>> {
+  async createCategory(
+    dto: CreateTicketCategoryDto,
+  ): Promise<ServiceResponse<TicketCategory>> {
     const category = new TicketCategory();
     Object.assign(category, dto);
     const saved = await this.categoryRepository.save(category);
@@ -140,13 +212,21 @@ export class TicketsService {
       });
       if (!full?.user?.email) return;
       await this.mailService.sendTicketCreatedEmail(
-        full.user.email, full.user.name || 'Customer',
-        full.ticketNumber, full.subject,
+        full.user.email,
+        full.user.name || 'Customer',
+        full.ticketNumber,
+        full.subject,
       );
-      this.mailService.sendAdminNewTicketAlert(
-        full.ticketNumber, full.subject, full.user.name || 'Customer',
-      ).catch(() => {});
-    } catch (_) { /* silently ignore */ }
+      this.mailService
+        .sendAdminNewTicketAlert(
+          full.ticketNumber,
+          full.subject,
+          full.user.name || 'Customer',
+        )
+        .catch(() => {});
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 
   private async sendTicketStatusEmail(ticket: Ticket): Promise<void> {
@@ -157,10 +237,14 @@ export class TicketsService {
       });
       if (!full?.user?.email) return;
       await this.mailService.sendTicketStatusUpdateEmail(
-        full.user.email, full.user.name || 'Customer',
-        full.ticketNumber, full.status,
+        full.user.email,
+        full.user.name || 'Customer',
+        full.ticketNumber,
+        full.status,
       );
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 
   private async sendTicketAssignedNotification(ticket: Ticket): Promise<void> {
@@ -171,13 +255,20 @@ export class TicketsService {
       });
       if (!full?.assignedToUser?.email) return;
       await this.mailService.sendTicketAssignedEmail(
-        full.assignedToUser.email, full.assignedToUser.name || 'Agent',
-        full.ticketNumber, full.subject,
+        full.assignedToUser.email,
+        full.assignedToUser.name || 'Agent',
+        full.ticketNumber,
+        full.subject,
       );
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 
-  private async sendTicketReplyNotification(ticketId: string, senderId: string): Promise<void> {
+  private async sendTicketReplyNotification(
+    ticketId: string,
+    senderId: string,
+  ): Promise<void> {
     try {
       const full = await this.ticketRepository.findOne({
         where: { id: ticketId },
@@ -187,10 +278,14 @@ export class TicketsService {
       // If sender is the customer, skip notifying them; otherwise notify the customer
       if (senderId !== full.userId && full.user?.email) {
         await this.mailService.sendTicketReplyEmail(
-          full.user.email, full.user.name || 'Customer',
-          full.ticketNumber, 'Support Team',
+          full.user.email,
+          full.user.name || 'Customer',
+          full.ticketNumber,
+          'Support Team',
         );
       }
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 }

@@ -15,10 +15,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { CreateUserWithPermissionsDto } from './dto/create-user-with-permissions.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateAddressDto } from './dto/create-address.dto';
-import {
-  AssignmentActionEnum,
-  AssignPermissionsDto,
-} from './dto/assign-permissions.dto';
+import { AssignPermissionsDto } from './dto/assign-permissions.dto';
 import { SecurityUtil } from '../../common/utils/security.util';
 import { ServiceResponse } from '../../common/interfaces/service-response.interface';
 import * as bcrypt from 'bcryptjs';
@@ -208,38 +205,44 @@ export class UsersService {
    * Permissions are now managed through roles, not directly assigned to users.
    */
   async assignPermissions(
-    userId: string,
-    dto: AssignPermissionsDto,
+    _userId: string,
+    _dto: AssignPermissionsDto,
   ): Promise<ServiceResponse<User>> {
     throw new Error(
       'Direct user permission assignment is deprecated. ' +
-      'Use role-based permissions instead. Assign roles to users via assignRoleToUser.'
+        'Use role-based permissions instead. Assign roles to users via assignRoleToUser.',
     );
   }
 
   private async addUserPermissions(
-    userId: string,
-    permissionIds: string[],
+    _userId: string,
+    _permissionIds: string[],
   ): Promise<void> {
     // Deprecated - user_permissions table doesn't exist
-    throw new Error('user_permissions table does not exist in the current schema');
+    throw new Error(
+      'user_permissions table does not exist in the current schema',
+    );
   }
 
   private async removeUserPermissions(
-    userId: string,
-    permissionIds: string[],
+    _userId: string,
+    _permissionIds: string[],
   ): Promise<void> {
     // Deprecated - user_permissions table doesn't exist
-    throw new Error('user_permissions table does not exist in the current schema');
+    throw new Error(
+      'user_permissions table does not exist in the current schema',
+    );
   }
 
   private async replaceUserFeaturePermissions(
-    userId: string,
-    feature: string,
-    newPermissionIds: string[],
+    _userId: string,
+    _feature: string,
+    _newPermissionIds: string[],
   ): Promise<void> {
-    // Deprecated - user_permissions table doesn't exist  
-    throw new Error('user_permissions table does not exist in the current schema');
+    // Deprecated - user_permissions table doesn't exist
+    throw new Error(
+      'user_permissions table does not exist in the current schema',
+    );
   }
 
   async getAvailableActionsForFeature(module: string): Promise<string[]> {
@@ -312,7 +315,7 @@ export class UsersService {
         const roleRecord = await this.roleRepository.findOne({
           where: { name: user.role as any },
         });
-        
+
         if (roleRecord) {
           // Get role permissions using the new schema
           const rolePermissions = await this.userRepository.manager.query(
@@ -456,7 +459,8 @@ export class UsersService {
         role: 'user.role',
         createdAt: 'user.createdAt',
       };
-      const sortField = allowedSortFields[options?.sortBy || ''] || 'user.createdAt';
+      const sortField =
+        allowedSortFields[options?.sortBy || ''] || 'user.createdAt';
       const sortOrder = options?.sortOrder === 'ASC' ? 'ASC' : 'DESC';
       query.orderBy(sortField, sortOrder);
 
@@ -486,7 +490,11 @@ export class UsersService {
     };
   }
 
-  async update(id: string, dto: UpdateUserDto, callerRole?: string): Promise<ServiceResponse<User>> {
+  async update(
+    id: string,
+    dto: UpdateUserDto,
+    callerRole?: string,
+  ): Promise<ServiceResponse<User>> {
     try {
       const validId = SecurityUtil.validateId(id);
       SecurityUtil.validateObject(dto);
@@ -583,7 +591,10 @@ export class UsersService {
     };
   }
 
-  async createAddress(userId: string, dto: CreateAddressDto): Promise<ServiceResponse<Address>> {
+  async createAddress(
+    userId: string,
+    dto: CreateAddressDto,
+  ): Promise<ServiceResponse<Address>> {
     const address = this.addressRepository.create({
       ...dto,
       userId,
@@ -616,7 +627,10 @@ export class UsersService {
     };
   }
 
-  async deleteAddress(userId: string, addressId: string): Promise<ServiceResponse<void>> {
+  async deleteAddress(
+    userId: string,
+    addressId: string,
+  ): Promise<ServiceResponse<void>> {
     const address = await this.addressRepository.findOne({
       where: { id: addressId, userId },
     });

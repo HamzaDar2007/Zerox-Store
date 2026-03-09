@@ -32,7 +32,10 @@ export class CreateSavedPaymentMethodDto {
   @MaxLength(100)
   nickname?: string;
 
-  @ApiPropertyOptional({ description: 'Is this the default payment method', default: false })
+  @ApiPropertyOptional({
+    description: 'Is this the default payment method',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isDefault?: boolean;

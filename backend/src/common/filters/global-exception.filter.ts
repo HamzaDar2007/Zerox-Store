@@ -29,12 +29,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     const errorResponse = this.buildErrorResponse(exception, request);
-    
+
     this.logError(exception, request, errorResponse);
     response.status(errorResponse.statusCode).json(errorResponse);
   }
 
-  private buildErrorResponse(exception: unknown, request: Request): ErrorResponse {
+  private buildErrorResponse(
+    exception: unknown,
+    request: Request,
+  ): ErrorResponse {
     const timestamp = new Date().toISOString();
     const path = request.url;
 
@@ -53,10 +56,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return this.handleUnknownError(path, timestamp);
   }
 
-  private handleHttpException(exception: HttpException, path: string, timestamp: string): ErrorResponse {
+  private handleHttpException(
+    exception: HttpException,
+    path: string,
+    timestamp: string,
+  ): ErrorResponse {
     const status = exception.getStatus();
     const exceptionResponse = exception.getResponse();
-    
+
     const baseResponse: ErrorResponse = {
       success: false,
       message: exception.message,
@@ -68,7 +75,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
       const responseObj = exceptionResponse as Record<string, unknown>;
-      
+
       if ('message' in responseObj) {
         const messages = responseObj.message;
         if (Array.isArray(messages)) {
@@ -78,7 +85,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           baseResponse.message = String(messages);
         }
       }
-      
+
       if ('error' in responseObj && typeof responseObj.error === 'string') {
         baseResponse.error = responseObj.error;
       }
@@ -87,15 +94,22 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return baseResponse;
   }
 
-  private handleDatabaseError(exception: QueryFailedError, path: string, timestamp: string): ErrorResponse {
-    const isDuplicateError = exception.message.includes('duplicate key') || 
-                           exception.message.includes('UNIQUE constraint');
-    
-    const isForeignKeyError = exception.message.includes('foreign key') ||
-                             exception.message.includes('FOREIGN KEY constraint');
+  private handleDatabaseError(
+    exception: QueryFailedError,
+    path: string,
+    timestamp: string,
+  ): ErrorResponse {
+    const isDuplicateError =
+      exception.message.includes('duplicate key') ||
+      exception.message.includes('UNIQUE constraint');
 
-    const isNotNullError = exception.message.includes('NOT NULL') ||
-                          exception.message.includes('null value');
+    const isForeignKeyError =
+      exception.message.includes('foreign key') ||
+      exception.message.includes('FOREIGN KEY constraint');
+
+    const isNotNullError =
+      exception.message.includes('NOT NULL') ||
+      exception.message.includes('null value');
 
     if (isDuplicateError) {
       return {
@@ -140,17 +154,24 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     };
   }
 
-  private handleGenericError(exception: Error, path: string, timestamp: string): ErrorResponse {
-    const isValidationError = exception.message.includes('validation') ||
-                             exception.message.includes('invalid') ||
-                             exception.message.includes('required');
+  private handleGenericError(
+    exception: Error,
+    path: string,
+    timestamp: string,
+  ): ErrorResponse {
+    const isValidationError =
+      exception.message.includes('validation') ||
+      exception.message.includes('invalid') ||
+      exception.message.includes('required');
 
-    const isAuthError = exception.message.includes('unauthorized') ||
-                       exception.message.includes('forbidden') ||
-                       exception.message.includes('token');
+    const isAuthError =
+      exception.message.includes('unauthorized') ||
+      exception.message.includes('forbidden') ||
+      exception.message.includes('token');
 
-    const isNotFoundError = exception.message.includes('not found') ||
-                           exception.message.includes('does not exist');
+    const isNotFoundError =
+      exception.message.includes('not found') ||
+      exception.message.includes('does not exist');
 
     if (isValidationError) {
       return {
@@ -206,10 +227,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     };
   }
 
-  private logError(exception: unknown, request: Request, errorResponse: ErrorResponse): void {
+  private logError(
+    exception: unknown,
+    request: Request,
+    errorResponse: ErrorResponse,
+  ): void {
     const { method, url, ip, headers } = request;
     const userAgent = headers['user-agent'] || 'Unknown';
-    
+
     const logContext = {
       method,
       url,
@@ -217,14 +242,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       userAgent,
       statusCode: errorResponse.statusCode,
       timestamp: errorResponse.timestamp,
-      originalError: exception instanceof Error ? exception.message : String(exception),
+      originalError:
+        exception instanceof Error ? exception.message : String(exception),
     };
 
     // Log all errors as warnings with full context for debugging
     this.logger.warn(
       `${method} ${url} - ${errorResponse.statusCode} - ${errorResponse.message}`,
       exception instanceof Error ? exception.stack : String(exception),
-      JSON.stringify(logContext)
+      JSON.stringify(logContext),
     );
   }
 }

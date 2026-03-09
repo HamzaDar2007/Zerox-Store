@@ -24,9 +24,7 @@ import { BaseController } from '../../common/controllers/base.controller';
 @ApiBearerAuth('JWT-auth')
 @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
 export class RolePermissionsController extends BaseController {
-  constructor(
-    private readonly rolePermissionsService: RolePermissionsService,
-  ) {
+  constructor(private readonly rolePermissionsService: RolePermissionsService) {
     super();
   }
 
@@ -37,14 +35,18 @@ export class RolePermissionsController extends BaseController {
     @Param('roleId') roleId: string,
     @Body() dto: AssignRolePermissionsDto,
   ) {
-    return this.handleAsyncOperation(this.rolePermissionsService.assignPermissions(roleId, dto));
+    return this.handleAsyncOperation(
+      this.rolePermissionsService.assignPermissions(roleId, dto),
+    );
   }
 
   @Get(':roleId')
   @ApiOperation({ summary: 'Retrieve permissions for a role' })
   @Permissions('roles.read')
   getPermissions(@Param('roleId') roleId: string) {
-    return this.handleAsyncOperation(this.rolePermissionsService.getPermissionsByRole(roleId));
+    return this.handleAsyncOperation(
+      this.rolePermissionsService.getPermissionsByRole(roleId),
+    );
   }
 
   @Delete(':roleId/:permissionId')
@@ -54,6 +56,8 @@ export class RolePermissionsController extends BaseController {
     @Param('roleId') roleId: string,
     @Param('permissionId') permissionId: string,
   ) {
-    return this.handleAsyncOperation(this.rolePermissionsService.removePermission(roleId, permissionId));
+    return this.handleAsyncOperation(
+      this.rolePermissionsService.removePermission(roleId, permissionId),
+    );
   }
 }

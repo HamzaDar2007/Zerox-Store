@@ -13,14 +13,20 @@ export class CreateReferralCodeDto {
   @IsUuidString()
   userId: string;
 
-  @ApiPropertyOptional({ description: 'Custom referral code (auto-generated if not provided)', maxLength: 20 })
+  @ApiPropertyOptional({
+    description: 'Custom referral code (auto-generated if not provided)',
+    maxLength: 20,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(20)
   @Matches(/^[A-Z0-9]+$/, { message: 'code must be uppercase alphanumeric' })
   code?: string;
 
-  @ApiPropertyOptional({ description: 'Whether the code is active', default: true })
+  @ApiPropertyOptional({
+    description: 'Whether the code is active',
+    default: true,
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

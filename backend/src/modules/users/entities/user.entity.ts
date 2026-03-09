@@ -5,9 +5,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  OneToMany,
 } from 'typeorm';
-import { UserRole, Gender, LoginStatus } from '@common/enums';
+import { UserRole, Gender } from '@common/enums';
 
 @Entity('users')
 export class User {
@@ -45,7 +44,12 @@ export class User {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
-  @Column({ name: 'profile_image', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'profile_image',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   profileImage: string | null;
 
   @Column({ name: 'date_of_birth', type: 'date', nullable: true })
@@ -58,7 +62,13 @@ export class User {
   })
   gender: Gender | null;
 
-  @Column({ name: 'referral_code', type: 'varchar', length: 20, nullable: true, unique: true })
+  @Column({
+    name: 'referral_code',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+    unique: true,
+  })
   referralCode: string | null;
 
   @Column({ name: 'last_login_at', type: 'timestamptz', nullable: true })
@@ -76,10 +86,22 @@ export class User {
   @Column({ name: 'two_factor_enabled', type: 'boolean', default: false })
   twoFactorEnabled: boolean;
 
-  @Column({ name: 'two_factor_secret', type: 'varchar', length: 255, nullable: true, select: false })
+  @Column({
+    name: 'two_factor_secret',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    select: false,
+  })
   twoFactorSecret: string | null;
 
-  @Column({ name: 'two_factor_backup_codes', type: 'text', array: true, nullable: true, select: false })
+  @Column({
+    name: 'two_factor_backup_codes',
+    type: 'text',
+    array: true,
+    nullable: true,
+    select: false,
+  })
   twoFactorBackupCodes: string[] | null;
 
   @Column({ name: 'preferred_language_id', type: 'uuid', nullable: true })

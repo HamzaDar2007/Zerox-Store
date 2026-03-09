@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TaxZone } from './entities/tax-zone.entity';
@@ -50,12 +47,18 @@ export class TaxService {
   }
 
   async findOneZone(id: string): Promise<ServiceResponse<TaxZone>> {
-    const zone = await this.zoneRepository.findOne({ where: { id }, relations: ['rates'] });
+    const zone = await this.zoneRepository.findOne({
+      where: { id },
+      relations: ['rates'],
+    });
     if (!zone) throw new NotFoundException('Tax zone not found');
     return { success: true, message: 'Tax zone retrieved', data: zone };
   }
 
-  async updateZone(id: string, dto: UpdateTaxZoneDto): Promise<ServiceResponse<TaxZone>> {
+  async updateZone(
+    id: string,
+    dto: UpdateTaxZoneDto,
+  ): Promise<ServiceResponse<TaxZone>> {
     const zone = await this.zoneRepository.findOne({ where: { id } });
     if (!zone) throw new NotFoundException('Tax zone not found');
     Object.assign(zone, dto);
@@ -81,11 +84,17 @@ export class TaxService {
 
   async findAllRates(taxZoneId?: string): Promise<ServiceResponse<TaxRate[]>> {
     const where = taxZoneId ? { taxZoneId } : {};
-    const rates = await this.rateRepository.find({ where, relations: ['taxZone', 'taxClass'] });
+    const rates = await this.rateRepository.find({
+      where,
+      relations: ['taxZone', 'taxClass'],
+    });
     return { success: true, message: 'Tax rates retrieved', data: rates };
   }
 
-  async updateRate(id: string, dto: UpdateTaxRateDto): Promise<ServiceResponse<TaxRate>> {
+  async updateRate(
+    id: string,
+    dto: UpdateTaxRateDto,
+  ): Promise<ServiceResponse<TaxRate>> {
     const rate = await this.rateRepository.findOne({ where: { id } });
     if (!rate) throw new NotFoundException('Tax rate not found');
     Object.assign(rate, dto);
@@ -102,7 +111,9 @@ export class TaxService {
 
   // ==================== TAX CLASSES ====================
 
-  async createClass(dto: CreateTaxClassDto): Promise<ServiceResponse<TaxClass>> {
+  async createClass(
+    dto: CreateTaxClassDto,
+  ): Promise<ServiceResponse<TaxClass>> {
     const taxClass = new TaxClass();
     Object.assign(taxClass, dto);
     const saved = await this.classRepository.save(taxClass);
@@ -114,7 +125,10 @@ export class TaxService {
     return { success: true, message: 'Tax classes retrieved', data: classes };
   }
 
-  async updateClass(id: string, dto: UpdateTaxClassDto): Promise<ServiceResponse<TaxClass>> {
+  async updateClass(
+    id: string,
+    dto: UpdateTaxClassDto,
+  ): Promise<ServiceResponse<TaxClass>> {
     const taxClass = await this.classRepository.findOne({ where: { id } });
     if (!taxClass) throw new NotFoundException('Tax class not found');
     Object.assign(taxClass, dto);
@@ -129,14 +143,18 @@ export class TaxService {
     countryCode: string,
     stateCode?: string,
     taxClassId?: string,
-  ): Promise<ServiceResponse<{ taxAmount: number; taxRate: number; taxBreakdown: any[] }>> {
+  ): Promise<
+    ServiceResponse<{ taxAmount: number; taxRate: number; taxBreakdown: any[] }>
+  > {
     const query = this.rateRepository
       .createQueryBuilder('rate')
       .leftJoin('rate.taxZone', 'zone')
       .where(':countryCode = ANY(zone.countries)', { countryCode });
 
     if (stateCode) {
-      query.andWhere('(:stateCode = ANY(zone.states) OR zone.states = \'{}\')', { stateCode });
+      query.andWhere("(:stateCode = ANY(zone.states) OR zone.states = '{}')", {
+        stateCode,
+      });
     }
 
     if (taxClassId) {
@@ -166,8 +184,14 @@ export class TaxService {
     };
   }
 
-  async getOrderTaxLines(orderId: string): Promise<ServiceResponse<OrderTaxLine[]>> {
+  async getOrderTaxLines(
+    orderId: string,
+  ): Promise<ServiceResponse<OrderTaxLine[]>> {
     const taxLines = await this.taxLineRepository.find({ where: { orderId } });
-    return { success: true, message: 'Order tax lines retrieved', data: taxLines };
+    return {
+      success: true,
+      message: 'Order tax lines retrieved',
+      data: taxLines,
+    };
   }
 }

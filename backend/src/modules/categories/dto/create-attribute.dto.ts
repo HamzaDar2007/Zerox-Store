@@ -20,11 +20,15 @@ export class CreateAttributeDto {
   @Transform(({ value }) => value?.trim())
   name: string;
 
-  @ApiPropertyOptional({ description: 'Attribute slug (auto-generated if not provided)' })
+  @ApiPropertyOptional({
+    description: 'Attribute slug (auto-generated if not provided)',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(100)
-  @Matches(/^[a-z0-9-]+$/, { message: 'Slug must contain only lowercase letters, numbers, and hyphens' })
+  @Matches(/^[a-z0-9-]+$/, {
+    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+  })
   slug?: string;
 
   @ApiPropertyOptional({ description: 'Attribute group ID' })
@@ -43,7 +47,10 @@ export class CreateAttributeDto {
   @MaxLength(20)
   unit?: string;
 
-  @ApiPropertyOptional({ description: 'Is filterable in product listing', default: false })
+  @ApiPropertyOptional({
+    description: 'Is filterable in product listing',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isFilterable?: boolean;
@@ -53,7 +60,10 @@ export class CreateAttributeDto {
   @IsBoolean()
   isRequired?: boolean;
 
-  @ApiPropertyOptional({ description: 'Is variant attribute (like size, color)', default: false })
+  @ApiPropertyOptional({
+    description: 'Is variant attribute (like size, color)',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isVariantAttribute?: boolean;

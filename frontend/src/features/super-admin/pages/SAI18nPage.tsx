@@ -235,7 +235,7 @@ export default function SAI18nPage() {
             <Button disabled={creatingLang} onClick={async () => {
               if (!langForm.code || !langForm.name) { toast.error('Code and name required'); return; }
               try {
-                await createLang({ code: langForm.code, name: langForm.name, nativeName: langForm.nativeName || undefined, direction: langForm.direction }).unwrap();
+                await createLang({ code: langForm.code, name: langForm.name, nativeName: langForm.nativeName || undefined, direction: langForm.direction as any }).unwrap();
                 toast.success('Language added');
                 setShowCreateLang(false);
                 setLangForm({ code: '', name: '', nativeName: '', direction: 'ltr' });

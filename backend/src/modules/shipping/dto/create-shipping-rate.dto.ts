@@ -1,12 +1,6 @@
 import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsEnum,
-  IsNumber,
-  Min,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsEnum, IsNumber, Min } from 'class-validator';
 import { ShippingRateType } from '@common/enums';
 
 export class CreateShippingRateDto {
@@ -20,7 +14,11 @@ export class CreateShippingRateDto {
   @IsUuidString()
   shippingZoneId: string;
 
-  @ApiPropertyOptional({ description: 'Rate type', enum: ShippingRateType, default: ShippingRateType.FLAT })
+  @ApiPropertyOptional({
+    description: 'Rate type',
+    enum: ShippingRateType,
+    default: ShippingRateType.FLAT,
+  })
   @IsOptional()
   @IsEnum(ShippingRateType)
   rateType?: ShippingRateType;

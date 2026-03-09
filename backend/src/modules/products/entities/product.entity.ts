@@ -54,16 +54,33 @@ export class Product {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
-  @Column({ name: 'short_description', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'short_description',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   shortDescription: string | null;
 
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   price: number;
 
-  @Column({ name: 'compare_at_price', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'compare_at_price',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   compareAtPrice: number | null;
 
-  @Column({ name: 'cost_price', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'cost_price',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   costPrice: number | null;
 
   @Column({ name: 'currency_code', type: 'varchar', length: 3, default: 'PKR' })
@@ -96,7 +113,12 @@ export class Product {
   @Column({ type: 'decimal', precision: 8, scale: 2, nullable: true })
   height: number | null;
 
-  @Column({ name: 'dimension_unit', type: 'varchar', length: 10, default: 'cm' })
+  @Column({
+    name: 'dimension_unit',
+    type: 'varchar',
+    length: 10,
+    default: 'cm',
+  })
   dimensionUnit: string;
 
   @Column({
@@ -107,7 +129,11 @@ export class Product {
   })
   warrantyType: WarrantyType | null;
 
-  @Column({ name: 'warranty_duration_months', type: 'smallint', nullable: true })
+  @Column({
+    name: 'warranty_duration_months',
+    type: 'smallint',
+    nullable: true,
+  })
   warrantyDurationMonths: number | null;
 
   @Column({ type: 'text', array: true, nullable: true })
@@ -132,7 +158,13 @@ export class Product {
   @Column({ name: 'is_taxable', type: 'boolean', default: true })
   isTaxable: boolean;
 
-  @Column({ name: 'avg_rating', type: 'decimal', precision: 3, scale: 2, default: 0 })
+  @Column({
+    name: 'avg_rating',
+    type: 'decimal',
+    precision: 3,
+    scale: 2,
+    default: 0,
+  })
   avgRating: number;
 
   @Column({ name: 'total_reviews', type: 'integer', default: 0 })
@@ -147,7 +179,12 @@ export class Product {
   @Column({ name: 'meta_title', type: 'varchar', length: 255, nullable: true })
   metaTitle: string | null;
 
-  @Column({ name: 'meta_description', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'meta_description',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   metaDescription: string | null;
 
   @OneToMany(() => ProductVariant, (variant) => variant.product)

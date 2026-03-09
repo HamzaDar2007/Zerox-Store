@@ -14,7 +14,9 @@ import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateWarehouseDto {
-  @ApiPropertyOptional({ description: 'Seller ID (null for platform warehouses)' })
+  @ApiPropertyOptional({
+    description: 'Seller ID (null for platform warehouses)',
+  })
   @IsOptional()
   @IsUuidString()
   sellerId?: string;

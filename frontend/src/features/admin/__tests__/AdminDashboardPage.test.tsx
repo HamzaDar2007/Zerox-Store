@@ -1,6 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@/test/test-utils';
 import AdminDashboardPage from '../pages/AdminDashboardPage';
+
+vi.mock('@/store/api', () => ({
+  useGetUsersQuery: () => ({ data: { data: { total: 5 } }, isLoading: false, isError: false, refetch: vi.fn() }),
+  useGetOrdersQuery: () => ({ data: { data: { items: [], total: 3 } }, isLoading: false, isError: false, refetch: vi.fn() }),
+  useGetSellersQuery: () => ({ data: { data: [] }, isLoading: false, isError: false, refetch: vi.fn() }),
+}));
 
 describe('AdminDashboardPage', () => {
   it('renders dashboard heading', async () => {

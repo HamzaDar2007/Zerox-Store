@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BulkOperation } from './entities/bulk-operation.entity';
@@ -17,7 +21,10 @@ export class OperationsService {
     private importExportJobRepository: Repository<ImportExportJob>,
   ) {}
 
-  async createBulkOperation(userId: string, dto: CreateBulkOperationDto): Promise<ServiceResponse<BulkOperation>> {
+  async createBulkOperation(
+    userId: string,
+    dto: CreateBulkOperationDto,
+  ): Promise<ServiceResponse<BulkOperation>> {
     const operation = new BulkOperation();
     Object.assign(operation, dto);
     operation.userId = userId;
@@ -35,27 +42,51 @@ export class OperationsService {
     page?: number;
     limit?: number;
   }): Promise<ServiceResponse<BulkOperation[]>> {
-    const query = this.bulkOperationRepository.createQueryBuilder('op')
+    const query = this.bulkOperationRepository
+      .createQueryBuilder('op')
       .leftJoinAndSelect('op.user', 'user')
       .orderBy('op.createdAt', 'DESC');
-    if (options?.userId) query.andWhere('op.userId = :userId', { userId: options.userId });
-    if (options?.status) query.andWhere('op.status = :status', { status: options.status });
-    if (options?.operationType) query.andWhere('op.operationType = :operationType', { operationType: options.operationType });
+    if (options?.userId)
+      query.andWhere('op.userId = :userId', { userId: options.userId });
+    if (options?.status)
+      query.andWhere('op.status = :status', { status: options.status });
+    if (options?.operationType)
+      query.andWhere('op.operationType = :operationType', {
+        operationType: options.operationType,
+      });
     const p = options?.page || 1;
     const l = options?.limit || 20;
     query.skip((p - 1) * l).take(l);
     const [operations, total] = await query.getManyAndCount();
-    return { success: true, message: 'Bulk operations retrieved', data: operations, meta: { total, page: p, limit: l } };
+    return {
+      success: true,
+      message: 'Bulk operations retrieved',
+      data: operations,
+      meta: { total, page: p, limit: l },
+    };
   }
 
   async findBulkOperation(id: string): Promise<ServiceResponse<BulkOperation>> {
-    const operation = await this.bulkOperationRepository.findOne({ where: { id }, relations: ['user'] });
+    const operation = await this.bulkOperationRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
     if (!operation) throw new NotFoundException('Bulk operation not found');
-    return { success: true, message: 'Bulk operation retrieved', data: operation };
+    return {
+      success: true,
+      message: 'Bulk operation retrieved',
+      data: operation,
+    };
   }
 
-  async updateBulkOperationProgress(id: string, successCount: number, failureCount: number): Promise<ServiceResponse<BulkOperation>> {
-    const operation = await this.bulkOperationRepository.findOne({ where: { id } });
+  async updateBulkOperationProgress(
+    id: string,
+    successCount: number,
+    failureCount: number,
+  ): Promise<ServiceResponse<BulkOperation>> {
+    const operation = await this.bulkOperationRepository.findOne({
+      where: { id },
+    });
     if (!operation) throw new NotFoundException('Bulk operation not found');
     operation.successCount = successCount;
     operation.failureCount = failureCount;
@@ -71,21 +102,39 @@ export class OperationsService {
     return { success: true, message: 'Progress updated', data: updated };
   }
 
-  async failBulkOperation(id: string, errorLog: Record<string, any>[]): Promise<ServiceResponse<BulkOperation>> {
-    const operation = await this.bulkOperationRepository.findOne({ where: { id } });
+  async failBulkOperation(
+    id: string,
+    errorLog: Record<string, any>[],
+  ): Promise<ServiceResponse<BulkOperation>> {
+    const operation = await this.bulkOperationRepository.findOne({
+      where: { id },
+    });
     if (!operation) throw new NotFoundException('Bulk operation not found');
     operation.status = JobStatus.FAILED;
     operation.errorLog = errorLog;
     operation.completedAt = new Date();
     const updated = await this.bulkOperationRepository.save(operation);
-    return { success: true, message: 'Operation marked as failed', data: updated };
+    return {
+      success: true,
+      message: 'Operation marked as failed',
+      data: updated,
+    };
   }
 
-  async cancelBulkOperation(id: string): Promise<ServiceResponse<BulkOperation>> {
-    const operation = await this.bulkOperationRepository.findOne({ where: { id } });
+  async cancelBulkOperation(
+    id: string,
+  ): Promise<ServiceResponse<BulkOperation>> {
+    const operation = await this.bulkOperationRepository.findOne({
+      where: { id },
+    });
     if (!operation) throw new NotFoundException('Bulk operation not found');
-    if (operation.status === JobStatus.COMPLETED || operation.status === JobStatus.FAILED) {
-      throw new BadRequestException('Cannot cancel completed or failed operation');
+    if (
+      operation.status === JobStatus.COMPLETED ||
+      operation.status === JobStatus.FAILED
+    ) {
+      throw new BadRequestException(
+        'Cannot cancel completed or failed operation',
+      );
     }
     operation.status = JobStatus.CANCELLED;
     operation.completedAt = new Date();
@@ -93,7 +142,10 @@ export class OperationsService {
     return { success: true, message: 'Operation cancelled', data: updated };
   }
 
-  async createImportExportJob(userId: string, dto: CreateImportExportJobDto): Promise<ServiceResponse<ImportExportJob>> {
+  async createImportExportJob(
+    userId: string,
+    dto: CreateImportExportJobDto,
+  ): Promise<ServiceResponse<ImportExportJob>> {
     const job = new ImportExportJob();
     Object.assign(job, dto);
     job.userId = userId;
@@ -113,26 +165,45 @@ export class OperationsService {
     page?: number;
     limit?: number;
   }): Promise<ServiceResponse<ImportExportJob[]>> {
-    const query = this.importExportJobRepository.createQueryBuilder('job')
+    const query = this.importExportJobRepository
+      .createQueryBuilder('job')
       .leftJoinAndSelect('job.user', 'user')
       .orderBy('job.createdAt', 'DESC');
-    if (options?.userId) query.andWhere('job.userId = :userId', { userId: options.userId });
-    if (options?.type) query.andWhere('job.type = :type', { type: options.type });
-    if (options?.status) query.andWhere('job.status = :status', { status: options.status });
+    if (options?.userId)
+      query.andWhere('job.userId = :userId', { userId: options.userId });
+    if (options?.type)
+      query.andWhere('job.type = :type', { type: options.type });
+    if (options?.status)
+      query.andWhere('job.status = :status', { status: options.status });
     const p = options?.page || 1;
     const l = options?.limit || 20;
     query.skip((p - 1) * l).take(l);
     const [jobs, total] = await query.getManyAndCount();
-    return { success: true, message: 'Import/export jobs retrieved', data: jobs, meta: { total, page: p, limit: l } };
+    return {
+      success: true,
+      message: 'Import/export jobs retrieved',
+      data: jobs,
+      meta: { total, page: p, limit: l },
+    };
   }
 
-  async findImportExportJob(id: string): Promise<ServiceResponse<ImportExportJob>> {
-    const job = await this.importExportJobRepository.findOne({ where: { id }, relations: ['user'] });
+  async findImportExportJob(
+    id: string,
+  ): Promise<ServiceResponse<ImportExportJob>> {
+    const job = await this.importExportJobRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
     if (!job) throw new NotFoundException('Import/export job not found');
     return { success: true, message: 'Import/export job retrieved', data: job };
   }
 
-  async updateJobProgress(id: string, processedRows: number, successRows: number, failedRows: number): Promise<ServiceResponse<ImportExportJob>> {
+  async updateJobProgress(
+    id: string,
+    processedRows: number,
+    successRows: number,
+    failedRows: number,
+  ): Promise<ServiceResponse<ImportExportJob>> {
     const job = await this.importExportJobRepository.findOne({ where: { id } });
     if (!job) throw new NotFoundException('Import/export job not found');
     job.processedRows = processedRows;
@@ -149,7 +220,11 @@ export class OperationsService {
     return { success: true, message: 'Progress updated', data: updated };
   }
 
-  async failJob(id: string, errorSummary: string, errorLog?: Record<string, any>[]): Promise<ServiceResponse<ImportExportJob>> {
+  async failJob(
+    id: string,
+    errorSummary: string,
+    errorLog?: Record<string, any>[],
+  ): Promise<ServiceResponse<ImportExportJob>> {
     const job = await this.importExportJobRepository.findOne({ where: { id } });
     if (!job) throw new NotFoundException('Import/export job not found');
     job.status = JobStatus.FAILED;
@@ -160,7 +235,10 @@ export class OperationsService {
     return { success: true, message: 'Job marked as failed', data: updated };
   }
 
-  async completeJob(id: string, resultFileUrl?: string): Promise<ServiceResponse<ImportExportJob>> {
+  async completeJob(
+    id: string,
+    resultFileUrl?: string,
+  ): Promise<ServiceResponse<ImportExportJob>> {
     const job = await this.importExportJobRepository.findOne({ where: { id } });
     if (!job) throw new NotFoundException('Import/export job not found');
     job.status = JobStatus.COMPLETED;
@@ -170,10 +248,17 @@ export class OperationsService {
     return { success: true, message: 'Job completed', data: updated };
   }
 
-  async getMyJobs(userId: string, type?: string): Promise<ServiceResponse<ImportExportJob[]>> {
+  async getMyJobs(
+    userId: string,
+    type?: string,
+  ): Promise<ServiceResponse<ImportExportJob[]>> {
     const where: any = { userId };
     if (type) where.type = type;
-    const jobs = await this.importExportJobRepository.find({ where, order: { createdAt: 'DESC' }, take: 50 });
+    const jobs = await this.importExportJobRepository.find({
+      where,
+      order: { createdAt: 'DESC' },
+      take: 50,
+    });
     return { success: true, message: 'Jobs retrieved', data: jobs };
   }
 }

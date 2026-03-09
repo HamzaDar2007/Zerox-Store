@@ -18,7 +18,9 @@ export class ProductAttribute {
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 
-  @ManyToOne(() => Product, (product) => product.attributes, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Product, (product) => product.attributes, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
@@ -39,7 +41,13 @@ export class ProductAttribute {
   @Column({ name: 'value_text', type: 'text', nullable: true })
   valueText: string | null;
 
-  @Column({ name: 'value_numeric', type: 'decimal', precision: 14, scale: 4, nullable: true })
+  @Column({
+    name: 'value_numeric',
+    type: 'decimal',
+    precision: 14,
+    scale: 4,
+    nullable: true,
+  })
   valueNumeric: number | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

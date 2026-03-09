@@ -1,5 +1,19 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { AuditService } from './audit.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
@@ -13,7 +27,9 @@ import { BaseController } from '../../common/controllers/base.controller';
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class AuditLogsController extends BaseController {
-  constructor(private readonly auditService: AuditService) { super(); }
+  constructor(private readonly auditService: AuditService) {
+    super();
+  }
 
   @Get()
   @ApiOperation({ summary: 'Get all audit logs' })
@@ -32,19 +48,29 @@ export class AuditLogsController extends BaseController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.handleAsyncOperation(this.auditService.findAllAuditLogs({
-      userId, action, entityType,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
-      page, limit
-    }));
+    return this.handleAsyncOperation(
+      this.auditService.findAllAuditLogs({
+        userId,
+        action,
+        entityType,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+        page,
+        limit,
+      }),
+    );
   }
 
   @Get('entity/:entityType/:entityId')
   @ApiOperation({ summary: 'Get entity audit history' })
   @Permissions('audit.read')
-  getEntityHistory(@Param('entityType') entityType: string, @Param('entityId') entityId: string) {
-    return this.handleAsyncOperation(this.auditService.getEntityHistory(entityType, entityId));
+  getEntityHistory(
+    @Param('entityType') entityType: string,
+    @Param('entityId') entityId: string,
+  ) {
+    return this.handleAsyncOperation(
+      this.auditService.getEntityHistory(entityType, entityId),
+    );
   }
 
   @Get('user/:userId')
@@ -55,11 +81,13 @@ export class AuditLogsController extends BaseController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.handleAsyncOperation(this.auditService.getUserActivity(
-      userId,
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined
-    ));
+    return this.handleAsyncOperation(
+      this.auditService.getUserActivity(
+        userId,
+        startDate ? new Date(startDate) : undefined,
+        endDate ? new Date(endDate) : undefined,
+      ),
+    );
   }
 
   @Get(':id')
@@ -73,7 +101,9 @@ export class AuditLogsController extends BaseController {
   @ApiOperation({ summary: 'Cleanup old audit logs' })
   @Permissions('audit.delete')
   cleanup(@Body('daysToKeep') daysToKeep?: number) {
-    return this.handleAsyncOperation(this.auditService.cleanupOldLogs(daysToKeep));
+    return this.handleAsyncOperation(
+      this.auditService.cleanupOldLogs(daysToKeep),
+    );
   }
 }
 
@@ -82,7 +112,9 @@ export class AuditLogsController extends BaseController {
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class ActivityLogsController extends BaseController {
-  constructor(private readonly auditService: AuditService) { super(); }
+  constructor(private readonly auditService: AuditService) {
+    super();
+  }
 
   @Get()
   @ApiOperation({ summary: 'Get all activity logs' })
@@ -99,24 +131,35 @@ export class ActivityLogsController extends BaseController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.handleAsyncOperation(this.auditService.findAllActivityLogs({
-      userId, activityType,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
-      page, limit
-    }));
+    return this.handleAsyncOperation(
+      this.auditService.findAllActivityLogs({
+        userId,
+        activityType,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+        page,
+        limit,
+      }),
+    );
   }
 
   @Get('my-activity')
   @ApiOperation({ summary: 'Get my activity summary' })
   getMyActivity(@CurrentUser() user: User, @Query('days') days?: number) {
-    return this.handleAsyncOperation(this.auditService.getActivitySummary(user.id, days));
+    return this.handleAsyncOperation(
+      this.auditService.getActivitySummary(user.id, days),
+    );
   }
 
   @Get('user/:userId/summary')
   @ApiOperation({ summary: 'Get user activity summary' })
   @Permissions('audit.read')
-  getUserSummary(@Param('userId', ParseUUIDPipe) userId: string, @Query('days') days?: number) {
-    return this.handleAsyncOperation(this.auditService.getActivitySummary(userId, days));
+  getUserSummary(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Query('days') days?: number,
+  ) {
+    return this.handleAsyncOperation(
+      this.auditService.getActivitySummary(userId, days),
+    );
   }
 }

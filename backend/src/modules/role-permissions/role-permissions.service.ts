@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { AssignRolePermissionsDto } from './dto/assign-role-permissions.dto';
@@ -44,11 +48,13 @@ export class RolePermissionsService {
     }
 
     // 3. Check if these permissions belong to the specified role
-    const nonMatchingPermissions = permissions.filter(p => p.roleId !== roleId);
+    const nonMatchingPermissions = permissions.filter(
+      (p) => p.roleId !== roleId,
+    );
     if (nonMatchingPermissions.length > 0) {
       throw new BadRequestException(
         `Some permissions do not belong to role ${roleId}. ` +
-        `In this schema, permissions are created with a role_id and cannot be reassigned.`
+          `In this schema, permissions are created with a role_id and cannot be reassigned.`,
       );
     }
 
@@ -59,7 +65,9 @@ export class RolePermissionsService {
     };
   }
 
-  async getPermissionsByRole(roleId: string): Promise<ServiceResponse<Permission[]>> {
+  async getPermissionsByRole(
+    roleId: string,
+  ): Promise<ServiceResponse<Permission[]>> {
     const validRoleId = SecurityUtil.validateId(roleId);
 
     // Verify role exists
@@ -81,7 +89,10 @@ export class RolePermissionsService {
     };
   }
 
-  async removePermission(roleId: string, permissionId: string): Promise<ServiceResponse<void>> {
+  async removePermission(
+    roleId: string,
+    permissionId: string,
+  ): Promise<ServiceResponse<void>> {
     const validRoleId = SecurityUtil.validateId(roleId);
     const validPermissionId = SecurityUtil.validateId(permissionId);
 
@@ -92,13 +103,13 @@ export class RolePermissionsService {
 
     if (!permission) {
       throw new NotFoundException(
-        `Permission with ID ${permissionId} not found for role ${roleId}`
+        `Permission with ID ${permissionId} not found for role ${roleId}`,
       );
     }
 
     // Delete the permission
     await this.permissionRepo.remove(permission);
-    
+
     return {
       success: true,
       message: 'Permission removed from role successfully',

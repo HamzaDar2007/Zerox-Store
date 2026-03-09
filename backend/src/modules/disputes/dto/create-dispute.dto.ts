@@ -54,7 +54,10 @@ export class CreateDisputeDto {
   @Min(0)
   disputedAmount?: number;
 
-  @ApiPropertyOptional({ description: 'Resolution type', enum: DisputeResolution })
+  @ApiPropertyOptional({
+    description: 'Resolution type',
+    enum: DisputeResolution,
+  })
   @IsOptional()
   @IsEnum(DisputeResolution)
   resolution?: DisputeResolution;

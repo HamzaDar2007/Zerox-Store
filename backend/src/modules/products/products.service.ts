@@ -45,7 +45,10 @@ export class ProductsService {
 
   // ==================== PRODUCT CRUD ====================
 
-  async create(dto: CreateProductDto, userId: string): Promise<ServiceResponse<Product>> {
+  async create(
+    dto: CreateProductDto,
+    userId: string,
+  ): Promise<ServiceResponse<Product>> {
     const existingProduct = await this.productRepository.findOne({
       where: { slug: dto.slug },
     });
@@ -64,7 +67,9 @@ export class ProductsService {
     if (!product.sellerId) {
       const seller = await this.sellerRepository.findOne({ where: { userId } });
       if (!seller) {
-        throw new BadRequestException('No seller profile found for this user. Please create a seller profile first.');
+        throw new BadRequestException(
+          'No seller profile found for this user. Please create a seller profile first.',
+        );
       }
       product.sellerId = seller.id;
     }
@@ -115,15 +120,21 @@ export class ProductsService {
     }
 
     if (options?.categoryId) {
-      query.andWhere('product.categoryId = :categoryId', { categoryId: options.categoryId });
+      query.andWhere('product.categoryId = :categoryId', {
+        categoryId: options.categoryId,
+      });
     }
 
     if (options?.brandId) {
-      query.andWhere('product.brandId = :brandId', { brandId: options.brandId });
+      query.andWhere('product.brandId = :brandId', {
+        brandId: options.brandId,
+      });
     }
 
     if (options?.sellerId) {
-      query.andWhere('product.sellerId = :sellerId', { sellerId: options.sellerId });
+      query.andWhere('product.sellerId = :sellerId', {
+        sellerId: options.sellerId,
+      });
     }
 
     if (options?.status) {
@@ -138,7 +149,8 @@ export class ProductsService {
       avgRating: 'product.avgRating',
       totalSold: 'product.totalSold',
     };
-    const sortField = allowedSortFields[options?.sortBy || ''] || 'product.createdAt';
+    const sortField =
+      allowedSortFields[options?.sortBy || ''] || 'product.createdAt';
     const sortOrder = options?.sortOrder === 'ASC' ? 'ASC' : 'DESC';
     query.orderBy(sortField, sortOrder);
 
@@ -159,7 +171,14 @@ export class ProductsService {
   async findOne(id: string): Promise<ServiceResponse<Product>> {
     const product = await this.productRepository.findOne({
       where: { id },
-      relations: ['category', 'brand', 'seller', 'images', 'variants', 'attributes'],
+      relations: [
+        'category',
+        'brand',
+        'seller',
+        'images',
+        'variants',
+        'attributes',
+      ],
     });
 
     if (!product) {
@@ -193,7 +212,10 @@ export class ProductsService {
     };
   }
 
-  async update(id: string, dto: UpdateProductDto): Promise<ServiceResponse<Product>> {
+  async update(
+    id: string,
+    dto: UpdateProductDto,
+  ): Promise<ServiceResponse<Product>> {
     const product = await this.productRepository.findOne({ where: { id } });
 
     if (!product) {
@@ -236,7 +258,10 @@ export class ProductsService {
     };
   }
 
-  async updateStatus(id: string, status: ProductStatus): Promise<ServiceResponse<Product>> {
+  async updateStatus(
+    id: string,
+    status: ProductStatus,
+  ): Promise<ServiceResponse<Product>> {
     const product = await this.productRepository.findOne({ where: { id } });
 
     if (!product) {
@@ -256,8 +281,13 @@ export class ProductsService {
 
   // ==================== VARIANTS ====================
 
-  async createVariant(productId: string, dto: CreateProductVariantDto): Promise<ServiceResponse<ProductVariant>> {
-    const product = await this.productRepository.findOne({ where: { id: productId } });
+  async createVariant(
+    productId: string,
+    dto: CreateProductVariantDto,
+  ): Promise<ServiceResponse<ProductVariant>> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+    });
 
     if (!product) {
       throw new NotFoundException('Product not found');
@@ -278,7 +308,9 @@ export class ProductsService {
     };
   }
 
-  async findAllVariants(productId: string): Promise<ServiceResponse<ProductVariant[]>> {
+  async findAllVariants(
+    productId: string,
+  ): Promise<ServiceResponse<ProductVariant[]>> {
     const variants = await this.variantRepository.find({
       where: { productId },
       order: { sortOrder: 'ASC' },
@@ -291,7 +323,10 @@ export class ProductsService {
     };
   }
 
-  async updateVariant(id: string, dto: UpdateProductVariantDto): Promise<ServiceResponse<ProductVariant>> {
+  async updateVariant(
+    id: string,
+    dto: UpdateProductVariantDto,
+  ): Promise<ServiceResponse<ProductVariant>> {
     const variant = await this.variantRepository.findOne({ where: { id } });
 
     if (!variant) {
@@ -325,8 +360,13 @@ export class ProductsService {
 
   // ==================== IMAGES ====================
 
-  async addImage(productId: string, dto: CreateProductImageDto): Promise<ServiceResponse<ProductImage>> {
-    const product = await this.productRepository.findOne({ where: { id: productId } });
+  async addImage(
+    productId: string,
+    dto: CreateProductImageDto,
+  ): Promise<ServiceResponse<ProductImage>> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+    });
 
     if (!product) {
       throw new NotFoundException('Product not found');
@@ -364,7 +404,9 @@ export class ProductsService {
 
   // ==================== Q&A ====================
 
-  async getProductQuestions(productId: string): Promise<ServiceResponse<ProductQuestion[]>> {
+  async getProductQuestions(
+    productId: string,
+  ): Promise<ServiceResponse<ProductQuestion[]>> {
     const questions = await this.questionRepository.find({
       where: { productId },
       relations: ['answers', 'user'],
@@ -378,8 +420,14 @@ export class ProductsService {
     };
   }
 
-  async askQuestion(productId: string, userId: string, question: string): Promise<ServiceResponse<ProductQuestion>> {
-    const product = await this.productRepository.findOne({ where: { id: productId } });
+  async askQuestion(
+    productId: string,
+    userId: string,
+    question: string,
+  ): Promise<ServiceResponse<ProductQuestion>> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+    });
 
     if (!product) {
       throw new NotFoundException('Product not found');
@@ -401,8 +449,15 @@ export class ProductsService {
     };
   }
 
-  async answerQuestion(questionId: string, userId: string, answer: string, isSellerAnswer: boolean = false): Promise<ServiceResponse<ProductAnswer>> {
-    const question = await this.questionRepository.findOne({ where: { id: questionId } });
+  async answerQuestion(
+    questionId: string,
+    userId: string,
+    answer: string,
+    isSellerAnswer: boolean = false,
+  ): Promise<ServiceResponse<ProductAnswer>> {
+    const question = await this.questionRepository.findOne({
+      where: { id: questionId },
+    });
 
     if (!question) {
       throw new NotFoundException('Question not found');
@@ -427,7 +482,9 @@ export class ProductsService {
 
   // ==================== PRICE HISTORY ====================
 
-  async getPriceHistory(productId: string): Promise<ServiceResponse<PriceHistory[]>> {
+  async getPriceHistory(
+    productId: string,
+  ): Promise<ServiceResponse<PriceHistory[]>> {
     const history = await this.priceHistoryRepository.find({
       where: { productId },
       order: { createdAt: 'DESC' },
@@ -437,6 +494,38 @@ export class ProductsService {
       success: true,
       message: 'Price history retrieved successfully',
       data: history,
+    };
+  }
+
+  async getRelatedProducts(
+    productId: string,
+    limit: number = 8,
+  ): Promise<ServiceResponse<Product[]>> {
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+    });
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const query = this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.images', 'images')
+      .where('product.id != :productId', { productId })
+      .andWhere('product.status = :status', { status: ProductStatus.ACTIVE });
+
+    if (product.categoryId) {
+      query.andWhere('product.categoryId = :categoryId', {
+        categoryId: product.categoryId,
+      });
+    }
+
+    const related = await query.orderBy('RANDOM()').take(limit).getMany();
+
+    return {
+      success: true,
+      message: 'Related products retrieved successfully',
+      data: related,
     };
   }
 }

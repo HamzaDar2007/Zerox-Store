@@ -42,7 +42,12 @@ export class PriceHistory {
   @JoinColumn({ name: 'changed_by' })
   changedByUser: User | null;
 
-  @Column({ name: 'change_reason', type: 'varchar', length: 200, nullable: true })
+  @Column({
+    name: 'change_reason',
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+  })
   changeReason: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

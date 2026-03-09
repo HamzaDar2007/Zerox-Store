@@ -27,7 +27,9 @@ export class CreateStockMovementDto {
   @Min(1)
   quantity: number;
 
-  @ApiPropertyOptional({ description: 'Reference type (e.g., order, transfer)' })
+  @ApiPropertyOptional({
+    description: 'Reference type (e.g., order, transfer)',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(50)

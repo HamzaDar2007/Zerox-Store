@@ -23,9 +23,12 @@ export class DisputesService {
     private readonly mailService: MailService,
   ) {}
 
-  async create(dto: CreateDisputeDto, customerId: string): Promise<ServiceResponse<Dispute>> {
+  async create(
+    dto: CreateDisputeDto,
+    customerId: string,
+  ): Promise<ServiceResponse<Dispute>> {
     const disputeNumber = await this.generateDisputeNumber();
-    
+
     const dispute = new Dispute();
     Object.assign(dispute, dto);
     dispute.customerId = customerId;
@@ -47,18 +50,31 @@ export class DisputesService {
     page?: number;
     limit?: number;
   }): Promise<ServiceResponse<Dispute[]>> {
-    const query = this.disputeRepository.createQueryBuilder('dispute')
+    const query = this.disputeRepository
+      .createQueryBuilder('dispute')
       .leftJoinAndSelect('dispute.order', 'order')
       .leftJoinAndSelect('dispute.customer', 'customer')
       .orderBy('dispute.createdAt', 'DESC');
-    if (options?.customerId) query.andWhere('dispute.customerId = :customerId', { customerId: options.customerId });
-    if (options?.orderId) query.andWhere('dispute.orderId = :orderId', { orderId: options.orderId });
-    if (options?.status) query.andWhere('dispute.status = :status', { status: options.status });
+    if (options?.customerId)
+      query.andWhere('dispute.customerId = :customerId', {
+        customerId: options.customerId,
+      });
+    if (options?.orderId)
+      query.andWhere('dispute.orderId = :orderId', {
+        orderId: options.orderId,
+      });
+    if (options?.status)
+      query.andWhere('dispute.status = :status', { status: options.status });
     const page = options?.page || 1;
     const limit = options?.limit || 20;
     query.skip((page - 1) * limit).take(limit);
     const [disputes, total] = await query.getManyAndCount();
-    return { success: true, message: 'Disputes retrieved', data: disputes, meta: { total, page, limit } };
+    return {
+      success: true,
+      message: 'Disputes retrieved',
+      data: disputes,
+      meta: { total, page, limit },
+    };
   }
 
   async findOne(id: string): Promise<ServiceResponse<Dispute>> {
@@ -70,7 +86,11 @@ export class DisputesService {
     return { success: true, message: 'Dispute retrieved', data: dispute };
   }
 
-  async updateStatus(id: string, status: DisputeStatus, resolution?: DisputeResolution): Promise<ServiceResponse<Dispute>> {
+  async updateStatus(
+    id: string,
+    status: DisputeStatus,
+    resolution?: DisputeResolution,
+  ): Promise<ServiceResponse<Dispute>> {
     const dispute = await this.disputeRepository.findOne({ where: { id } });
     if (!dispute) throw new NotFoundException('Dispute not found');
     dispute.status = status;
@@ -83,11 +103,21 @@ export class DisputesService {
     // Send dispute status update emails (fire-and-forget)
     this.sendDisputeStatusEmails(updated).catch(() => {});
 
-    return { success: true, message: `Dispute ${status.toLowerCase()}`, data: updated };
+    return {
+      success: true,
+      message: `Dispute ${status.toLowerCase()}`,
+      data: updated,
+    };
   }
 
-  async addEvidence(disputeId: string, dto: CreateDisputeEvidenceDto, submittedBy: string): Promise<ServiceResponse<DisputeEvidence>> {
-    const dispute = await this.disputeRepository.findOne({ where: { id: disputeId } });
+  async addEvidence(
+    disputeId: string,
+    dto: CreateDisputeEvidenceDto,
+    submittedBy: string,
+  ): Promise<ServiceResponse<DisputeEvidence>> {
+    const dispute = await this.disputeRepository.findOne({
+      where: { id: disputeId },
+    });
     if (!dispute) throw new NotFoundException('Dispute not found');
     const evidence = new DisputeEvidence();
     Object.assign(evidence, dto);
@@ -97,8 +127,14 @@ export class DisputesService {
     return { success: true, message: 'Evidence added', data: saved };
   }
 
-  async addMessage(disputeId: string, dto: CreateDisputeMessageDto, senderId: string): Promise<ServiceResponse<DisputeMessage>> {
-    const dispute = await this.disputeRepository.findOne({ where: { id: disputeId } });
+  async addMessage(
+    disputeId: string,
+    dto: CreateDisputeMessageDto,
+    senderId: string,
+  ): Promise<ServiceResponse<DisputeMessage>> {
+    const dispute = await this.disputeRepository.findOne({
+      where: { id: disputeId },
+    });
     if (!dispute) throw new NotFoundException('Dispute not found');
     const message = new DisputeMessage();
     Object.assign(message, dto);
@@ -112,7 +148,9 @@ export class DisputesService {
     return { success: true, message: 'Message added', data: saved };
   }
 
-  async getMessages(disputeId: string): Promise<ServiceResponse<DisputeMessage[]>> {
+  async getMessages(
+    disputeId: string,
+  ): Promise<ServiceResponse<DisputeMessage[]>> {
     const messages = await this.messageRepository.find({
       where: { disputeId },
       relations: ['sender'],
@@ -139,17 +177,25 @@ export class DisputesService {
       const orderNum = full.order?.orderNumber || 'N/A';
       if (full.customer?.email) {
         await this.mailService.sendDisputeOpenedEmail(
-          full.customer.email, full.customer.name || 'Customer',
-          full.disputeNumber, orderNum, 'customer',
+          full.customer.email,
+          full.customer.name || 'Customer',
+          full.disputeNumber,
+          orderNum,
+          'customer',
         );
       }
       if (full.seller?.email) {
         await this.mailService.sendDisputeOpenedEmail(
-          full.seller.email, full.seller.name || 'Seller',
-          full.disputeNumber, orderNum, 'seller',
+          full.seller.email,
+          full.seller.name || 'Seller',
+          full.disputeNumber,
+          orderNum,
+          'seller',
         );
       }
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 
   private async sendDisputeStatusEmails(dispute: Dispute): Promise<void> {
@@ -162,20 +208,31 @@ export class DisputesService {
       const res = full.resolution ? String(full.resolution) : undefined;
       if (full.customer?.email) {
         await this.mailService.sendDisputeStatusUpdateEmail(
-          full.customer.email, full.customer.name || 'Customer',
-          full.disputeNumber, full.status, res,
+          full.customer.email,
+          full.customer.name || 'Customer',
+          full.disputeNumber,
+          full.status,
+          res,
         );
       }
       if (full.seller?.email) {
         await this.mailService.sendDisputeStatusUpdateEmail(
-          full.seller.email, full.seller.name || 'Seller',
-          full.disputeNumber, full.status, res,
+          full.seller.email,
+          full.seller.name || 'Seller',
+          full.disputeNumber,
+          full.status,
+          res,
         );
       }
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 
-  private async sendDisputeMessageNotification(disputeId: string, senderId: string): Promise<void> {
+  private async sendDisputeMessageNotification(
+    disputeId: string,
+    senderId: string,
+  ): Promise<void> {
     try {
       const full = await this.disputeRepository.findOne({
         where: { id: disputeId },
@@ -188,10 +245,14 @@ export class DisputesService {
       const senderUser = senderIsCustomer ? full.customer : full.seller;
       if (recipient?.email) {
         await this.mailService.sendDisputeNewMessageEmail(
-          recipient.email, recipient.name || 'User',
-          full.disputeNumber, senderUser?.name || 'Other Party',
+          recipient.email,
+          recipient.name || 'User',
+          full.disputeNumber,
+          senderUser?.name || 'Other Party',
         );
       }
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 }

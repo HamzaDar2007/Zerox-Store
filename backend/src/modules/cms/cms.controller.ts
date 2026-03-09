@@ -1,5 +1,16 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CmsService } from './cms.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
@@ -13,7 +24,9 @@ import { UpdateBannerDto } from './dto/update-banner.dto';
 @ApiTags('CMS - Pages')
 @Controller('cms/pages')
 export class PagesController extends BaseController {
-  constructor(private readonly cmsService: CmsService) { super(); }
+  constructor(private readonly cmsService: CmsService) {
+    super();
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -29,17 +42,31 @@ export class PagesController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get all pages' })
   @Permissions('cms.read')
-  findAll(@Query('isPublished') isPublished?: string, @Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.handleAsyncOperation(this.cmsService.findAllPages({
-      isPublished: isPublished === 'true' ? true : isPublished === 'false' ? false : undefined,
-      page, limit
-    }));
+  findAll(
+    @Query('isPublished') isPublished?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.handleAsyncOperation(
+      this.cmsService.findAllPages({
+        isPublished:
+          isPublished === 'true'
+            ? true
+            : isPublished === 'false'
+              ? false
+              : undefined,
+        page,
+        limit,
+      }),
+    );
   }
 
   @Get('published')
   @ApiOperation({ summary: 'Get published pages' })
   findPublished(@Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.handleAsyncOperation(this.cmsService.findAllPages({ isPublished: true, page, limit }));
+    return this.handleAsyncOperation(
+      this.cmsService.findAllPages({ isPublished: true, page, limit }),
+    );
   }
 
   @Get('slug/:slug')
@@ -97,7 +124,9 @@ export class PagesController extends BaseController {
 @ApiTags('CMS - Banners')
 @Controller('cms/banners')
 export class BannersController extends BaseController {
-  constructor(private readonly cmsService: CmsService) { super(); }
+  constructor(private readonly cmsService: CmsService) {
+    super();
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -113,17 +142,29 @@ export class BannersController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get all banners' })
   @Permissions('cms.read')
-  findAll(@Query('isActive') isActive?: string, @Query('position') position?: string, @Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.handleAsyncOperation(this.cmsService.findAllBanners({
-      isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
-      position, page, limit
-    }));
+  findAll(
+    @Query('isActive') isActive?: string,
+    @Query('position') position?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.handleAsyncOperation(
+      this.cmsService.findAllBanners({
+        isActive:
+          isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+        position,
+        page,
+        limit,
+      }),
+    );
   }
 
   @Get('active/:position')
   @ApiOperation({ summary: 'Get active banners by position' })
   findActiveByPosition(@Param('position') position: string) {
-    return this.handleAsyncOperation(this.cmsService.getActiveBannersByPosition(position));
+    return this.handleAsyncOperation(
+      this.cmsService.getActiveBannersByPosition(position),
+    );
   }
 
   @Get(':id')

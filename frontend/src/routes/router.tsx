@@ -15,6 +15,7 @@ const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
+const VerifyEmailPage = lazy(() => import('@/features/auth/pages/VerifyEmailPage'));
 
 // ── Lazy Pages — Customer ──
 const HomePage = lazy(() => import('@/features/customer/pages/HomePage'));
@@ -41,6 +42,10 @@ const CustomerPaymentMethodsPage = lazy(() => import('@/features/customer/pages/
 const MyReviewsPage = lazy(() => import('@/features/customer/pages/MyReviewsPage'));
 const ComparisonPage = lazy(() => import('@/features/customer/pages/ComparisonPage'));
 const BundlesListPage = lazy(() => import('@/features/customer/pages/BundlesListPage'));
+const ChangePasswordPage = lazy(() => import('@/features/customer/pages/ChangePasswordPage'));
+const OrderConfirmationPage = lazy(() => import('@/features/customer/pages/OrderConfirmationPage'));
+const BundleDetailPage = lazy(() => import('@/features/customer/pages/BundleDetailPage'));
+const BrandPage = lazy(() => import('@/features/customer/pages/BrandPage'));
 
 const NotFoundPage = lazy(() => import('@/features/misc/NotFoundPage'));
 
@@ -55,6 +60,10 @@ const SellerInventoryPage = lazy(() => import('@/features/seller/pages/SellerInv
 const SellerDisputesPage = lazy(() => import('@/features/seller/pages/SellerDisputesPage'));
 const SellerBundlesPage = lazy(() => import('@/features/seller/pages/SellerBundlesPage'));
 const SellerSubscriptionsPage = lazy(() => import('@/features/seller/pages/SellerSubscriptionsPage'));
+const SellerWalletPage = lazy(() => import('@/features/seller/pages/SellerWalletPage'));
+const SellerDocumentsPage = lazy(() => import('@/features/seller/pages/SellerDocumentsPage'));
+const SellerShipmentsPage = lazy(() => import('@/features/seller/pages/SellerShipmentsPage'));
+const SellerStockMovementsPage = lazy(() => import('@/features/seller/pages/SellerStockMovementsPage'));
 
 // ── Lazy Pages — Admin ──
 const AdminDashboardPage = lazy(() => import('@/features/admin/pages/AdminDashboardPage'));
@@ -77,6 +86,8 @@ const AdminInventoryPage = lazy(() => import('@/features/admin/pages/AdminInvent
 const AdminDisputesPage = lazy(() => import('@/features/admin/pages/AdminDisputesPage'));
 const AdminBundlesPage = lazy(() => import('@/features/admin/pages/AdminBundlesPage'));
 const AdminAnalyticsPage = lazy(() => import('@/features/admin/pages/AdminAnalyticsPage'));
+const AdminAttributesPage = lazy(() => import('@/features/admin/pages/AdminAttributesPage'));
+const AdminWarehousesPage = lazy(() => import('@/features/admin/pages/AdminWarehousesPage'));
 
 // ── Lazy Pages — Super Admin ──
 const SuperAdminDashboardPage = lazy(() => import('@/features/super-admin/pages/SuperAdminDashboardPage'));
@@ -92,6 +103,8 @@ const SARolesPage = lazy(() => import('@/features/super-admin/pages/SARolesPage'
 const SAPermissionsPage = lazy(() => import('@/features/super-admin/pages/SAPermissionsPage'));
 const SARoleAssignmentsPage = lazy(() => import('@/features/super-admin/pages/SARoleAssignmentsPage'));
 const SAAnalyticsPage = lazy(() => import('@/features/super-admin/pages/SAAnalyticsPage'));
+const SAImportExportPage = lazy(() => import('@/features/super-admin/pages/SAImportExportPage'));
+const SASystemHealthPage = lazy(() => import('@/features/super-admin/pages/SASystemHealthPage'));
 
 function SuspenseWrap({ children }: { children: React.ReactNode }) {
   return (
@@ -135,6 +148,12 @@ export function AppRouter() {
           <GuestGuard>
             <SuspenseWrap><ResetPasswordPage /></SuspenseWrap>
           </GuestGuard>
+        }
+      />
+      <Route
+        path="/verify-email"
+        element={
+          <SuspenseWrap><VerifyEmailPage /></SuspenseWrap>
         }
       />
 
@@ -217,6 +236,7 @@ export function AppRouter() {
           <Route path="loyalty" element={<SuspenseWrap><CustomerLoyaltyPage /></SuspenseWrap>} />
           <Route path="payment-methods" element={<SuspenseWrap><CustomerPaymentMethodsPage /></SuspenseWrap>} />
           <Route path="reviews" element={<SuspenseWrap><MyReviewsPage /></SuspenseWrap>} />
+          <Route path="change-password" element={<SuspenseWrap><ChangePasswordPage /></SuspenseWrap>} />
         </Route>
 
         {/* Redirects for convenience URLs */}
@@ -225,6 +245,9 @@ export function AppRouter() {
         {/* Public storefront pages */}
         <Route path="compare" element={<SuspenseWrap><ComparisonPage /></SuspenseWrap>} />
         <Route path="bundles" element={<SuspenseWrap><BundlesListPage /></SuspenseWrap>} />
+        <Route path="bundles/:bundleId" element={<SuspenseWrap><BundleDetailPage /></SuspenseWrap>} />
+        <Route path="brands/:brandId" element={<SuspenseWrap><BrandPage /></SuspenseWrap>} />
+        <Route path="order-confirmation/:orderId" element={<AuthGuard><SuspenseWrap><OrderConfirmationPage /></SuspenseWrap></AuthGuard>} />
       </Route>
 
       {/* ═══════════════════ Seller Portal (Auth + Seller) ═════════════ */}
@@ -249,6 +272,10 @@ export function AppRouter() {
         <Route path="disputes" element={<SuspenseWrap><SellerDisputesPage /></SuspenseWrap>} />
         <Route path="bundles" element={<SuspenseWrap><SellerBundlesPage /></SuspenseWrap>} />
         <Route path="subscriptions" element={<SuspenseWrap><SellerSubscriptionsPage /></SuspenseWrap>} />
+        <Route path="wallet" element={<SuspenseWrap><SellerWalletPage /></SuspenseWrap>} />
+        <Route path="documents" element={<SuspenseWrap><SellerDocumentsPage /></SuspenseWrap>} />
+        <Route path="shipments" element={<SuspenseWrap><SellerShipmentsPage /></SuspenseWrap>} />
+        <Route path="stock-movements" element={<SuspenseWrap><SellerStockMovementsPage /></SuspenseWrap>} />
       </Route>
 
       {/* ═══════════════════ Admin Portal (Auth + Admin) ═══════════════ */}
@@ -292,6 +319,8 @@ export function AppRouter() {
         <Route path="disputes" element={<SuspenseWrap><AdminDisputesPage /></SuspenseWrap>} />
         <Route path="bundles" element={<SuspenseWrap><AdminBundlesPage /></SuspenseWrap>} />
         <Route path="analytics" element={<SuspenseWrap><AdminAnalyticsPage /></SuspenseWrap>} />
+        <Route path="attributes" element={<SuspenseWrap><AdminAttributesPage /></SuspenseWrap>} />
+        <Route path="warehouses" element={<SuspenseWrap><AdminWarehousesPage /></SuspenseWrap>} />
       </Route>
 
       {/* ═══════════════════ Super Admin Portal ════════════════════════ */}
@@ -341,6 +370,8 @@ export function AppRouter() {
         <Route path="permissions" element={<SuspenseWrap><SAPermissionsPage /></SuspenseWrap>} />
         <Route path="role-assignments" element={<SuspenseWrap><SARoleAssignmentsPage /></SuspenseWrap>} />
         <Route path="analytics" element={<SuspenseWrap><SAAnalyticsPage /></SuspenseWrap>} />
+        <Route path="import-export" element={<SuspenseWrap><SAImportExportPage /></SuspenseWrap>} />
+        <Route path="health" element={<SuspenseWrap><SASystemHealthPage /></SuspenseWrap>} />
       </Route>
 
       {/* ═══════════════════ Catch-all 404 ═════════════════════════════ */}

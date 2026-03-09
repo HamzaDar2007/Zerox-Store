@@ -61,7 +61,13 @@ export class DisputesController extends BaseController {
     @Query('limit') limit?: number,
   ) {
     return this.handleAsyncOperation(
-      this.disputesService.findAll({ customerId, orderId, status, page, limit }),
+      this.disputesService.findAll({
+        customerId,
+        orderId,
+        status,
+        page,
+        limit,
+      }),
     );
   }
 
@@ -91,7 +97,9 @@ export class DisputesController extends BaseController {
     @Body() dto: CreateDisputeEvidenceDto,
     @CurrentUser() user: User,
   ) {
-    return this.handleAsyncOperation(this.disputesService.addEvidence(id, dto, user.id));
+    return this.handleAsyncOperation(
+      this.disputesService.addEvidence(id, dto, user.id),
+    );
   }
 
   @Get(':id/messages')
@@ -107,6 +115,8 @@ export class DisputesController extends BaseController {
     @Body() dto: CreateDisputeMessageDto,
     @CurrentUser() user: User,
   ) {
-    return this.handleAsyncOperation(this.disputesService.addMessage(id, dto, user.id));
+    return this.handleAsyncOperation(
+      this.disputesService.addMessage(id, dto, user.id),
+    );
   }
 }

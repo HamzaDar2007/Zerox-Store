@@ -7,6 +7,7 @@ import type {
   AuthResponse,
   ForgotPasswordDto,
   ResetPasswordDto,
+  ChangePasswordDto,
 } from '@/common/types';
 
 export const authApi = baseApi.injectEndpoints({
@@ -63,6 +64,30 @@ export const authApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+
+    changePassword: builder.mutation<ApiResponse<void>, ChangePasswordDto>({
+      query: (data) => ({
+        url: '/auth/change-password',
+        method: 'POST',
+        body: data,
+      }),
+    }),
+
+    verifyEmail: builder.mutation<ApiResponse<void>, { token: string }>({
+      query: (data) => ({
+        url: '/auth/verify-email',
+        method: 'POST',
+        body: data,
+      }),
+    }),
+
+    resendVerification: builder.mutation<ApiResponse<void>, { email: string }>({
+      query: (data) => ({
+        url: '/auth/resend-verification',
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -73,4 +98,7 @@ export const {
   useLogoutMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useChangePasswordMutation,
+  useVerifyEmailMutation,
+  useResendVerificationMutation,
 } = authApi;

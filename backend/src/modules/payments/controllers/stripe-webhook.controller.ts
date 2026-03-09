@@ -39,11 +39,16 @@ export class StripeWebhookController {
     try {
       const rawBody = (req as any).rawBody;
       if (!rawBody) {
-        this.logger.warn('Missing raw body – ensure raw body middleware is configured');
+        this.logger.warn(
+          'Missing raw body – ensure raw body middleware is configured',
+        );
         return res.status(400).json({ error: 'Missing raw body' });
       }
 
-      const event = this.stripeService.constructWebhookEvent(rawBody, signature);
+      const event = this.stripeService.constructWebhookEvent(
+        rawBody,
+        signature,
+      );
 
       await this.paymentsService.handleStripeWebhook(event);
 

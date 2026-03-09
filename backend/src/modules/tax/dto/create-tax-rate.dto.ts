@@ -36,7 +36,10 @@ export class CreateTaxRateDto {
   @Max(100)
   rate: number;
 
-  @ApiPropertyOptional({ description: 'Priority (for compound taxes)', default: 0 })
+  @ApiPropertyOptional({
+    description: 'Priority (for compound taxes)',
+    default: 0,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)

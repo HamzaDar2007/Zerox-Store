@@ -18,11 +18,18 @@ export class OrderStatusHistory {
   @Column({ name: 'order_id', type: 'uuid' })
   orderId: string;
 
-  @ManyToOne(() => Order, (order) => order.statusHistory, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Order, (order) => order.statusHistory, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
-  @Column({ name: 'previous_status', type: 'enum', enum: OrderStatus, nullable: true })
+  @Column({
+    name: 'previous_status',
+    type: 'enum',
+    enum: OrderStatus,
+    nullable: true,
+  })
   previousStatus: OrderStatus | null;
 
   @Column({ name: 'new_status', type: 'enum', enum: OrderStatus })

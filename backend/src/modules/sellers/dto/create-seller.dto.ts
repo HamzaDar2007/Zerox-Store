@@ -5,8 +5,6 @@ import {
   IsEnum,
   IsUUID,
   MaxLength,
-  IsBoolean,
-  IsDateString,
   IsNumber,
   Min,
   Max,
@@ -14,7 +12,7 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { VerificationStatus, PayoutFrequency } from '@common/enums';
+import { PayoutFrequency } from '@common/enums';
 
 export class CreateSellerDto {
   @ApiProperty({ description: 'User ID', example: 'uuid' })
@@ -29,7 +27,10 @@ export class CreateSellerDto {
   @Transform(({ value }) => value?.trim())
   businessName: string;
 
-  @ApiPropertyOptional({ description: 'Business name in Arabic', maxLength: 200 })
+  @ApiPropertyOptional({
+    description: 'Business name in Arabic',
+    maxLength: 200,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(200)
@@ -39,7 +40,9 @@ export class CreateSellerDto {
   @IsOptional()
   @IsString()
   @MaxLength(15)
-  @Matches(/^[0-9]{5}-[0-9]{7}-[0-9]$/, { message: 'CNIC must be in format 12345-1234567-1' })
+  @Matches(/^[0-9]{5}-[0-9]{7}-[0-9]$/, {
+    message: 'CNIC must be in format 12345-1234567-1',
+  })
   cnic?: string;
 
   @ApiPropertyOptional({ description: 'CNIC front image URL' })
@@ -84,12 +87,18 @@ export class CreateSellerDto {
   @MaxLength(11)
   bankSwift?: string;
 
-  @ApiPropertyOptional({ enum: PayoutFrequency, default: PayoutFrequency.WEEKLY })
+  @ApiPropertyOptional({
+    enum: PayoutFrequency,
+    default: PayoutFrequency.WEEKLY,
+  })
   @IsOptional()
   @IsEnum(PayoutFrequency)
   payoutFrequency?: PayoutFrequency;
 
-  @ApiPropertyOptional({ description: 'Commission rate percentage', default: 10 })
+  @ApiPropertyOptional({
+    description: 'Commission rate percentage',
+    default: 10,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)

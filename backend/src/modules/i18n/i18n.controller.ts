@@ -1,5 +1,21 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { I18nService } from './i18n.service';
 import { CreateLanguageDto } from './dto/create-language.dto';
 import { UpdateLanguageDto } from './dto/update-language.dto';
@@ -15,7 +31,9 @@ import { BaseController } from '../../common/controllers/base.controller';
 @ApiTags('I18n - Languages')
 @Controller('i18n/languages')
 export class LanguagesController extends BaseController {
-  constructor(private readonly i18nService: I18nService) { super(); }
+  constructor(private readonly i18nService: I18nService) {
+    super();
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -30,15 +48,20 @@ export class LanguagesController extends BaseController {
   @ApiOperation({ summary: 'Get all languages' })
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   findAll(@Query('isActive') isActive?: string) {
-    return this.handleAsyncOperation(this.i18nService.findAllLanguages({
-      isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined
-    }));
+    return this.handleAsyncOperation(
+      this.i18nService.findAllLanguages({
+        isActive:
+          isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      }),
+    );
   }
 
   @Get('active')
   @ApiOperation({ summary: 'Get active languages' })
   findActive() {
-    return this.handleAsyncOperation(this.i18nService.findAllLanguages({ isActive: true }));
+    return this.handleAsyncOperation(
+      this.i18nService.findAllLanguages({ isActive: true }),
+    );
   }
 
   @Get('code/:code')
@@ -58,7 +81,10 @@ export class LanguagesController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update language' })
   @Permissions('i18n.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateLanguageDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateLanguageDto,
+  ) {
     return this.handleAsyncOperation(this.i18nService.updateLanguage(id, dto));
   }
 
@@ -84,7 +110,9 @@ export class LanguagesController extends BaseController {
 @ApiTags('I18n - Currencies')
 @Controller('i18n/currencies')
 export class CurrenciesController extends BaseController {
-  constructor(private readonly i18nService: I18nService) { super(); }
+  constructor(private readonly i18nService: I18nService) {
+    super();
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -99,15 +127,20 @@ export class CurrenciesController extends BaseController {
   @ApiOperation({ summary: 'Get all currencies' })
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   findAll(@Query('isActive') isActive?: string) {
-    return this.handleAsyncOperation(this.i18nService.findAllCurrencies({
-      isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined
-    }));
+    return this.handleAsyncOperation(
+      this.i18nService.findAllCurrencies({
+        isActive:
+          isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      }),
+    );
   }
 
   @Get('active')
   @ApiOperation({ summary: 'Get active currencies' })
   findActive() {
-    return this.handleAsyncOperation(this.i18nService.findAllCurrencies({ isActive: true }));
+    return this.handleAsyncOperation(
+      this.i18nService.findAllCurrencies({ isActive: true }),
+    );
   }
 
   @Get('code/:code')
@@ -121,8 +154,14 @@ export class CurrenciesController extends BaseController {
   @ApiQuery({ name: 'amount', type: Number })
   @ApiQuery({ name: 'from', type: String })
   @ApiQuery({ name: 'to', type: String })
-  convert(@Query('amount') amount: number, @Query('from') from: string, @Query('to') to: string) {
-    return this.handleAsyncOperation(this.i18nService.convertAmount(Number(amount), from, to));
+  convert(
+    @Query('amount') amount: number,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return this.handleAsyncOperation(
+      this.i18nService.convertAmount(Number(amount), from, to),
+    );
   }
 
   @Get(':id/rate-history')
@@ -130,8 +169,16 @@ export class CurrenciesController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get currency rate history' })
   @Permissions('i18n.read')
-  getRateHistory(@Param('id', ParseUUIDPipe) id: string, @Query('limit') limit?: number) {
-    return this.handleAsyncOperation(this.i18nService.getCurrencyRateHistory(id, limit ? Number(limit) : undefined));
+  getRateHistory(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('limit') limit?: number,
+  ) {
+    return this.handleAsyncOperation(
+      this.i18nService.getCurrencyRateHistory(
+        id,
+        limit ? Number(limit) : undefined,
+      ),
+    );
   }
 
   @Get(':id')
@@ -145,7 +192,10 @@ export class CurrenciesController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update currency' })
   @Permissions('i18n.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateCurrencyDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCurrencyDto,
+  ) {
     return this.handleAsyncOperation(this.i18nService.updateCurrency(id, dto));
   }
 
@@ -173,7 +223,9 @@ export class CurrenciesController extends BaseController {
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class TranslationsController extends BaseController {
-  constructor(private readonly i18nService: I18nService) { super(); }
+  constructor(private readonly i18nService: I18nService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create translation' })
@@ -188,15 +240,26 @@ export class TranslationsController extends BaseController {
   @ApiQuery({ name: 'entityType', required: false })
   @ApiQuery({ name: 'entityId', required: false })
   @Permissions('i18n.read')
-  findAll(@Query('languageId') languageId?: string, @Query('entityType') entityType?: string, @Query('entityId') entityId?: string) {
-    return this.handleAsyncOperation(this.i18nService.findTranslations({ languageId, entityType, entityId }));
+  findAll(
+    @Query('languageId') languageId?: string,
+    @Query('entityType') entityType?: string,
+    @Query('entityId') entityId?: string,
+  ) {
+    return this.handleAsyncOperation(
+      this.i18nService.findTranslations({ languageId, entityType, entityId }),
+    );
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update translation' })
   @Permissions('i18n.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTranslationDto) {
-    return this.handleAsyncOperation(this.i18nService.updateTranslation(id, dto));
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTranslationDto,
+  ) {
+    return this.handleAsyncOperation(
+      this.i18nService.updateTranslation(id, dto),
+    );
   }
 
   @Delete(':id')
@@ -209,7 +272,24 @@ export class TranslationsController extends BaseController {
   @Post('upsert')
   @ApiOperation({ summary: 'Upsert translation' })
   @Permissions('i18n.update')
-  upsert(@Body() dto: { languageId: string; entityType: string; entityId: string; field: string; value: string }) {
-    return this.handleAsyncOperation(this.i18nService.upsertTranslation(dto.languageId, dto.entityType, dto.entityId, dto.field, dto.value));
+  upsert(
+    @Body()
+    dto: {
+      languageId: string;
+      entityType: string;
+      entityId: string;
+      field: string;
+      value: string;
+    },
+  ) {
+    return this.handleAsyncOperation(
+      this.i18nService.upsertTranslation(
+        dto.languageId,
+        dto.entityType,
+        dto.entityId,
+        dto.field,
+        dto.value,
+      ),
+    );
   }
 }

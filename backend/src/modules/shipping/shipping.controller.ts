@@ -10,7 +10,12 @@ import {
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { ShippingService } from './shipping.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
@@ -33,7 +38,9 @@ import {
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class ShippingZonesController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) { super(); }
+  constructor(private readonly shippingService: ShippingService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create shipping zone' })
@@ -59,7 +66,10 @@ export class ShippingZonesController extends BaseController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update shipping zone' })
   @Permissions('shipping.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateShippingZoneDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateShippingZoneDto,
+  ) {
     return this.handleAsyncOperation(this.shippingService.updateZone(id, dto));
   }
 
@@ -76,7 +86,9 @@ export class ShippingZonesController extends BaseController {
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class ShippingMethodsController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) { super(); }
+  constructor(private readonly shippingService: ShippingService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create shipping method' })
@@ -90,14 +102,21 @@ export class ShippingMethodsController extends BaseController {
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   @Permissions('shipping.read')
   findAll(@Query('isActive') isActive?: boolean) {
-    return this.handleAsyncOperation(this.shippingService.findAllMethods(isActive));
+    return this.handleAsyncOperation(
+      this.shippingService.findAllMethods(isActive),
+    );
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update shipping method' })
   @Permissions('shipping.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateShippingMethodDto) {
-    return this.handleAsyncOperation(this.shippingService.updateMethod(id, dto));
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateShippingMethodDto,
+  ) {
+    return this.handleAsyncOperation(
+      this.shippingService.updateMethod(id, dto),
+    );
   }
 
   @Delete(':id')
@@ -113,7 +132,9 @@ export class ShippingMethodsController extends BaseController {
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class ShippingCarriersController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) { super(); }
+  constructor(private readonly shippingService: ShippingService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create shipping carrier' })
@@ -127,14 +148,21 @@ export class ShippingCarriersController extends BaseController {
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   @Permissions('shipping.read')
   findAll(@Query('isActive') isActive?: boolean) {
-    return this.handleAsyncOperation(this.shippingService.findAllCarriers(isActive));
+    return this.handleAsyncOperation(
+      this.shippingService.findAllCarriers(isActive),
+    );
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update shipping carrier' })
   @Permissions('shipping.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateShippingCarrierDto) {
-    return this.handleAsyncOperation(this.shippingService.updateCarrier(id, dto));
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateShippingCarrierDto,
+  ) {
+    return this.handleAsyncOperation(
+      this.shippingService.updateCarrier(id, dto),
+    );
   }
 }
 
@@ -143,7 +171,9 @@ export class ShippingCarriersController extends BaseController {
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class ShippingRatesController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) { super(); }
+  constructor(private readonly shippingService: ShippingService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create shipping rate' })
@@ -157,14 +187,22 @@ export class ShippingRatesController extends BaseController {
   @ApiQuery({ name: 'zoneId', required: false })
   @ApiQuery({ name: 'methodId', required: false })
   @Permissions('shipping.read')
-  findAll(@Query('zoneId') zoneId?: string, @Query('methodId') methodId?: string) {
-    return this.handleAsyncOperation(this.shippingService.findRates(zoneId, methodId));
+  findAll(
+    @Query('zoneId') zoneId?: string,
+    @Query('methodId') methodId?: string,
+  ) {
+    return this.handleAsyncOperation(
+      this.shippingService.findRates(zoneId, methodId),
+    );
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update shipping rate' })
   @Permissions('shipping.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateShippingRateDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateShippingRateDto,
+  ) {
     return this.handleAsyncOperation(this.shippingService.updateRate(id, dto));
   }
 }
@@ -172,13 +210,21 @@ export class ShippingRatesController extends BaseController {
 @ApiTags('Shipping Calculator')
 @Controller('shipping/calculate')
 export class ShippingCalculatorController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) { super(); }
+  constructor(private readonly shippingService: ShippingService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Calculate shipping options' })
-  calculate(@Body() body: { zoneId: string; weight: number; totalAmount: number }) {
+  calculate(
+    @Body() body: { zoneId: string; weight: number; totalAmount: number },
+  ) {
     return this.handleAsyncOperation(
-      this.shippingService.calculateShipping(body.zoneId, body.weight, body.totalAmount),
+      this.shippingService.calculateShipping(
+        body.zoneId,
+        body.weight,
+        body.totalAmount,
+      ),
     );
   }
 }
@@ -186,7 +232,9 @@ export class ShippingCalculatorController extends BaseController {
 @ApiTags('Delivery Slots')
 @Controller('shipping/slots')
 export class DeliverySlotsController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) { super(); }
+  constructor(private readonly shippingService: ShippingService) {
+    super();
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)

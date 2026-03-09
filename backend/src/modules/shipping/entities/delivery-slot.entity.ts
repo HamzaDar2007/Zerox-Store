@@ -26,7 +26,13 @@ export class DeliverySlot {
   @Column({ name: 'max_orders', type: 'integer', nullable: true })
   maxOrders: number | null;
 
-  @Column({ name: 'additional_fee', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'additional_fee',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   additionalFee: number;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })

@@ -1,5 +1,21 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { SystemService } from './system.service';
 import { CreateSystemSettingDto } from './dto/create-system-setting.dto';
 import { UpdateSystemSettingDto } from './dto/update-system-setting.dto';
@@ -10,12 +26,28 @@ import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
 import { BaseController } from '../../common/controllers/base.controller';
 
+@ApiTags('System - Health')
+@Controller('system/health')
+export class HealthController extends BaseController {
+  constructor(private readonly systemService: SystemService) {
+    super();
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'System health check' })
+  check() {
+    return this.handleAsyncOperation(this.systemService.getHealthCheck());
+  }
+}
+
 @ApiTags('System - Settings')
 @Controller('system/settings')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class SettingsController extends BaseController {
-  constructor(private readonly systemService: SystemService) { super(); }
+  constructor(private readonly systemService: SystemService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create setting' })
@@ -29,14 +61,18 @@ export class SettingsController extends BaseController {
   @ApiQuery({ name: 'group', required: false })
   @Permissions('system.read')
   findAll(@Query('group') group?: string) {
-    return this.handleAsyncOperation(this.systemService.findAllSettings({ group }));
+    return this.handleAsyncOperation(
+      this.systemService.findAllSettings({ group }),
+    );
   }
 
   @Get('group/:group')
   @ApiOperation({ summary: 'Get settings by group' })
   @Permissions('system.read')
   findByGroup(@Param('group') group: string) {
-    return this.handleAsyncOperation(this.systemService.getSettingsByGroup(group));
+    return this.handleAsyncOperation(
+      this.systemService.getSettingsByGroup(group),
+    );
   }
 
   @Get('key/:key')
@@ -56,7 +92,10 @@ export class SettingsController extends BaseController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update setting' })
   @Permissions('system.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateSystemSettingDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateSystemSettingDto,
+  ) {
     return this.handleAsyncOperation(this.systemService.updateSetting(id, dto));
   }
 
@@ -64,14 +103,18 @@ export class SettingsController extends BaseController {
   @ApiOperation({ summary: 'Update setting by key' })
   @Permissions('system.update')
   updateByKey(@Param('key') key: string, @Body('value') value: string) {
-    return this.handleAsyncOperation(this.systemService.updateSettingByKey(key, value));
+    return this.handleAsyncOperation(
+      this.systemService.updateSettingByKey(key, value),
+    );
   }
 
   @Post('bulk')
   @ApiOperation({ summary: 'Bulk update settings' })
   @Permissions('system.update')
   bulkUpdate(@Body() settings: { key: string; value: string }[]) {
-    return this.handleAsyncOperation(this.systemService.bulkUpdateSettings(settings));
+    return this.handleAsyncOperation(
+      this.systemService.bulkUpdateSettings(settings),
+    );
   }
 
   @Delete(':id')
@@ -87,7 +130,9 @@ export class SettingsController extends BaseController {
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class FeatureFlagsController extends BaseController {
-  constructor(private readonly systemService: SystemService) { super(); }
+  constructor(private readonly systemService: SystemService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create feature flag' })
@@ -120,8 +165,13 @@ export class FeatureFlagsController extends BaseController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update feature flag' })
   @Permissions('system.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateFeatureFlagDto) {
-    return this.handleAsyncOperation(this.systemService.updateFeatureFlag(id, dto));
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateFeatureFlagDto,
+  ) {
+    return this.handleAsyncOperation(
+      this.systemService.updateFeatureFlag(id, dto),
+    );
   }
 
   @Patch(':id/toggle')

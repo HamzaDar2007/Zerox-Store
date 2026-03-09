@@ -1,5 +1,21 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { BundlesService } from './bundles.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
@@ -11,7 +27,9 @@ import { UpdateProductBundleDto } from './dto/update-product-bundle.dto';
 @ApiTags('Bundles')
 @Controller('bundles')
 export class BundlesController extends BaseController {
-  constructor(private readonly bundlesService: BundlesService) { super(); }
+  constructor(private readonly bundlesService: BundlesService) {
+    super();
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -25,14 +43,27 @@ export class BundlesController extends BaseController {
   @Get()
   @ApiOperation({ summary: 'Get all bundles' })
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
-  findAll(@Query('isActive') isActive?: string, @Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.handleAsyncOperation(this.bundlesService.findAll({ isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined, page, limit }));
+  findAll(
+    @Query('isActive') isActive?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.handleAsyncOperation(
+      this.bundlesService.findAll({
+        isActive:
+          isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+        page,
+        limit,
+      }),
+    );
   }
 
   @Get('active')
   @ApiOperation({ summary: 'Get active bundles' })
   findActive(@Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.handleAsyncOperation(this.bundlesService.findAll({ isActive: true, page, limit }));
+    return this.handleAsyncOperation(
+      this.bundlesService.findAll({ isActive: true, page, limit }),
+    );
   }
 
   @Get(':id')
@@ -52,7 +83,10 @@ export class BundlesController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update bundle' })
   @Permissions('bundles.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateProductBundleDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateProductBundleDto,
+  ) {
     return this.handleAsyncOperation(this.bundlesService.update(id, dto));
   }
 
@@ -79,7 +113,10 @@ export class BundlesController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Add item to bundle' })
   @Permissions('bundles.update')
-  addItem(@Param('id', ParseUUIDPipe) id: string, @Body() dto: { productId: string; variantId?: string; quantity?: number }) {
+  addItem(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: { productId: string; variantId?: string; quantity?: number },
+  ) {
     return this.handleAsyncOperation(this.bundlesService.addItem(id, dto));
   }
 
@@ -94,8 +131,20 @@ export class BundlesController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update bundle item' })
   @Permissions('bundles.update')
-  updateItem(@Param('id', ParseUUIDPipe) id: string, @Param('itemId', ParseUUIDPipe) itemId: string, @Body() dto: Partial<{ productId: string; variantId: string; quantity: number; sortOrder: number }>) {
-    return this.handleAsyncOperation(this.bundlesService.updateItem(id, itemId, dto));
+  updateItem(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
+    @Body()
+    dto: Partial<{
+      productId: string;
+      variantId: string;
+      quantity: number;
+      sortOrder: number;
+    }>,
+  ) {
+    return this.handleAsyncOperation(
+      this.bundlesService.updateItem(id, itemId, dto),
+    );
   }
 
   @Delete(':id/items/:itemId')
@@ -103,13 +152,20 @@ export class BundlesController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Remove item from bundle' })
   @Permissions('bundles.update')
-  removeItem(@Param('id', ParseUUIDPipe) id: string, @Param('itemId', ParseUUIDPipe) itemId: string) {
-    return this.handleAsyncOperation(this.bundlesService.removeItem(id, itemId));
+  removeItem(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
+  ) {
+    return this.handleAsyncOperation(
+      this.bundlesService.removeItem(id, itemId),
+    );
   }
 
   @Get(':id/price')
   @ApiOperation({ summary: 'Calculate bundle price' })
   calculatePrice(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.bundlesService.calculateBundlePrice(id));
+    return this.handleAsyncOperation(
+      this.bundlesService.calculateBundlePrice(id),
+    );
   }
 }

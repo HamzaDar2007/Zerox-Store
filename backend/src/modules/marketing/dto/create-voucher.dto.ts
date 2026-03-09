@@ -72,7 +72,9 @@ export class CreateVoucherDto {
   @Min(1)
   usageLimitPerUser?: number;
 
-  @ApiPropertyOptional({ description: 'Store ID (for store-specific vouchers)' })
+  @ApiPropertyOptional({
+    description: 'Store ID (for store-specific vouchers)',
+  })
   @IsOptional()
   @IsUuidString()
   storeId?: string;
@@ -92,12 +94,18 @@ export class CreateVoucherDto {
   @IsDateString()
   endsAt: string;
 
-  @ApiPropertyOptional({ description: 'Can be combined with other vouchers', default: false })
+  @ApiPropertyOptional({
+    description: 'Can be combined with other vouchers',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isStackable?: boolean;
 
-  @ApiPropertyOptional({ description: 'Applies to items on sale', default: false })
+  @ApiPropertyOptional({
+    description: 'Applies to items on sale',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   appliesToSaleItems?: boolean;

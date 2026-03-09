@@ -13,13 +13,7 @@ import { GuardsModule } from '../../common/modules/guards.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      User,
-      UserRole,
-      Address,
-      Role,
-      Permission,
-    ]),
+    TypeOrmModule.forFeature([User, UserRole, Address, Role, Permission]),
     SharedModule,
     GuardsModule,
   ],

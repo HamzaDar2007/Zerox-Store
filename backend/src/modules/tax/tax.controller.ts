@@ -10,7 +10,12 @@ import {
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { TaxService } from './tax.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
@@ -58,7 +63,10 @@ export class TaxZonesController extends BaseController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update tax zone' })
   @Permissions('tax.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTaxZoneDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTaxZoneDto,
+  ) {
     return this.handleAsyncOperation(this.taxService.updateZone(id, dto));
   }
 
@@ -97,7 +105,10 @@ export class TaxRatesController extends BaseController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update tax rate' })
   @Permissions('tax.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTaxRateDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTaxRateDto,
+  ) {
     return this.handleAsyncOperation(this.taxService.updateRate(id, dto));
   }
 
@@ -135,7 +146,10 @@ export class TaxClassesController extends BaseController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update tax class' })
   @Permissions('tax.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTaxClassDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTaxClassDto,
+  ) {
     return this.handleAsyncOperation(this.taxService.updateClass(id, dto));
   }
 }
@@ -150,10 +164,21 @@ export class TaxCalculatorController extends BaseController {
   @Post()
   @ApiOperation({ summary: 'Calculate tax' })
   calculate(
-    @Body() body: { amount: number; countryCode: string; stateCode?: string; taxClassId?: string },
+    @Body()
+    body: {
+      amount: number;
+      countryCode: string;
+      stateCode?: string;
+      taxClassId?: string;
+    },
   ) {
     return this.handleAsyncOperation(
-      this.taxService.calculateTax(body.amount, body.countryCode, body.stateCode, body.taxClassId),
+      this.taxService.calculateTax(
+        body.amount,
+        body.countryCode,
+        body.stateCode,
+        body.taxClassId,
+      ),
     );
   }
 }

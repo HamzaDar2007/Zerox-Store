@@ -20,7 +20,9 @@ export class TaxRate {
   @Column({ name: 'tax_class_id', type: 'uuid' })
   taxClassId: string;
 
-  @ManyToOne(() => TaxClass, (taxClass) => taxClass.rates, { onDelete: 'CASCADE' })
+  @ManyToOne(() => TaxClass, (taxClass) => taxClass.rates, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'tax_class_id' })
   taxClass: TaxClass;
 

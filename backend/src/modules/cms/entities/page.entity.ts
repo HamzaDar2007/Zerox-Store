@@ -30,7 +30,12 @@ export class Page {
   @Column({ name: 'meta_title', type: 'varchar', length: 255, nullable: true })
   metaTitle: string | null;
 
-  @Column({ name: 'meta_description', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'meta_description',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   metaDescription: string | null;
 
   @Column({ name: 'parent_id', type: 'uuid', nullable: true })

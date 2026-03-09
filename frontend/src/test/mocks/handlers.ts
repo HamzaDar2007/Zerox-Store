@@ -81,6 +81,9 @@ export const handlers = [
   http.post(`${BASE}/auth/logout`, () => json(null)),
   http.post(`${BASE}/auth/forgot-password`, () => json({ message: 'Email sent' })),
   http.post(`${BASE}/auth/reset-password`, () => json({ message: 'Password reset' })),
+  http.post(`${BASE}/auth/change-password`, () => json({ message: 'Password changed successfully. Please login again.' })),
+  http.post(`${BASE}/auth/verify-email`, () => json({ message: 'Email verified successfully' })),
+  http.post(`${BASE}/auth/resend-verification`, () => json({ message: 'Verification email sent' })),
 
   // ── Users ──
   http.get(`${BASE}/users`, () => jsonPag([createMockUser()])),
@@ -140,6 +143,9 @@ export const handlers = [
   http.get(`${BASE}/checkout/session/:id`, () => json({})),
   http.patch(`${BASE}/checkout/session/:id`, () => json({})),
   http.post(`${BASE}/checkout/complete`, () => json(createMockOrder())),
+  http.get(`${BASE}/cart/summary`, () => json({ subtotal: 1000, itemCount: 2, discount: 0, total: 1000 })),
+  http.post(`${BASE}/cart/voucher`, () => json({ discount: 100, message: 'Voucher applied' })),
+  http.delete(`${BASE}/cart/voucher`, () => json(null)),
 
   // ── Categories / Brands / Attributes ──
   http.get(`${BASE}/categories`, () => json([createMockCategory()])),

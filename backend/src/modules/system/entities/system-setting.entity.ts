@@ -23,10 +23,20 @@ export class SystemSetting {
   @Column({ type: 'text', nullable: true })
   value: string | null;
 
-  @Column({ name: 'value_type', type: 'varchar', length: 20, default: 'string' })
+  @Column({
+    name: 'value_type',
+    type: 'varchar',
+    length: 20,
+    default: 'string',
+  })
   valueType: string;
 
-  @Column({ name: 'display_name', type: 'varchar', length: 200, nullable: true })
+  @Column({
+    name: 'display_name',
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+  })
   displayName: string | null;
 
   @Column({ type: 'text', nullable: true })

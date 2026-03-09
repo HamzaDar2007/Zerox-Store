@@ -56,7 +56,7 @@ export default defineConfig({
     },
     cssCodeSplit: true,
     reportCompressedSize: true,
-    chunkSizeWarningLimit: 250, // Warn if any chunk > 250KB
+    chunkSizeWarningLimit: 400, // Warn if any chunk > 400KB (Recharts ~358KB)
     rollupOptions: {
       output: {
         manualChunks: {
@@ -102,6 +102,8 @@ export default defineConfig({
           misc: ['react-day-picker', 'cmdk', 'sonner'],
           // Security utilities
           security: ['dompurify'],
+          // Charts (only loaded on analytics pages)
+          charts: ['recharts'],
         },
       },
     },

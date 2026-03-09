@@ -46,7 +46,12 @@ export class Refund {
   })
   status: RefundStatus;
 
-  @Column({ name: 'gateway_refund_id', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'gateway_refund_id',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   gatewayRefundId: string | null;
 
   @Column({ name: 'gateway_response', type: 'jsonb', nullable: true })

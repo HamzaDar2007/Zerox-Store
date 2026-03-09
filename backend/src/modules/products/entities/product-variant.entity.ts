@@ -17,7 +17,9 @@ export class ProductVariant {
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 
-  @ManyToOne(() => Product, (product) => product.variants, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Product, (product) => product.variants, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
@@ -33,10 +35,22 @@ export class ProductVariant {
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   price: number;
 
-  @Column({ name: 'compare_at_price', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'compare_at_price',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   compareAtPrice: number | null;
 
-  @Column({ name: 'cost_price', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'cost_price',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   costPrice: number | null;
 
   @Column({ type: 'integer', default: 0 })

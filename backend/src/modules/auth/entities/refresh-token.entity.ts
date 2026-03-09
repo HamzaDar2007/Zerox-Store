@@ -29,13 +29,22 @@ export class Session {
   @Column({ name: 'user_agent', type: 'text', nullable: true })
   userAgent: string | null;
 
-  @Column({ name: 'device_fingerprint', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'device_fingerprint',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   deviceFingerprint: string | null;
 
   @Column({ name: 'is_valid', type: 'boolean', default: true })
   isValid: boolean;
 
-  @Column({ name: 'last_activity_at', type: 'timestamptz', default: () => 'NOW()' })
+  @Column({
+    name: 'last_activity_at',
+    type: 'timestamptz',
+    default: () => 'NOW()',
+  })
   lastActivityAt: Date;
 
   @Column({ name: 'expires_at', type: 'timestamptz' })

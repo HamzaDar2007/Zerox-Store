@@ -1,5 +1,20 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { OperationsService } from './operations.service';
 import { CreateBulkOperationDto } from './dto/create-bulk-operation.dto';
 import { CreateImportExportJobDto } from './dto/create-import-export-job.dto';
@@ -15,13 +30,17 @@ import { BaseController } from '../../common/controllers/base.controller';
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class BulkOperationsController extends BaseController {
-  constructor(private readonly operationsService: OperationsService) { super(); }
+  constructor(private readonly operationsService: OperationsService) {
+    super();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create bulk operation' })
   @Permissions('operations.create')
   create(@Body() dto: CreateBulkOperationDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.operationsService.createBulkOperation(user.id, dto));
+    return this.handleAsyncOperation(
+      this.operationsService.createBulkOperation(user.id, dto),
+    );
   }
 
   @Get()
@@ -35,35 +54,60 @@ export class BulkOperationsController extends BaseController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.handleAsyncOperation(this.operationsService.findAllBulkOperations({ status, operationType, page, limit }));
+    return this.handleAsyncOperation(
+      this.operationsService.findAllBulkOperations({
+        status,
+        operationType,
+        page,
+        limit,
+      }),
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get bulk operation by ID' })
   @Permissions('operations.read')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.operationsService.findBulkOperation(id));
+    return this.handleAsyncOperation(
+      this.operationsService.findBulkOperation(id),
+    );
   }
 
   @Patch(':id/progress')
   @ApiOperation({ summary: 'Update bulk operation progress' })
   @Permissions('operations.update')
-  updateProgress(@Param('id', ParseUUIDPipe) id: string, @Body() dto: { successCount: number; failureCount?: number }) {
-    return this.handleAsyncOperation(this.operationsService.updateBulkOperationProgress(id, dto.successCount, dto.failureCount));
+  updateProgress(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: { successCount: number; failureCount?: number },
+  ) {
+    return this.handleAsyncOperation(
+      this.operationsService.updateBulkOperationProgress(
+        id,
+        dto.successCount,
+        dto.failureCount,
+      ),
+    );
   }
 
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancel bulk operation' })
   @Permissions('operations.update')
   cancel(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.operationsService.cancelBulkOperation(id));
+    return this.handleAsyncOperation(
+      this.operationsService.cancelBulkOperation(id),
+    );
   }
 
   @Post(':id/fail')
   @ApiOperation({ summary: 'Mark bulk operation as failed' })
   @Permissions('operations.update')
-  fail(@Param('id', ParseUUIDPipe) id: string, @Body('errorLog') errorLog: Record<string, any>[]) {
-    return this.handleAsyncOperation(this.operationsService.failBulkOperation(id, errorLog || []));
+  fail(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('errorLog') errorLog: Record<string, any>[],
+  ) {
+    return this.handleAsyncOperation(
+      this.operationsService.failBulkOperation(id, errorLog || []),
+    );
   }
 }
 
@@ -72,14 +116,18 @@ export class BulkOperationsController extends BaseController {
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class ImportExportController extends BaseController {
-  constructor(private readonly operationsService: OperationsService) { super(); }
+  constructor(private readonly operationsService: OperationsService) {
+    super();
+  }
 
   @Post()
   @UseGuards(PermissionsGuard)
   @ApiOperation({ summary: 'Create import/export job' })
   @Permissions('operations.create')
   create(@Body() dto: CreateImportExportJobDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.operationsService.createImportExportJob(user.id, dto));
+    return this.handleAsyncOperation(
+      this.operationsService.createImportExportJob(user.id, dto),
+    );
   }
 
   @Get()
@@ -96,42 +144,78 @@ export class ImportExportController extends BaseController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.handleAsyncOperation(this.operationsService.findAllImportExportJobs({ type, status, userId, page, limit }));
+    return this.handleAsyncOperation(
+      this.operationsService.findAllImportExportJobs({
+        type,
+        status,
+        userId,
+        page,
+        limit,
+      }),
+    );
   }
 
   @Get('my-jobs')
   @ApiOperation({ summary: 'Get my import/export jobs' })
-  getMyJobs(@CurrentUser() user: User, @Query('jobType') jobType?: 'import' | 'export') {
-    return this.handleAsyncOperation(this.operationsService.getMyJobs(user.id, jobType));
+  getMyJobs(
+    @CurrentUser() user: User,
+    @Query('jobType') jobType?: 'import' | 'export',
+  ) {
+    return this.handleAsyncOperation(
+      this.operationsService.getMyJobs(user.id, jobType),
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get import/export job by ID' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.operationsService.findImportExportJob(id));
+    return this.handleAsyncOperation(
+      this.operationsService.findImportExportJob(id),
+    );
   }
 
   @Patch(':id/progress')
   @UseGuards(PermissionsGuard)
   @ApiOperation({ summary: 'Update job progress' })
   @Permissions('operations.update')
-  updateProgress(@Param('id', ParseUUIDPipe) id: string, @Body() dto: { processedRows: number; successRows?: number; failedRows?: number }) {
-    return this.handleAsyncOperation(this.operationsService.updateJobProgress(id, dto.processedRows, dto.successRows || 0, dto.failedRows || 0));
+  updateProgress(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body()
+    dto: { processedRows: number; successRows?: number; failedRows?: number },
+  ) {
+    return this.handleAsyncOperation(
+      this.operationsService.updateJobProgress(
+        id,
+        dto.processedRows,
+        dto.successRows || 0,
+        dto.failedRows || 0,
+      ),
+    );
   }
 
   @Post(':id/complete')
   @UseGuards(PermissionsGuard)
   @ApiOperation({ summary: 'Mark job as completed' })
   @Permissions('operations.update')
-  complete(@Param('id', ParseUUIDPipe) id: string, @Body('resultFileUrl') resultFileUrl?: string) {
-    return this.handleAsyncOperation(this.operationsService.completeJob(id, resultFileUrl));
+  complete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('resultFileUrl') resultFileUrl?: string,
+  ) {
+    return this.handleAsyncOperation(
+      this.operationsService.completeJob(id, resultFileUrl),
+    );
   }
 
   @Post(':id/fail')
   @UseGuards(PermissionsGuard)
   @ApiOperation({ summary: 'Mark job as failed' })
   @Permissions('operations.update')
-  fail(@Param('id', ParseUUIDPipe) id: string, @Body() dto: { errorMessage: string; errorDetails?: any }) {
-    return this.handleAsyncOperation(this.operationsService.failJob(id, dto.errorMessage, dto.errorDetails));
+  fail(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: { errorMessage: string; errorDetails?: any },
+  ) {
+    return this.handleAsyncOperation(
+      this.operationsService.failJob(id, dto.errorMessage, dto.errorDetails),
+    );
   }
 }

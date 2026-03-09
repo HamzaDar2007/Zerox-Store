@@ -15,7 +15,12 @@ export class Role {
   @Column({ type: 'varchar', length: 50, unique: true })
   name: string;
 
-  @Column({ name: 'display_name', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'display_name',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   displayName: string | null;
 
   @Column({ type: 'text', nullable: true })

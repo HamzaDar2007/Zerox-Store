@@ -35,7 +35,12 @@ export class VoucherUsage {
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
-  @Column({ name: 'discount_applied', type: 'decimal', precision: 12, scale: 2 })
+  @Column({
+    name: 'discount_applied',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+  })
   discountApplied: number;
 
   @Column({ name: 'used_at', type: 'timestamptz', default: () => 'NOW()' })

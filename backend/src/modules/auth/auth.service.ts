@@ -4,6 +4,7 @@ import {
   ConflictException,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,6 +19,8 @@ import {
   PasswordResetDto,
   ResetPasswordDto,
 } from './dto/refresh-token.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { VerifyEmailDto, ResendVerificationDto } from './dto/verify-email.dto';
 import { User } from '../users/entities/user.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 
@@ -35,12 +38,20 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly mailService: MailService,
   ) {}
 
-  async register(
-    dto: RegisterDto,
-  ): Promise<{ success: boolean; message: string; data: { accessToken: string; refreshToken: string; user: UserWithoutPassword } }> {
+  async register(dto: RegisterDto): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      accessToken: string;
+      refreshToken: string;
+      user: UserWithoutPassword;
+    };
+  }> {
     ValidationUtil.validateEmail(dto.email);
     // ValidationUtil.validateString(dto.firstName, 'firstName', 2, 50);
     // ValidationUtil.validateString(dto.lastName, 'lastName', 2, 50);
@@ -62,7 +73,12 @@ export class AuthService {
 
     // Extract the actual user data from the service response
     const userData = userResponse.data || (userResponse as any);
-    const { password: _pw, twoFactorSecret: _tfs, twoFactorBackupCodes: _tbc, ...userWithoutPassword } = userData;
+    const {
+      password: _pw,
+      twoFactorSecret: _tfs,
+      twoFactorBackupCodes: _tbc,
+      ...userWithoutPassword
+    } = userData;
 
     // Generate tokens so user is auto-logged-in after registration
     const payload = { sub: userData.id, email: userData.email };
@@ -72,12 +88,27 @@ export class AuthService {
     const refreshToken = await this.generateRefreshToken(userData.id);
 
     // Send welcome email to customer + alert to admin (fire-and-forget)
-    this.mailService.sendWelcomeEmail(dto.name || 'User', dto.email).catch(() => {});
+    this.mailService
+      .sendWelcomeEmail(dto.name || 'User', dto.email)
+      .catch(() => {});
+
+    // Send email verification link (fire-and-forget)
+    const verificationToken = await this.jwtService.signAsync(
+      { sub: userData.id, email: userData.email, type: 'email-verification' },
+      { expiresIn: '24h' },
+    );
+    this.mailService
+      .sendEmailVerification(dto.email, dto.name || 'User', verificationToken)
+      .catch(() => {});
 
     return {
       success: true,
       message: 'User registered successfully',
-      data: { accessToken, refreshToken: refreshToken.refreshToken, user: userWithoutPassword },
+      data: {
+        accessToken,
+        refreshToken: refreshToken.refreshToken,
+        user: userWithoutPassword,
+      },
     };
   }
 
@@ -109,20 +140,47 @@ export class AuthService {
 
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) {
+      // Increment login attempts and lock account after 5 failures
+      const attempts = (user.loginAttempts || 0) + 1;
+      const updateData: Partial<User> = { loginAttempts: attempts };
+      if (attempts >= 5) {
+        updateData.lockedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15-minute lockout
+      }
+      await this.userRepository.update({ id: user.id }, updateData);
       throw new UnauthorizedException('Invalid email or password');
+    }
+
+    // Reset login attempts on successful login
+    if (user.loginAttempts > 0 || user.lockedUntil) {
+      await this.userRepository.update(
+        { id: user.id },
+        {
+          loginAttempts: 0,
+          lockedUntil: null,
+        },
+      );
     }
 
     // Check if account is deactivated
     if (user.isActive === false) {
-      throw new ForbiddenException('Account is deactivated. Please contact support.');
+      throw new ForbiddenException(
+        'Account is deactivated. Please contact support.',
+      );
     }
 
     // Check if account is temporarily locked
     if (user.lockedUntil && user.lockedUntil > new Date()) {
-      throw new ForbiddenException('Account is temporarily locked. Please try again later.');
+      throw new ForbiddenException(
+        'Account is temporarily locked. Please try again later.',
+      );
     }
 
-    const { password: _pw, twoFactorSecret: _tfs, twoFactorBackupCodes: _tbc, ...userSafe } = user;
+    const {
+      password: _pw,
+      twoFactorSecret: _tfs,
+      twoFactorBackupCodes: _tbc,
+      ...userSafe
+    } = user;
     const payload = { sub: user.id, email: user.email };
 
     const accessToken = await this.jwtService.signAsync(payload, {
@@ -134,14 +192,18 @@ export class AuthService {
     return {
       success: true,
       message: 'Login successful',
-      data: { accessToken, refreshToken: refreshToken.refreshToken, user: userSafe },
+      data: {
+        accessToken,
+        refreshToken: refreshToken.refreshToken,
+        user: userSafe,
+      },
     };
   }
 
   async refreshToken(dto: RefreshTokenDto): Promise<{
     success: boolean;
     message: string;
-    data: { accessToken: string };
+    data: { accessToken: string; refreshToken: string };
   }> {
     ValidationUtil.validateString(dto.refreshToken, 'refreshToken');
 
@@ -154,6 +216,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
+    // Invalidate the old refresh token (token rotation)
+    refreshToken.isValid = false;
+    await this.refreshTokenRepository.save(refreshToken);
+
     const payload = {
       sub: refreshToken.user.id,
       email: refreshToken.user.email,
@@ -162,6 +228,11 @@ export class AuthService {
       expiresIn: '15m',
     });
 
+    // Generate a new refresh token
+    const newRefreshToken = await this.generateRefreshToken(
+      refreshToken.user.id,
+    );
+
     SafeLogger.log(
       `Token refreshed for user: ${refreshToken.user.email}`,
       'AuthService',
@@ -169,7 +240,7 @@ export class AuthService {
     return {
       success: true,
       message: 'Token refreshed successfully',
-      data: { accessToken },
+      data: { accessToken, refreshToken: newRefreshToken.refreshToken },
     };
   }
 
@@ -216,7 +287,9 @@ export class AuthService {
       );
 
       // Send password reset email with the token link
-      this.mailService.sendPasswordResetEmail(user.email, user.name || 'User', resetToken).catch(() => {});
+      this.mailService
+        .sendPasswordResetEmail(user.email, user.name || 'User', resetToken)
+        .catch(() => {});
     }
 
     return {
@@ -256,9 +329,13 @@ export class AuthService {
       try {
         const user = await this.usersService.findByEmail(payload.email || '');
         if (user) {
-          this.mailService.sendPasswordChangedEmail(user.email, user.name || 'User').catch(() => {});
+          this.mailService
+            .sendPasswordChangedEmail(user.email, user.name || 'User')
+            .catch(() => {});
         }
-      } catch (_) { /* silently ignore */ }
+      } catch (_) {
+        /* silently ignore */
+      }
 
       return {
         success: true,
@@ -278,7 +355,12 @@ export class AuthService {
   ): Promise<{ success: boolean; message: string; data: any }> {
     const user = await this.usersService.findOne(userId);
     const userData = user as any;
-    const { password: _pw, twoFactorSecret: _tfs, twoFactorBackupCodes: _tbc, ...userWithoutPassword } = userData?.data || userData || {};
+    const {
+      password: _pw,
+      twoFactorSecret: _tfs,
+      twoFactorBackupCodes: _tbc,
+      ...userWithoutPassword
+    } = userData?.data || userData || {};
     return {
       success: true,
       message: 'User details retrieved successfully',
@@ -291,7 +373,12 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const { password: _pw, twoFactorSecret: _tfs, twoFactorBackupCodes: _tbc, ...userWithoutPassword } = user as any;
+    const {
+      password: _pw,
+      twoFactorSecret: _tfs,
+      twoFactorBackupCodes: _tbc,
+      ...userWithoutPassword
+    } = user as any;
     return userWithoutPassword;
   }
 
@@ -312,5 +399,110 @@ export class AuthService {
 
   async getUserWithDetails(userId: string) {
     return this.usersService.findOneWithPermissions(userId);
+  }
+
+  async changePassword(
+    userId: string,
+    dto: ChangePasswordDto,
+  ): Promise<{ success: boolean; message: string }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'email', 'name', 'password'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isMatch = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!isMatch) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+    await this.usersService.updatePassword(userId, hashedPassword);
+
+    // Revoke all refresh tokens for security
+    await this.refreshTokenRepository.update({ userId }, { isValid: false });
+
+    // Send confirmation email (fire-and-forget)
+    this.mailService
+      .sendPasswordChangedEmail(user.email, user.name || 'User')
+      .catch(() => {});
+
+    SafeLogger.log(`Password changed for user ID: ${userId}`, 'AuthService');
+    return {
+      success: true,
+      message: 'Password changed successfully. Please login again.',
+    };
+  }
+
+  async verifyEmail(
+    dto: VerifyEmailDto,
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const payload = await this.jwtService.verifyAsync(dto.token);
+      if (payload.type !== 'email-verification') {
+        throw new BadRequestException('Invalid token type');
+      }
+
+      const user = await this.userRepository.findOne({
+        where: { id: payload.sub },
+      });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (user.isEmailVerified) {
+        return { success: true, message: 'Email is already verified' };
+      }
+
+      await this.userRepository.update(
+        { id: user.id },
+        {
+          isEmailVerified: true,
+          emailVerifiedAt: new Date(),
+        },
+      );
+
+      SafeLogger.log(`Email verified for user: ${user.email}`, 'AuthService');
+      return { success: true, message: 'Email verified successfully' };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Invalid or expired verification token');
+    }
+  }
+
+  async resendVerificationEmail(
+    dto: ResendVerificationDto,
+  ): Promise<{ success: boolean; message: string }> {
+    // Always return same response to prevent email enumeration
+    const user = await this.usersService.findByEmail(
+      dto.email.toLowerCase().trim(),
+    );
+
+    if (user && !user.isEmailVerified) {
+      const verificationToken = await this.jwtService.signAsync(
+        { sub: user.id, email: user.email, type: 'email-verification' },
+        { expiresIn: '24h' },
+      );
+      this.mailService
+        .sendEmailVerification(
+          user.email,
+          user.name || 'User',
+          verificationToken,
+        )
+        .catch(() => {});
+    }
+
+    return {
+      success: true,
+      message:
+        'If an account with that email exists and is not yet verified, a new verification link has been sent.',
+    };
   }
 }

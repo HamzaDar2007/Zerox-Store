@@ -62,7 +62,13 @@ export class Dispute {
   @Column({ type: 'text' })
   description: string;
 
-  @Column({ name: 'disputed_amount', type: 'decimal', precision: 14, scale: 2, nullable: true })
+  @Column({
+    name: 'disputed_amount',
+    type: 'decimal',
+    precision: 14,
+    scale: 2,
+    nullable: true,
+  })
   disputedAmount: number | null;
 
   @Column({
@@ -75,7 +81,13 @@ export class Dispute {
   @Column({ name: 'resolution_note', type: 'text', nullable: true })
   resolutionNotes: string | null;
 
-  @Column({ name: 'resolution_amount', type: 'decimal', precision: 14, scale: 2, nullable: true })
+  @Column({
+    name: 'resolution_amount',
+    type: 'decimal',
+    precision: 14,
+    scale: 2,
+    nullable: true,
+  })
   refundAmount: number | null;
 
   @Column({ name: 'assigned_admin_id', type: 'uuid', nullable: true })

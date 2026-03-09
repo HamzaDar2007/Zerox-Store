@@ -13,10 +13,15 @@ import { SavedPaymentMethod } from './entities/saved-payment-method.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { CreateRefundDto } from './dto/create-refund.dto';
-import { UpdateRefundDto } from './dto/update-refund.dto';
+// UpdateRefundDto reserved for future refund update endpoint
 import { CreateSavedPaymentMethodDto } from './dto/create-saved-payment-method.dto';
 import { ServiceResponse } from '../../common/interfaces/service-response.interface';
-import { PaymentStatus, RefundStatus, PaymentAttemptStatus, PaymentMethod } from '@common/enums';
+import {
+  PaymentStatus,
+  RefundStatus,
+  PaymentAttemptStatus,
+  PaymentMethod,
+} from '@common/enums';
 import { MailService } from '../../common/modules/mail/mail.service';
 import { StripeService } from './providers/stripe.service';
 import { User } from '../users/entities/user.entity';
@@ -40,13 +45,19 @@ export class PaymentsService {
 
   // ==================== PAYMENTS ====================
 
-  async createPayment(dto: CreatePaymentDto): Promise<ServiceResponse<Payment>> {
+  async createPayment(
+    dto: CreatePaymentDto,
+  ): Promise<ServiceResponse<Payment>> {
     const payment = new Payment();
     Object.assign(payment, {
       ...dto,
       status: PaymentStatus.PENDING,
     });
-    payment.paymentNumber = 'PAY-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    payment.paymentNumber =
+      'PAY-' +
+      Date.now() +
+      '-' +
+      Math.random().toString(36).substring(2, 8).toUpperCase();
 
     const savedPayment = await this.paymentRepository.save(payment);
 
@@ -70,7 +81,9 @@ export class PaymentsService {
       .orderBy('payment.createdAt', 'DESC');
 
     if (options?.orderId) {
-      query.andWhere('payment.orderId = :orderId', { orderId: options.orderId });
+      query.andWhere('payment.orderId = :orderId', {
+        orderId: options.orderId,
+      });
     }
 
     if (options?.userId) {
@@ -112,7 +125,10 @@ export class PaymentsService {
     };
   }
 
-  async updatePayment(id: string, dto: UpdatePaymentDto): Promise<ServiceResponse<Payment>> {
+  async updatePayment(
+    id: string,
+    dto: UpdatePaymentDto,
+  ): Promise<ServiceResponse<Payment>> {
     const payment = await this.paymentRepository.findOne({ where: { id } });
 
     if (!payment) {
@@ -129,8 +145,13 @@ export class PaymentsService {
     };
   }
 
-  async processPayment(paymentId: string, paymentData: any): Promise<ServiceResponse<Payment>> {
-    const payment = await this.paymentRepository.findOne({ where: { id: paymentId } });
+  async processPayment(
+    paymentId: string,
+    paymentData: any,
+  ): Promise<ServiceResponse<Payment>> {
+    const payment = await this.paymentRepository.findOne({
+      where: { id: paymentId },
+    });
 
     if (!payment) {
       throw new NotFoundException('Payment not found');
@@ -151,7 +172,8 @@ export class PaymentsService {
     await this.attemptRepository.save(attempt);
 
     try {
-      const isStripe = payment.gatewayName === 'stripe' ||
+      const isStripe =
+        payment.gatewayName === 'stripe' ||
         payment.paymentMethod === PaymentMethod.STRIPE ||
         paymentData?.stripePaymentMethodId;
 
@@ -178,7 +200,10 @@ export class PaymentsService {
         if (intent.status === 'succeeded') {
           payment.status = PaymentStatus.COMPLETED;
           payment.paidAt = new Date();
-        } else if (intent.status === 'requires_action' || intent.status === 'requires_confirmation') {
+        } else if (
+          intent.status === 'requires_action' ||
+          intent.status === 'requires_confirmation'
+        ) {
           payment.status = PaymentStatus.AUTHORIZED;
         } else {
           payment.status = PaymentStatus.PENDING;
@@ -228,14 +253,32 @@ export class PaymentsService {
       const amount = Number(fullPayment.amount);
       const currency = fullPayment.currencyCode || 'PKR';
       if (fullPayment.status === PaymentStatus.COMPLETED) {
-        await this.mailService.sendPaymentSuccess(user.email, user.name || 'Customer', fullPayment.paymentNumber, amount, currency, fullPayment.paymentMethod || 'N/A');
+        await this.mailService.sendPaymentSuccess(
+          user.email,
+          user.name || 'Customer',
+          fullPayment.paymentNumber,
+          amount,
+          currency,
+          fullPayment.paymentMethod || 'N/A',
+        );
       } else if (fullPayment.status === PaymentStatus.FAILED) {
-        await this.mailService.sendPaymentFailure(user.email, user.name || 'Customer', fullPayment.paymentNumber, amount, currency, fullPayment.failureReason || 'Payment processing failed');
+        await this.mailService.sendPaymentFailure(
+          user.email,
+          user.name || 'Customer',
+          fullPayment.paymentNumber,
+          amount,
+          currency,
+          fullPayment.failureReason || 'Payment processing failed',
+        );
       }
-    } catch (err) { /* silently ignore */ }
+    } catch (err) {
+      /* silently ignore */
+    }
   }
 
-  async getPaymentAttempts(paymentId: string): Promise<ServiceResponse<PaymentAttempt[]>> {
+  async getPaymentAttempts(
+    paymentId: string,
+  ): Promise<ServiceResponse<PaymentAttempt[]>> {
     const attempts = await this.attemptRepository.find({
       where: { paymentId },
       order: { createdAt: 'DESC' },
@@ -250,7 +293,10 @@ export class PaymentsService {
 
   // ==================== REFUNDS ====================
 
-  async createRefund(dto: CreateRefundDto, userId: string): Promise<ServiceResponse<Refund>> {
+  async createRefund(
+    dto: CreateRefundDto,
+    _userId: string,
+  ): Promise<ServiceResponse<Refund>> {
     const payment = await this.paymentRepository.findOne({
       where: { id: dto.paymentId },
     });
@@ -267,7 +313,10 @@ export class PaymentsService {
     const existingRefunds = await this.refundRepository.find({
       where: { paymentId: dto.paymentId, status: RefundStatus.COMPLETED },
     });
-    const refundedAmount = existingRefunds.reduce((sum, r) => sum + Number(r.amount), 0);
+    const refundedAmount = existingRefunds.reduce(
+      (sum, r) => sum + Number(r.amount),
+      0,
+    );
     const remainingAmount = Number(payment.amount) - refundedAmount;
 
     if (dto.amount > remainingAmount) {
@@ -281,7 +330,11 @@ export class PaymentsService {
       ...dto,
       status: RefundStatus.PENDING,
     });
-    refund.refundNumber = 'REF-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    refund.refundNumber =
+      'REF-' +
+      Date.now() +
+      '-' +
+      Math.random().toString(36).substring(2, 8).toUpperCase();
 
     const savedRefund = await this.refundRepository.save(refund);
 
@@ -307,7 +360,9 @@ export class PaymentsService {
       .orderBy('refund.createdAt', 'DESC');
 
     if (options?.paymentId) {
-      query.andWhere('refund.paymentId = :paymentId', { paymentId: options.paymentId });
+      query.andWhere('refund.paymentId = :paymentId', {
+        paymentId: options.paymentId,
+      });
     }
 
     if (options?.status) {
@@ -359,10 +414,15 @@ export class PaymentsService {
       throw new BadRequestException('Refund already processed');
     }
 
-    const payment = refund.payment || await this.paymentRepository.findOne({ where: { id: refund.paymentId } });
+    const payment =
+      refund.payment ||
+      (await this.paymentRepository.findOne({
+        where: { id: refund.paymentId },
+      }));
 
     try {
-      const isStripe = payment?.gatewayName === 'stripe' && payment?.gatewayTransactionId;
+      const isStripe =
+        payment?.gatewayName === 'stripe' && payment?.gatewayTransactionId;
 
       if (isStripe) {
         // ===== STRIPE REFUND PROCESSING =====
@@ -405,8 +465,13 @@ export class PaymentsService {
     };
   }
 
-  async rejectRefund(refundId: string, reason: string): Promise<ServiceResponse<Refund>> {
-    const refund = await this.refundRepository.findOne({ where: { id: refundId } });
+  async rejectRefund(
+    refundId: string,
+    reason: string,
+  ): Promise<ServiceResponse<Refund>> {
+    const refund = await this.refundRepository.findOne({
+      where: { id: refundId },
+    });
 
     if (!refund) {
       throw new NotFoundException('Refund not found');
@@ -428,36 +493,61 @@ export class PaymentsService {
   }
 
   /** Fetch user via refund → payment → order → user and send refund email */
-  private async sendRefundEmail(refund: Refund, type: 'requested' | 'completed' | 'rejected', paymentEntity?: Payment): Promise<void> {
+  private async sendRefundEmail(
+    refund: Refund,
+    type: 'requested' | 'completed' | 'rejected',
+    paymentEntity?: Payment,
+  ): Promise<void> {
     try {
       const fullRefund = await this.refundRepository.findOne({
         where: { id: refund.id },
         relations: ['payment', 'payment.order', 'payment.order.user'],
       });
       const payment = fullRefund?.payment || paymentEntity;
-      const user: User | undefined = (payment as any)?.order?.user || (fullRefund as any)?.payment?.order?.user;
+      const user: User | undefined =
+        (payment as any)?.order?.user ||
+        (fullRefund as any)?.payment?.order?.user;
       if (!user?.email) return;
       const currency = payment?.currencyCode || 'PKR';
       const amount = Number(refund.amount);
       if (type === 'requested') {
-        await this.mailService.sendRefundRequested(user.email, user.name || 'Customer', refund.refundNumber, amount, currency);
+        await this.mailService.sendRefundRequested(
+          user.email,
+          user.name || 'Customer',
+          refund.refundNumber,
+          amount,
+          currency,
+        );
       } else if (type === 'completed') {
-        await this.mailService.sendRefundCompleted(user.email, user.name || 'Customer', refund.refundNumber, amount, currency);
+        await this.mailService.sendRefundCompleted(
+          user.email,
+          user.name || 'Customer',
+          refund.refundNumber,
+          amount,
+          currency,
+        );
       } else if (type === 'rejected') {
-        await this.mailService.sendRefundRejected(user.email, user.name || 'Customer', refund.refundNumber, refund.reasonDetails || 'Not specified');
+        await this.mailService.sendRefundRejected(
+          user.email,
+          user.name || 'Customer',
+          refund.refundNumber,
+          refund.reasonDetails || 'Not specified',
+        );
       }
-    } catch (err) { /* silently ignore */ }
+    } catch (err) {
+      /* silently ignore */
+    }
   }
 
   // ==================== SAVED PAYMENT METHODS ====================
 
-  async savePaymentMethod(userId: string, dto: CreateSavedPaymentMethodDto): Promise<ServiceResponse<SavedPaymentMethod>> {
+  async savePaymentMethod(
+    userId: string,
+    dto: CreateSavedPaymentMethodDto,
+  ): Promise<ServiceResponse<SavedPaymentMethod>> {
     // If setting as default, unset other defaults
     if (dto.isDefault) {
-      await this.savedMethodRepository.update(
-        { userId },
-        { isDefault: false },
-      );
+      await this.savedMethodRepository.update({ userId }, { isDefault: false });
     }
 
     const method = new SavedPaymentMethod();
@@ -475,7 +565,9 @@ export class PaymentsService {
     };
   }
 
-  async getSavedPaymentMethods(userId: string): Promise<ServiceResponse<SavedPaymentMethod[]>> {
+  async getSavedPaymentMethods(
+    userId: string,
+  ): Promise<ServiceResponse<SavedPaymentMethod[]>> {
     const methods = await this.savedMethodRepository.find({
       where: { userId },
       order: { isDefault: 'DESC', createdAt: 'DESC' },
@@ -488,7 +580,10 @@ export class PaymentsService {
     };
   }
 
-  async deleteSavedPaymentMethod(id: string, userId: string): Promise<ServiceResponse<void>> {
+  async deleteSavedPaymentMethod(
+    id: string,
+    userId: string,
+  ): Promise<ServiceResponse<void>> {
     const method = await this.savedMethodRepository.findOne({
       where: { id, userId },
     });
@@ -505,7 +600,10 @@ export class PaymentsService {
     };
   }
 
-  async setDefaultPaymentMethod(id: string, userId: string): Promise<ServiceResponse<SavedPaymentMethod>> {
+  async setDefaultPaymentMethod(
+    id: string,
+    userId: string,
+  ): Promise<ServiceResponse<SavedPaymentMethod>> {
     const method = await this.savedMethodRepository.findOne({
       where: { id, userId },
     });
@@ -515,10 +613,7 @@ export class PaymentsService {
     }
 
     // Unset other defaults
-    await this.savedMethodRepository.update(
-      { userId },
-      { isDefault: false },
-    );
+    await this.savedMethodRepository.update({ userId }, { isDefault: false });
 
     method.isDefault = true;
     const updatedMethod = await this.savedMethodRepository.save(method);
@@ -539,8 +634,16 @@ export class PaymentsService {
     paymentId: string;
     stripePaymentMethodId?: string;
     stripeCustomerId?: string;
-  }): Promise<ServiceResponse<{ clientSecret: string; paymentIntentId: string; status: string }>> {
-    const payment = await this.paymentRepository.findOne({ where: { id: params.paymentId } });
+  }): Promise<
+    ServiceResponse<{
+      clientSecret: string;
+      paymentIntentId: string;
+      status: string;
+    }>
+  > {
+    const payment = await this.paymentRepository.findOne({
+      where: { id: params.paymentId },
+    });
     if (!payment) throw new NotFoundException('Payment not found');
 
     const amountInSmallestUnit = Math.round(Number(payment.amount) * 100);
@@ -580,10 +683,14 @@ export class PaymentsService {
     paymentId: string;
     stripePaymentMethodId?: string;
   }): Promise<ServiceResponse<Payment>> {
-    const payment = await this.paymentRepository.findOne({ where: { id: params.paymentId } });
+    const payment = await this.paymentRepository.findOne({
+      where: { id: params.paymentId },
+    });
     if (!payment) throw new NotFoundException('Payment not found');
     if (!payment.gatewayTransactionId) {
-      throw new BadRequestException('No Stripe PaymentIntent found on this payment');
+      throw new BadRequestException(
+        'No Stripe PaymentIntent found on this payment',
+      );
     }
 
     const intent = await this.stripeService.confirmPaymentIntent(
@@ -641,7 +748,8 @@ export class PaymentsService {
         });
         if (payment) {
           payment.status = PaymentStatus.FAILED;
-          payment.failureReason = intent.last_payment_error?.message || 'Payment failed';
+          payment.failureReason =
+            intent.last_payment_error?.message || 'Payment failed';
           payment.gatewayResponse = intent;
           await this.paymentRepository.save(payment);
           this.sendPaymentEmail(payment).catch(() => {});
@@ -681,7 +789,10 @@ export class PaymentsService {
     setDefault = false,
   ): Promise<ServiceResponse<SavedPaymentMethod>> {
     // Attach the payment method to the Stripe customer
-    const stripePm = await this.stripeService.attachPaymentMethod(stripePaymentMethodId, stripeCustomerId);
+    const stripePm = await this.stripeService.attachPaymentMethod(
+      stripePaymentMethodId,
+      stripeCustomerId,
+    );
 
     if (setDefault) {
       await this.savedMethodRepository.update({ userId }, { isDefault: false });
@@ -720,7 +831,10 @@ export class PaymentsService {
   /**
    * Delete a saved payment method – if it's a Stripe method, also detach from Stripe.
    */
-  async deletePaymentMethodWithStripe(id: string, userId: string): Promise<ServiceResponse<void>> {
+  async deletePaymentMethodWithStripe(
+    id: string,
+    userId: string,
+  ): Promise<ServiceResponse<void>> {
     const method = await this.savedMethodRepository.findOne({
       where: { id, userId },
     });
@@ -734,7 +848,9 @@ export class PaymentsService {
       try {
         await this.stripeService.detachPaymentMethod(method.gatewayToken);
       } catch (err) {
-        this.logger.warn(`Failed to detach Stripe PM ${method.gatewayToken}: ${err.message}`);
+        this.logger.warn(
+          `Failed to detach Stripe PM ${method.gatewayToken}: ${err.message}`,
+        );
       }
     }
 

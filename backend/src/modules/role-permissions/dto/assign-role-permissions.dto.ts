@@ -1,9 +1,16 @@
-import { IsArray, IsEnum, IsOptional, IsNotEmpty, Matches } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsOptional,
+  IsNotEmpty,
+  Matches,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PermissionActionEnum } from 'src/common/enums/permission-actions.enum';
 
 // Permissive UUID pattern: 8-4-4-4-12 hex chars
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class AssignRolePermissionsDto {
   @ApiProperty({
@@ -17,7 +24,10 @@ export class AssignRolePermissionsDto {
   })
   @IsArray({ message: 'Permission IDs must be an array' })
   @IsNotEmpty({ message: 'At least one permission ID is required' })
-  @Matches(UUID_PATTERN, { each: true, message: 'Each permission ID must be a valid UUID' })
+  @Matches(UUID_PATTERN, {
+    each: true,
+    message: 'Each permission ID must be a valid UUID',
+  })
   permissionIds: string[];
 
   @ApiPropertyOptional({
@@ -26,6 +36,8 @@ export class AssignRolePermissionsDto {
     example: PermissionActionEnum.CREATE,
   })
   @IsOptional()
-  @IsEnum(PermissionActionEnum, { message: 'Action must be a valid permission action' })
+  @IsEnum(PermissionActionEnum, {
+    message: 'Action must be a valid permission action',
+  })
   action?: PermissionActionEnum;
 }

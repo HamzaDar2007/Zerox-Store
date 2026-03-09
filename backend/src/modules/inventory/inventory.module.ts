@@ -28,7 +28,11 @@ import { GuardsModule } from '../../common/modules/guards.module';
     SharedModule,
     GuardsModule,
   ],
-  controllers: [WarehousesController, InventoryController, InventoryTransfersController],
+  controllers: [
+    WarehousesController,
+    InventoryController,
+    InventoryTransfersController,
+  ],
   providers: [InventoryService],
   exports: [InventoryService, TypeOrmModule],
 })

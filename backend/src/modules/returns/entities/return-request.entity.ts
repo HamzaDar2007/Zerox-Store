@@ -71,7 +71,13 @@ export class ReturnRequest {
   @Column({ type: 'integer' })
   quantity: number;
 
-  @Column({ name: 'refund_amount', type: 'decimal', precision: 14, scale: 2, nullable: true })
+  @Column({
+    name: 'refund_amount',
+    type: 'decimal',
+    precision: 14,
+    scale: 2,
+    nullable: true,
+  })
   refundAmount: number | null;
 
   @Column({

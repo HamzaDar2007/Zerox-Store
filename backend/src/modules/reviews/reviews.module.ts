@@ -7,16 +7,14 @@ import { ReviewHelpfulness } from './entities/review-helpfulness.entity';
 import { ReviewReport } from './entities/review-report.entity';
 import { SharedModule } from '../shared/shared.module';
 import { GuardsModule } from '../../common/modules/guards.module';
+import { OrdersModule } from '../orders/orders.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Review,
-      ReviewHelpfulness,
-      ReviewReport,
-    ]),
+    TypeOrmModule.forFeature([Review, ReviewHelpfulness, ReviewReport]),
     SharedModule,
     GuardsModule,
+    OrdersModule,
   ],
   controllers: [ReviewsController],
   providers: [ReviewsService],

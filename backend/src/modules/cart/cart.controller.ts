@@ -57,13 +57,18 @@ export class CartController extends BaseController {
     @Body() dto: UpdateCartItemDto,
     @CurrentUser() user: User,
   ) {
-    return this.handleAsyncOperation(this.cartService.updateItem(id, dto, user.id));
+    return this.handleAsyncOperation(
+      this.cartService.updateItem(id, dto, user.id),
+    );
   }
 
   @Delete('items/:id')
   @ApiOperation({ summary: 'Remove item from cart' })
   @ApiResponse({ status: 200, description: 'Item removed from cart' })
-  removeItem(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+  removeItem(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
     return this.handleAsyncOperation(this.cartService.removeItem(id, user.id));
   }
 
@@ -72,6 +77,34 @@ export class CartController extends BaseController {
   @ApiResponse({ status: 200, description: 'Cart cleared' })
   clearCart(@CurrentUser() user: User) {
     return this.handleAsyncOperation(this.cartService.clearCart(user.id));
+  }
+
+  @Get('summary')
+  @ApiOperation({ summary: 'Get cart summary (totals)' })
+  @ApiResponse({ status: 200, description: 'Cart summary retrieved' })
+  async getCartSummary(@CurrentUser() user: User) {
+    const cartResult = await this.cartService.getOrCreateCart(user.id);
+    return this.handleAsyncOperation(
+      this.cartService.getCartSummary(cartResult.data!.id),
+    );
+  }
+
+  @Post('voucher')
+  @ApiOperation({ summary: 'Apply voucher to cart' })
+  @ApiResponse({ status: 200, description: 'Voucher applied' })
+  applyVoucher(@Body('code') code: string, @CurrentUser() user: User) {
+    return this.handleAsyncOperation(
+      this.cartService.applyVoucherToCart(user.id, code),
+    );
+  }
+
+  @Delete('voucher')
+  @ApiOperation({ summary: 'Remove voucher from cart' })
+  @ApiResponse({ status: 200, description: 'Voucher removed' })
+  removeVoucher(@CurrentUser() user: User) {
+    return this.handleAsyncOperation(
+      this.cartService.removeVoucherFromCart(user.id),
+    );
   }
 }
 
@@ -95,7 +128,9 @@ export class WishlistController extends BaseController {
   @ApiOperation({ summary: 'Add product to wishlist' })
   @ApiResponse({ status: 201, description: 'Product added to wishlist' })
   addToWishlist(@Body() dto: CreateWishlistDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.cartService.addToWishlist(user.id, dto));
+    return this.handleAsyncOperation(
+      this.cartService.addToWishlist(user.id, dto),
+    );
   }
 
   @Delete(':productId')
@@ -105,7 +140,9 @@ export class WishlistController extends BaseController {
     @Param('productId', ParseUUIDPipe) productId: string,
     @CurrentUser() user: User,
   ) {
-    return this.handleAsyncOperation(this.cartService.removeFromWishlist(user.id, productId));
+    return this.handleAsyncOperation(
+      this.cartService.removeFromWishlist(user.id, productId),
+    );
   }
 
   @Get('check/:productId')
@@ -114,7 +151,9 @@ export class WishlistController extends BaseController {
     @Param('productId', ParseUUIDPipe) productId: string,
     @CurrentUser() user: User,
   ) {
-    return this.handleAsyncOperation(this.cartService.isInWishlist(user.id, productId));
+    return this.handleAsyncOperation(
+      this.cartService.isInWishlist(user.id, productId),
+    );
   }
 }
 
@@ -130,8 +169,13 @@ export class CheckoutController extends BaseController {
   @Post('session')
   @ApiOperation({ summary: 'Create checkout session' })
   @ApiResponse({ status: 201, description: 'Checkout session created' })
-  createSession(@Body() dto: CreateCheckoutSessionDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.cartService.createCheckoutSession(user.id, dto));
+  createSession(
+    @Body() dto: CreateCheckoutSessionDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.handleAsyncOperation(
+      this.cartService.createCheckoutSession(user.id, dto),
+    );
   }
 
   @Get('session/:id')
@@ -148,13 +192,17 @@ export class CheckoutController extends BaseController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateCheckoutSessionDto,
   ) {
-    return this.handleAsyncOperation(this.cartService.updateCheckoutSession(id, dto));
+    return this.handleAsyncOperation(
+      this.cartService.updateCheckoutSession(id, dto),
+    );
   }
 
   @Post('session/:id/complete')
   @ApiOperation({ summary: 'Complete checkout session' })
   @ApiResponse({ status: 200, description: 'Checkout session completed' })
   completeSession(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.cartService.completeCheckoutSession(id));
+    return this.handleAsyncOperation(
+      this.cartService.completeCheckoutSession(id),
+    );
   }
 }

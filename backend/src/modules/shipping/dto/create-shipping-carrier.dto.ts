@@ -26,7 +26,9 @@ export class CreateShippingCarrierDto {
   @IsString()
   logo?: string;
 
-  @ApiPropertyOptional({ description: 'Tracking URL template (use {tracking_number} placeholder)' })
+  @ApiPropertyOptional({
+    description: 'Tracking URL template (use {tracking_number} placeholder)',
+  })
   @IsOptional()
   @IsString()
   trackingUrlTemplate?: string;

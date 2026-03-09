@@ -1,4 +1,10 @@
-import { IsArray, IsEnum, IsOptional, IsString, IsNotEmpty } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsNotEmpty,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PermissionActionEnum } from '../../../common/enums/permission-actions.enum';
 
@@ -30,7 +36,10 @@ export class AssignPermissionsDto {
     ],
   })
   @IsArray({ message: 'Actions must be an array' })
-  @IsEnum(PermissionActionEnum, { each: true, message: 'Each action must be a valid permission action' })
+  @IsEnum(PermissionActionEnum, {
+    each: true,
+    message: 'Each action must be a valid permission action',
+  })
   actions: PermissionActionEnum[];
 
   @ApiProperty({
@@ -40,6 +49,8 @@ export class AssignPermissionsDto {
     required: false,
   })
   @IsOptional()
-  @IsEnum(AssignmentActionEnum, { message: 'Assignment action must be add, remove, or replace' })
+  @IsEnum(AssignmentActionEnum, {
+    message: 'Assignment action must be add, remove, or replace',
+  })
   assignmentAction?: AssignmentActionEnum = AssignmentActionEnum.ADD;
 }

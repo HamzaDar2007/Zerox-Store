@@ -50,6 +50,7 @@ import { InventoryModule } from './modules/inventory/inventory.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { MailModule } from './common/modules/mail/mail.module';
+import { SchedulerModule } from './modules/scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -117,6 +118,7 @@ import { MailModule } from './common/modules/mail/mail.module';
     InventoryModule,
     LoyaltyModule,
     AuditModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [

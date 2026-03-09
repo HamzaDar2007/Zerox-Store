@@ -42,10 +42,21 @@ export class Category {
   @Column({ name: 'meta_title', type: 'varchar', length: 255, nullable: true })
   metaTitle: string | null;
 
-  @Column({ name: 'meta_description', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'meta_description',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   metaDescription: string | null;
 
-  @Column({ name: 'commission_rate', type: 'decimal', precision: 5, scale: 2, nullable: true })
+  @Column({
+    name: 'commission_rate',
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    nullable: true,
+  })
   commissionRate: number | null;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })

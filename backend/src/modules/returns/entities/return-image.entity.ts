@@ -16,7 +16,9 @@ export class ReturnImage {
   @Column({ name: 'return_request_id', type: 'uuid' })
   returnRequestId: string;
 
-  @ManyToOne(() => ReturnRequest, (request) => request.images, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ReturnRequest, (request) => request.images, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'return_request_id' })
   returnRequest: ReturnRequest;
 

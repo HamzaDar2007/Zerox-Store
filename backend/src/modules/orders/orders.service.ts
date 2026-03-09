@@ -18,6 +18,9 @@ import { UpdateShipmentDto } from './dto/update-shipment.dto';
 import { ServiceResponse } from '../../common/interfaces/service-response.interface';
 import { OrderStatus, ShipmentStatus } from '@common/enums';
 import { MailService } from '../../common/modules/mail/mail.service';
+import { InventoryService } from '../inventory/inventory.service';
+import { LoyaltyService } from '../loyalty/loyalty.service';
+import { LoyaltyTransactionType } from '@common/enums';
 
 @Injectable()
 export class OrdersService {
@@ -36,11 +39,16 @@ export class OrdersService {
     private shipmentItemRepository: Repository<ShipmentItem>,
     private dataSource: DataSource,
     private readonly mailService: MailService,
+    private readonly inventoryService: InventoryService,
+    private readonly loyaltyService: LoyaltyService,
   ) {}
 
   // ==================== ORDER CRUD ====================
 
-  async create(dto: CreateOrderDto, userId: string): Promise<ServiceResponse<Order>> {
+  async create(
+    dto: CreateOrderDto,
+    userId: string,
+  ): Promise<ServiceResponse<Order>> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -87,6 +95,133 @@ export class OrdersService {
     }
   }
 
+  /**
+   * Create an order from checkout session data (cart items, calculated server-side).
+   * This is the primary order creation path invoked by `CartService.completeCheckoutSession()`.
+   */
+  async createFromCheckout(params: {
+    userId: string;
+    storeId?: string;
+    items: Array<{
+      productId: string;
+      variantId?: string;
+      quantity: number;
+      unitPrice: number;
+      productSnapshot: Record<string, any>;
+    }>;
+    shippingAddress: Record<string, any>;
+    billingAddress?: Record<string, any>;
+    shippingMethod?: string;
+    shippingAmount?: number;
+    paymentMethod?: string;
+    voucherId?: string;
+    voucherCode?: string;
+    discountAmount?: number;
+    customerNotes?: string;
+    isGift?: boolean;
+    giftMessage?: string;
+  }): Promise<ServiceResponse<Order>> {
+    if (!params.items?.length) {
+      throw new BadRequestException('Cannot create order with no items');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const orderNumber = await this.generateOrderNumber();
+
+      // Server-side totals calculation
+      let subtotal = 0;
+      for (const item of params.items) {
+        subtotal += Number(item.unitPrice) * item.quantity;
+      }
+      const discountAmount = Number(params.discountAmount || 0);
+      const shippingAmount = Number(params.shippingAmount || 0);
+      const taxAmount = 0; // TODO: integrate tax service when ready
+      const totalAmount =
+        subtotal - discountAmount + shippingAmount + taxAmount;
+
+      const order = new Order();
+      order.userId = params.userId;
+      order.storeId =
+        params.storeId || params.items[0]?.productSnapshot?.storeId || null;
+      order.orderNumber = orderNumber;
+      order.status = OrderStatus.PENDING;
+      order.currencyCode = 'PKR';
+      order.subtotal = subtotal;
+      order.discountAmount = discountAmount;
+      order.taxAmount = taxAmount;
+      order.shippingAmount = shippingAmount;
+      order.totalAmount = totalAmount;
+      order.shippingAddress = params.shippingAddress;
+      order.billingAddress = params.billingAddress || null;
+      order.shippingMethod = params.shippingMethod || null;
+      order.paymentMethod = params.paymentMethod || null;
+      order.voucherId = params.voucherId || null;
+      order.voucherCode = params.voucherCode || null;
+      order.customerNotes = params.customerNotes || null;
+      order.isGift = params.isGift || false;
+      order.giftMessage = params.giftMessage || null;
+      order.placedAt = new Date();
+
+      const savedOrder = await queryRunner.manager.save(order);
+
+      // Create order items
+      for (const item of params.items) {
+        const orderItem = new OrderItem();
+        orderItem.orderId = savedOrder.id;
+        orderItem.productId = item.productId;
+        orderItem.variantId = item.variantId || null;
+        orderItem.quantity = item.quantity;
+        orderItem.unitPrice = item.unitPrice;
+        orderItem.totalAmount = Number(item.unitPrice) * item.quantity;
+        orderItem.productSnapshot = item.productSnapshot;
+        await queryRunner.manager.save(orderItem);
+      }
+
+      // Create status history entry
+      const statusHistory = new OrderStatusHistory();
+      statusHistory.orderId = savedOrder.id;
+      statusHistory.newStatus = OrderStatus.PENDING;
+      statusHistory.notes = 'Order created from checkout';
+      statusHistory.changedBy = params.userId;
+      await queryRunner.manager.save(statusHistory);
+
+      // Try to reserve stock (non-blocking — if inventory is not configured the order still proceeds)
+      try {
+        for (const item of params.items) {
+          await this.inventoryService.reserveStock(
+            item.productId,
+            params.items[0]?.productSnapshot?.warehouseId || '',
+            item.quantity,
+            savedOrder.id,
+            item.variantId,
+          );
+        }
+      } catch (_) {
+        // Inventory not set up for these products — proceed without reservation
+      }
+
+      await queryRunner.commitTransaction();
+
+      // Send order confirmation email (fire-and-forget)
+      this.sendOrderEmail(savedOrder).catch(() => {});
+
+      return {
+        success: true,
+        message: 'Order created successfully',
+        data: savedOrder,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   /** Fetch user & items, then send order confirmation email */
   private async sendOrderEmail(order: Order): Promise<void> {
     try {
@@ -109,13 +244,17 @@ export class OrdersService {
         items,
       );
       // Notify admin about new order
-      this.mailService.sendAdminNewOrderAlert(
-        fullOrder.orderNumber,
-        Number(fullOrder.totalAmount),
-        fullOrder.currencyCode || 'PKR',
-        fullOrder.user.name || 'Customer',
-      ).catch(() => {});
-    } catch (err) { /* silently ignore */ }
+      this.mailService
+        .sendAdminNewOrderAlert(
+          fullOrder.orderNumber,
+          Number(fullOrder.totalAmount),
+          fullOrder.currencyCode || 'PKR',
+          fullOrder.user.name || 'Customer',
+        )
+        .catch(() => {});
+    } catch (err) {
+      /* silently ignore */
+    }
   }
 
   async findAll(options?: {
@@ -136,7 +275,9 @@ export class OrdersService {
     }
 
     if (options?.sellerId) {
-      query.andWhere('order.storeId = :sellerId', { sellerId: options.sellerId });
+      query.andWhere('order.storeId = :sellerId', {
+        sellerId: options.sellerId,
+      });
     }
 
     if (options?.status) {
@@ -182,7 +323,9 @@ export class OrdersService {
     };
   }
 
-  async findByOrderNumber(orderNumber: string): Promise<ServiceResponse<Order>> {
+  async findByOrderNumber(
+    orderNumber: string,
+  ): Promise<ServiceResponse<Order>> {
     const order = await this.orderRepository.findOne({
       where: { orderNumber },
       relations: ['items', 'items.product', 'shipments'],
@@ -199,7 +342,10 @@ export class OrdersService {
     };
   }
 
-  async update(id: string, dto: UpdateOrderDto): Promise<ServiceResponse<Order>> {
+  async update(
+    id: string,
+    dto: UpdateOrderDto,
+  ): Promise<ServiceResponse<Order>> {
     const order = await this.orderRepository.findOne({ where: { id } });
 
     if (!order) {
@@ -242,6 +388,30 @@ export class OrdersService {
 
     await this.orderRepository.save(order);
 
+    // Auto-commit inventory reservations when order is confirmed
+    if (status === OrderStatus.CONFIRMED) {
+      this.inventoryService
+        .commitReservationsByOrderId(order.id)
+        .catch(() => {});
+    }
+
+    // Auto-award loyalty points when order is delivered
+    if (status === OrderStatus.DELIVERED) {
+      const pointsToEarn = Math.floor(Number(order.totalAmount));
+      if (pointsToEarn > 0) {
+        this.loyaltyService
+          .earnPoints(order.userId, {
+            userId: order.userId,
+            type: LoyaltyTransactionType.EARNED,
+            points: pointsToEarn,
+            referenceType: 'order',
+            referenceId: order.id,
+            description: `Points earned for order ${order.orderNumber}`,
+          })
+          .catch(() => {});
+      }
+    }
+
     // Record status history
     const statusHistory = new OrderStatusHistory();
     Object.assign(statusHistory, {
@@ -264,9 +434,16 @@ export class OrdersService {
   }
 
   /** Fetch user and send order status / cancellation email */
-  private async sendStatusEmail(order: Order, previousStatus: string, newStatus: string): Promise<void> {
+  private async sendStatusEmail(
+    order: Order,
+    previousStatus: string,
+    newStatus: string,
+  ): Promise<void> {
     try {
-      const fullOrder = await this.orderRepository.findOne({ where: { id: order.id }, relations: ['user'] });
+      const fullOrder = await this.orderRepository.findOne({
+        where: { id: order.id },
+        relations: ['user'],
+      });
       if (!fullOrder?.user?.email) return;
       if (newStatus === OrderStatus.CANCELLED) {
         await this.mailService.sendOrderCancellation(
@@ -284,24 +461,44 @@ export class OrdersService {
           newStatus,
         );
       }
-    } catch (err) { /* silently ignore */ }
+    } catch (err) {
+      /* silently ignore */
+    }
   }
 
-  async cancel(id: string, reason: string, userId: string): Promise<ServiceResponse<Order>> {
+  async cancel(
+    id: string,
+    reason: string,
+    userId: string,
+  ): Promise<ServiceResponse<Order>> {
     const order = await this.orderRepository.findOne({ where: { id } });
 
     if (!order) {
       throw new NotFoundException('Order not found');
     }
 
-    if (order.status === OrderStatus.SHIPPED || order.status === OrderStatus.DELIVERED) {
-      throw new BadRequestException('Cannot cancel shipped or delivered orders');
+    if (
+      order.status === OrderStatus.SHIPPED ||
+      order.status === OrderStatus.DELIVERED
+    ) {
+      throw new BadRequestException(
+        'Cannot cancel shipped or delivered orders',
+      );
+    }
+
+    // Release any held inventory reservations for this order
+    try {
+      await this.inventoryService.releaseReservationsByOrderId(id);
+    } catch (_) {
+      /* proceed even if release fails */
     }
 
     return this.updateStatus(id, OrderStatus.CANCELLED, reason, userId);
   }
 
-  async getStatusHistory(orderId: string): Promise<ServiceResponse<OrderStatusHistory[]>> {
+  async getStatusHistory(
+    orderId: string,
+  ): Promise<ServiceResponse<OrderStatusHistory[]>> {
     const history = await this.statusHistoryRepository.find({
       where: { orderId },
       order: { createdAt: 'DESC' },
@@ -316,8 +513,13 @@ export class OrdersService {
 
   // ==================== ORDER ITEMS ====================
 
-  async addItem(orderId: string, dto: any): Promise<ServiceResponse<OrderItem>> {
-    const order = await this.orderRepository.findOne({ where: { id: orderId } });
+  async addItem(
+    orderId: string,
+    dto: any,
+  ): Promise<ServiceResponse<OrderItem>> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+    });
 
     if (!order) {
       throw new NotFoundException('Order not found');
@@ -375,18 +577,29 @@ export class OrdersService {
       subtotal += Number(item.unitPrice) * item.quantity;
     }
 
-    const order = await this.orderRepository.findOne({ where: { id: orderId } });
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+    });
     if (order) {
       order.subtotal = subtotal;
-      order.totalAmount = subtotal + Number(order.shippingAmount || 0) + Number(order.taxAmount || 0) - Number(order.discountAmount || 0);
+      order.totalAmount =
+        subtotal +
+        Number(order.shippingAmount || 0) +
+        Number(order.taxAmount || 0) -
+        Number(order.discountAmount || 0);
       await this.orderRepository.save(order);
     }
   }
 
   // ==================== SHIPMENTS ====================
 
-  async createShipment(orderId: string, dto: CreateShipmentDto): Promise<ServiceResponse<Shipment>> {
-    const order = await this.orderRepository.findOne({ where: { id: orderId } });
+  async createShipment(
+    orderId: string,
+    dto: CreateShipmentDto,
+  ): Promise<ServiceResponse<Shipment>> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+    });
 
     if (!order) {
       throw new NotFoundException('Order not found');
@@ -412,15 +625,26 @@ export class OrdersService {
   }
 
   /** Fetch order user and send shipment notification */
-  private async sendShipmentEmail(orderId: string, shipment: Shipment): Promise<void> {
+  private async sendShipmentEmail(
+    orderId: string,
+    shipment: Shipment,
+  ): Promise<void> {
     try {
-      const order = await this.orderRepository.findOne({ where: { id: orderId }, relations: ['user'] });
+      const order = await this.orderRepository.findOne({
+        where: { id: orderId },
+        relations: ['user'],
+      });
       if (!order?.user?.email) return;
       await this.mailService.sendShipmentCreatedEmail(
-        order.user.email, order.user.name || 'Customer',
-        order.orderNumber, shipment.trackingNumber || '', shipment.carrierName || '',
+        order.user.email,
+        order.user.name || 'Customer',
+        order.orderNumber,
+        shipment.trackingNumber || '',
+        shipment.carrierName || '',
       );
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 
   async getShipments(orderId: string): Promise<ServiceResponse<Shipment[]>> {
@@ -437,8 +661,13 @@ export class OrdersService {
     };
   }
 
-  async updateShipment(shipmentId: string, dto: UpdateShipmentDto): Promise<ServiceResponse<Shipment>> {
-    const shipment = await this.shipmentRepository.findOne({ where: { id: shipmentId } });
+  async updateShipment(
+    shipmentId: string,
+    dto: UpdateShipmentDto,
+  ): Promise<ServiceResponse<Shipment>> {
+    const shipment = await this.shipmentRepository.findOne({
+      where: { id: shipmentId },
+    });
 
     if (!shipment) {
       throw new NotFoundException('Shipment not found');
@@ -502,10 +731,14 @@ export class OrdersService {
         fullShipment.trackingNumber || '',
         fullShipment.status,
       );
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 
-  async trackShipment(trackingNumber: string): Promise<ServiceResponse<Shipment>> {
+  async trackShipment(
+    trackingNumber: string,
+  ): Promise<ServiceResponse<Shipment>> {
     const shipment = await this.shipmentRepository.findOne({
       where: { trackingNumber },
       relations: ['order'],
@@ -531,11 +764,19 @@ export class OrdersService {
     return `${prefix}${String(count + 1).padStart(6, '0')}`;
   }
 
-  async getUserOrders(userId: string, page: number = 1, limit: number = 10): Promise<ServiceResponse<Order[]>> {
+  async getUserOrders(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<ServiceResponse<Order[]>> {
     return this.findAll({ userId, page, limit });
   }
 
-  async getSellerOrders(sellerId: string, page: number = 1, limit: number = 10): Promise<ServiceResponse<Order[]>> {
+  async getSellerOrders(
+    sellerId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<ServiceResponse<Order[]>> {
     return this.findAll({ sellerId, page, limit });
   }
 }

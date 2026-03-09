@@ -16,21 +16,32 @@ export class ChatService {
     private messageRepository: Repository<Message>,
   ) {}
 
-  async createConversation(dto: CreateConversationDto): Promise<ServiceResponse<Conversation>> {
+  async createConversation(
+    dto: CreateConversationDto,
+  ): Promise<ServiceResponse<Conversation>> {
     const conversation = new Conversation();
     Object.assign(conversation, dto);
     const saved = await this.conversationRepository.save(conversation);
     return { success: true, message: 'Conversation created', data: saved };
   }
 
-  async findConversations(userId: string): Promise<ServiceResponse<Conversation[]>> {
+  async findConversations(
+    userId: string,
+  ): Promise<ServiceResponse<Conversation[]>> {
     const conversations = await this.conversationRepository
       .createQueryBuilder('conversation')
       .leftJoinAndSelect('conversation.messages', 'messages')
-      .where('conversation.buyerId = :userId OR conversation.customerId = :userId', { userId })
+      .where(
+        'conversation.buyerId = :userId OR conversation.customerId = :userId',
+        { userId },
+      )
       .orderBy('conversation.updatedAt', 'DESC')
       .getMany();
-    return { success: true, message: 'Conversations retrieved', data: conversations };
+    return {
+      success: true,
+      message: 'Conversations retrieved',
+      data: conversations,
+    };
   }
 
   async findOne(id: string): Promise<ServiceResponse<Conversation>> {
@@ -39,11 +50,21 @@ export class ChatService {
       relations: ['messages', 'messages.sender'],
     });
     if (!conversation) throw new NotFoundException('Conversation not found');
-    return { success: true, message: 'Conversation retrieved', data: conversation };
+    return {
+      success: true,
+      message: 'Conversation retrieved',
+      data: conversation,
+    };
   }
 
-  async sendMessage(conversationId: string, senderId: string, dto: CreateMessageDto): Promise<ServiceResponse<Message>> {
-    const conversation = await this.conversationRepository.findOne({ where: { id: conversationId } });
+  async sendMessage(
+    conversationId: string,
+    senderId: string,
+    dto: CreateMessageDto,
+  ): Promise<ServiceResponse<Message>> {
+    const conversation = await this.conversationRepository.findOne({
+      where: { id: conversationId },
+    });
     if (!conversation) throw new NotFoundException('Conversation not found');
 
     const message = new Message();
@@ -58,7 +79,11 @@ export class ChatService {
     return { success: true, message: 'Message sent', data: saved };
   }
 
-  async getMessages(conversationId: string, page: number = 1, limit: number = 50): Promise<ServiceResponse<Message[]>> {
+  async getMessages(
+    conversationId: string,
+    page: number = 1,
+    limit: number = 50,
+  ): Promise<ServiceResponse<Message[]>> {
     const messages = await this.messageRepository.find({
       where: { conversationId },
       relations: ['sender'],
@@ -69,7 +94,10 @@ export class ChatService {
     return { success: true, message: 'Messages retrieved', data: messages };
   }
 
-  async markAsRead(conversationId: string, userId: string): Promise<ServiceResponse<void>> {
+  async markAsRead(
+    conversationId: string,
+    userId: string,
+  ): Promise<ServiceResponse<void>> {
     await this.messageRepository.update(
       { conversationId, isRead: false, senderId: Not(userId) },
       { isRead: true, readAt: new Date() },
@@ -81,7 +109,10 @@ export class ChatService {
     const count = await this.messageRepository
       .createQueryBuilder('message')
       .innerJoin('message.conversation', 'conversation')
-      .where('(conversation.buyerId = :userId OR conversation.customerId = :userId)', { userId })
+      .where(
+        '(conversation.buyerId = :userId OR conversation.customerId = :userId)',
+        { userId },
+      )
       .andWhere('message.senderId != :userId', { userId })
       .andWhere('message.isRead = false')
       .getCount();

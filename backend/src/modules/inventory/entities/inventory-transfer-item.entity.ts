@@ -17,7 +17,9 @@ export class InventoryTransferItem {
   @Column({ name: 'transfer_id', type: 'uuid' })
   transferId: string;
 
-  @ManyToOne(() => InventoryTransfer, (transfer) => transfer.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => InventoryTransfer, (transfer) => transfer.items, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'transfer_id' })
   transfer: InventoryTransfer;
 

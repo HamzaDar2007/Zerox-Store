@@ -19,7 +19,9 @@ export class BundleItem {
   @Column({ name: 'bundle_id', type: 'uuid' })
   bundleId: string;
 
-  @ManyToOne(() => ProductBundle, (bundle) => bundle.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ProductBundle, (bundle) => bundle.items, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'bundle_id' })
   bundle: ProductBundle;
 

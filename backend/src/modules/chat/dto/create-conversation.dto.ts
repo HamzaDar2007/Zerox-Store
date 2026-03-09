@@ -25,7 +25,9 @@ export class CreateConversationDto {
   @IsUuidString()
   storeId?: string;
 
-  @ApiPropertyOptional({ description: 'Order ID (for order-related conversations)' })
+  @ApiPropertyOptional({
+    description: 'Order ID (for order-related conversations)',
+  })
   @IsOptional()
   @IsUuidString()
   orderId?: string;
@@ -36,7 +38,10 @@ export class CreateConversationDto {
   @MaxLength(255)
   subject?: string;
 
-  @ApiPropertyOptional({ description: 'Conversation status', enum: ConversationStatus })
+  @ApiPropertyOptional({
+    description: 'Conversation status',
+    enum: ConversationStatus,
+  })
   @IsOptional()
   @IsEnum(ConversationStatus)
   status?: ConversationStatus;

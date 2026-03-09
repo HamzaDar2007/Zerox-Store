@@ -29,10 +29,20 @@ export class Warehouse {
   @Column({ type: 'varchar', length: 20, unique: true })
   code: string;
 
-  @Column({ name: 'address_line1', type: 'varchar', length: 200, nullable: true })
+  @Column({
+    name: 'address_line1',
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+  })
   addressLine1: string | null;
 
-  @Column({ name: 'address_line2', type: 'varchar', length: 200, nullable: true })
+  @Column({
+    name: 'address_line2',
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+  })
   addressLine2: string | null;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
@@ -53,13 +63,28 @@ export class Warehouse {
   @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   longitude: number | null;
 
-  @Column({ name: 'contact_name', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'contact_name',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   contactName: string | null;
 
-  @Column({ name: 'contact_phone', type: 'varchar', length: 20, nullable: true })
+  @Column({
+    name: 'contact_phone',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
   contactPhone: string | null;
 
-  @Column({ name: 'contact_email', type: 'varchar', length: 150, nullable: true })
+  @Column({
+    name: 'contact_email',
+    type: 'varchar',
+    length: 150,
+    nullable: true,
+  })
   contactEmail: string | null;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })

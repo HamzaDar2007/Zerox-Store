@@ -8,7 +8,7 @@ import {
   JoinColumn,
   Unique,
 } from 'typeorm';
-import { NotificationType, NotificationChannel } from '@common/enums';
+import { NotificationChannel } from '@common/enums';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('notification_preferences')

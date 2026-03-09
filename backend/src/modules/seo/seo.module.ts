@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SeoService } from './seo.service';
-import { SeoMetadataController, UrlRedirectsController } from './seo.controller';
+import {
+  SeoMetadataController,
+  UrlRedirectsController,
+} from './seo.controller';
 import { SeoMetadata } from './entities/seo-metadata.entity';
 import { UrlRedirect } from './entities/url-redirect.entity';
 import { SharedModule } from '../shared/shared.module';

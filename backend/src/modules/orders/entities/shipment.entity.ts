@@ -24,16 +24,31 @@ export class Shipment {
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
-  @Column({ name: 'shipment_number', type: 'varchar', length: 50, unique: true })
+  @Column({
+    name: 'shipment_number',
+    type: 'varchar',
+    length: 50,
+    unique: true,
+  })
   shipmentNumber: string;
 
   @Column({ name: 'carrier_id', type: 'uuid', nullable: true })
   carrierId: string | null;
 
-  @Column({ name: 'carrier_name', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'carrier_name',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   carrierName: string | null;
 
-  @Column({ name: 'tracking_number', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'tracking_number',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   trackingNumber: string | null;
 
   @Column({ name: 'tracking_url', type: 'text', nullable: true })
@@ -46,10 +61,22 @@ export class Shipment {
   })
   status: ShipmentStatus;
 
-  @Column({ name: 'shipping_cost', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'shipping_cost',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   shippingCost: number;
 
-  @Column({ name: 'weight_kg', type: 'decimal', precision: 10, scale: 3, nullable: true })
+  @Column({
+    name: 'weight_kg',
+    type: 'decimal',
+    precision: 10,
+    scale: 3,
+    nullable: true,
+  })
   weightKg: number | null;
 
   @Column({ type: 'jsonb', nullable: true })
@@ -61,7 +88,11 @@ export class Shipment {
   @Column({ name: 'delivered_at', type: 'timestamptz', nullable: true })
   deliveredAt: Date | null;
 
-  @Column({ name: 'estimated_delivery_at', type: 'timestamptz', nullable: true })
+  @Column({
+    name: 'estimated_delivery_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
   estimatedDeliveryAt: Date | null;
 
   @Column({ name: 'delivery_address', type: 'jsonb' })

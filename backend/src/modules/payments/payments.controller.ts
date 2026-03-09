@@ -66,7 +66,13 @@ export class PaymentsController extends BaseController {
     @Query('limit') limit?: number,
   ) {
     return this.handleAsyncOperation(
-      this.paymentsService.findAllPayments({ orderId, userId, status, page, limit }),
+      this.paymentsService.findAllPayments({
+        orderId,
+        userId,
+        status,
+        page,
+        limit,
+      }),
     );
   }
 
@@ -82,8 +88,13 @@ export class PaymentsController extends BaseController {
   @ApiOperation({ summary: 'Update payment' })
   @ApiResponse({ status: 200, description: 'Payment updated successfully' })
   @Permissions('payments.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdatePaymentDto) {
-    return this.handleAsyncOperation(this.paymentsService.updatePayment(id, dto));
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePaymentDto,
+  ) {
+    return this.handleAsyncOperation(
+      this.paymentsService.updatePayment(id, dto),
+    );
   }
 
   @Post(':id/process')
@@ -94,18 +105,25 @@ export class PaymentsController extends BaseController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() paymentData: any,
   ) {
-    return this.handleAsyncOperation(this.paymentsService.processPayment(id, paymentData));
+    return this.handleAsyncOperation(
+      this.paymentsService.processPayment(id, paymentData),
+    );
   }
 
   @Get(':id/attempts')
   @ApiOperation({ summary: 'Get payment attempts' })
   getAttempts(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.paymentsService.getPaymentAttempts(id));
+    return this.handleAsyncOperation(
+      this.paymentsService.getPaymentAttempts(id),
+    );
   }
 
   @Post(':id/stripe/create-intent')
   @ApiOperation({ summary: 'Create Stripe PaymentIntent for a payment' })
-  @ApiResponse({ status: 200, description: 'PaymentIntent created with client secret' })
+  @ApiResponse({
+    status: 200,
+    description: 'PaymentIntent created with client secret',
+  })
   createStripeIntent(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: { stripePaymentMethodId?: string; stripeCustomerId?: string },
@@ -148,7 +166,9 @@ export class RefundsController extends BaseController {
   @ApiOperation({ summary: 'Request refund' })
   @ApiResponse({ status: 201, description: 'Refund request created' })
   create(@Body() dto: CreateRefundDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.paymentsService.createRefund(dto, user.id));
+    return this.handleAsyncOperation(
+      this.paymentsService.createRefund(dto, user.id),
+    );
   }
 
   @Get()
@@ -192,7 +212,9 @@ export class RefundsController extends BaseController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body('reason') reason: string,
   ) {
-    return this.handleAsyncOperation(this.paymentsService.rejectRefund(id, reason));
+    return this.handleAsyncOperation(
+      this.paymentsService.rejectRefund(id, reason),
+    );
   }
 }
 
@@ -209,25 +231,36 @@ export class PaymentMethodsController extends BaseController {
   @ApiOperation({ summary: 'Save payment method' })
   @ApiResponse({ status: 201, description: 'Payment method saved' })
   create(@Body() dto: CreateSavedPaymentMethodDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.paymentsService.savePaymentMethod(user.id, dto));
+    return this.handleAsyncOperation(
+      this.paymentsService.savePaymentMethod(user.id, dto),
+    );
   }
 
   @Get()
   @ApiOperation({ summary: 'Get saved payment methods' })
   findAll(@CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.paymentsService.getSavedPaymentMethods(user.id));
+    return this.handleAsyncOperation(
+      this.paymentsService.getSavedPaymentMethods(user.id),
+    );
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete payment method' })
   remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.paymentsService.deletePaymentMethodWithStripe(id, user.id));
+    return this.handleAsyncOperation(
+      this.paymentsService.deletePaymentMethodWithStripe(id, user.id),
+    );
   }
 
   @Post(':id/default')
   @ApiOperation({ summary: 'Set default payment method' })
-  setDefault(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.paymentsService.setDefaultPaymentMethod(id, user.id));
+  setDefault(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.handleAsyncOperation(
+      this.paymentsService.setDefaultPaymentMethod(id, user.id),
+    );
   }
 
   @Post('stripe/save')
@@ -235,7 +268,12 @@ export class PaymentMethodsController extends BaseController {
   @ApiResponse({ status: 201, description: 'Stripe payment method saved' })
   saveStripeMethod(
     @CurrentUser() user: User,
-    @Body() body: { stripePaymentMethodId: string; stripeCustomerId: string; setDefault?: boolean },
+    @Body()
+    body: {
+      stripePaymentMethodId: string;
+      stripeCustomerId: string;
+      setDefault?: boolean;
+    },
   ) {
     return this.handleAsyncOperation(
       this.paymentsService.saveStripePaymentMethod(

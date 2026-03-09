@@ -15,7 +15,9 @@ export class CurrencyRateHistory {
   @Column({ name: 'currency_id', type: 'uuid' })
   currencyId: string;
 
-  @ManyToOne(() => Currency, (currency) => currency.rateHistory, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Currency, (currency) => currency.rateHistory, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'currency_id' })
   currency: Currency;
 

@@ -18,7 +18,9 @@ export class ReturnShipment {
   @Column({ name: 'return_request_id', type: 'uuid' })
   returnRequestId: string;
 
-  @ManyToOne(() => ReturnRequest, (request) => request.shipments, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ReturnRequest, (request) => request.shipments, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'return_request_id' })
   returnRequest: ReturnRequest;
 
@@ -28,10 +30,20 @@ export class ReturnShipment {
   })
   direction: ReturnShipmentDirection;
 
-  @Column({ name: 'carrier_name', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'carrier_name',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   carrierName: string | null;
 
-  @Column({ name: 'tracking_number', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'tracking_number',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   trackingNumber: string | null;
 
   @Column({ name: 'tracking_url', type: 'text', nullable: true })

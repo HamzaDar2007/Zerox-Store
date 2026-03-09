@@ -38,7 +38,10 @@ export class CreateShippingZoneDto {
   @IsString({ each: true })
   postcodes?: string[];
 
-  @ApiPropertyOptional({ description: 'Is default shipping zone', default: false })
+  @ApiPropertyOptional({
+    description: 'Is default shipping zone',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isDefault?: boolean;

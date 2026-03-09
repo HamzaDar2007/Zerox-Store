@@ -10,10 +10,9 @@ import {
   Min,
   Max,
   IsArray,
-  ValidateNested,
   Matches,
 } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProductStatus, WarrantyType } from '@common/enums';
 
@@ -40,11 +39,15 @@ export class CreateProductDto {
   @Transform(({ value }) => value?.trim())
   name: string;
 
-  @ApiPropertyOptional({ description: 'Product slug (auto-generated if not provided)' })
+  @ApiPropertyOptional({
+    description: 'Product slug (auto-generated if not provided)',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(300)
-  @Matches(/^[a-z0-9-]+$/, { message: 'Slug must contain only lowercase letters, numbers, and hyphens' })
+  @Matches(/^[a-z0-9-]+$/, {
+    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+  })
   slug?: string;
 
   @ApiPropertyOptional({ description: 'Full product description' })
@@ -52,7 +55,10 @@ export class CreateProductDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ description: 'Short description for listing', maxLength: 500 })
+  @ApiPropertyOptional({
+    description: 'Short description for listing',
+    maxLength: 500,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(500)
@@ -63,7 +69,9 @@ export class CreateProductDto {
   @Min(0)
   price: number;
 
-  @ApiPropertyOptional({ description: 'Compare at price (original price for discounts)' })
+  @ApiPropertyOptional({
+    description: 'Compare at price (original price for discounts)',
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)

@@ -58,7 +58,12 @@ export class Payment {
   @Column({ name: 'gateway_name', type: 'varchar', length: 50, nullable: true })
   gatewayName: string | null;
 
-  @Column({ name: 'gateway_transaction_id', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'gateway_transaction_id',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   gatewayTransactionId: string | null;
 
   @Column({ name: 'gateway_response', type: 'jsonb', nullable: true })
@@ -73,7 +78,13 @@ export class Payment {
   @Column({ name: 'failure_reason', type: 'text', nullable: true })
   failureReason: string | null;
 
-  @Column({ name: 'refunded_amount', type: 'decimal', precision: 14, scale: 2, default: 0 })
+  @Column({
+    name: 'refunded_amount',
+    type: 'decimal',
+    precision: 14,
+    scale: 2,
+    default: 0,
+  })
   refundedAmount: number;
 
   @Column({ type: 'jsonb', nullable: true })

@@ -43,7 +43,9 @@ export class SellersController extends BaseController {
   @ApiOperation({ summary: 'Register as a seller' })
   @ApiResponse({ status: 201, description: 'Seller registered successfully' })
   create(@Body() dto: CreateSellerDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.sellersService.createSeller(dto, user.id));
+    return this.handleAsyncOperation(
+      this.sellersService.createSeller(dto, user.id),
+    );
   }
 
   @Get()
@@ -87,14 +89,18 @@ export class SellersController extends BaseController {
     @Param('sellerId', ParseUUIDPipe) sellerId: string,
     @Body() dto: CreateStoreDto,
   ) {
-    return this.handleAsyncOperation(this.sellersService.createStore(sellerId, dto));
+    return this.handleAsyncOperation(
+      this.sellersService.createStore(sellerId, dto),
+    );
   }
 
   @Get(':sellerId/documents')
   @ApiOperation({ summary: 'Get seller documents' })
   @ApiResponse({ status: 200, description: 'Documents retrieved successfully' })
   getDocuments(@Param('sellerId', ParseUUIDPipe) sellerId: string) {
-    return this.handleAsyncOperation(this.sellersService.getSellerDocuments(sellerId));
+    return this.handleAsyncOperation(
+      this.sellersService.getSellerDocuments(sellerId),
+    );
   }
 
   @Post(':sellerId/documents')
@@ -104,21 +110,42 @@ export class SellersController extends BaseController {
     @Param('sellerId', ParseUUIDPipe) sellerId: string,
     @Body() dto: CreateSellerDocumentDto,
   ) {
-    return this.handleAsyncOperation(this.sellersService.addDocument(sellerId, dto));
+    return this.handleAsyncOperation(
+      this.sellersService.addDocument(sellerId, dto),
+    );
   }
 
   @Get(':sellerId/wallet')
   @ApiOperation({ summary: 'Get seller wallet' })
   @ApiResponse({ status: 200, description: 'Wallet retrieved successfully' })
   getWallet(@Param('sellerId', ParseUUIDPipe) sellerId: string) {
-    return this.handleAsyncOperation(this.sellersService.getSellerWallet(sellerId));
+    return this.handleAsyncOperation(
+      this.sellersService.getSellerWallet(sellerId),
+    );
   }
 
   @Get(':sellerId/wallet/transactions')
   @ApiOperation({ summary: 'Get wallet transactions' })
-  @ApiResponse({ status: 200, description: 'Transactions retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Transactions retrieved successfully',
+  })
   getTransactions(@Param('sellerId', ParseUUIDPipe) sellerId: string) {
-    return this.handleAsyncOperation(this.sellersService.getWalletTransactions(sellerId));
+    return this.handleAsyncOperation(
+      this.sellersService.getWalletTransactions(sellerId),
+    );
+  }
+
+  @Get(':sellerId/stats')
+  @ApiOperation({ summary: 'Get seller analytics/stats' })
+  @ApiResponse({
+    status: 200,
+    description: 'Seller stats retrieved successfully',
+  })
+  getStats(@Param('sellerId', ParseUUIDPipe) sellerId: string) {
+    return this.handleAsyncOperation(
+      this.sellersService.getSellerStats(sellerId),
+    );
   }
 }
 
@@ -172,13 +199,17 @@ export class StoresController extends BaseController {
   @ApiOperation({ summary: 'Follow a store' })
   @ApiResponse({ status: 201, description: 'Store followed successfully' })
   follow(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.sellersService.followStore(id, user.id));
+    return this.handleAsyncOperation(
+      this.sellersService.followStore(id, user.id),
+    );
   }
 
   @Delete(':id/follow')
   @ApiOperation({ summary: 'Unfollow a store' })
   @ApiResponse({ status: 200, description: 'Store unfollowed successfully' })
   unfollow(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.sellersService.unfollowStore(id, user.id));
+    return this.handleAsyncOperation(
+      this.sellersService.unfollowStore(id, user.id),
+    );
   }
 }

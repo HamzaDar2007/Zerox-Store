@@ -29,7 +29,10 @@ export class CreateDeliverySlotDto {
   @IsString()
   endTime: string;
 
-  @ApiPropertyOptional({ description: 'Days of week (0=Sunday, 6=Saturday)', type: [Number] })
+  @ApiPropertyOptional({
+    description: 'Days of week (0=Sunday, 6=Saturday)',
+    type: [Number],
+  })
   @IsOptional()
   @IsArray()
   @IsInt({ each: true })
@@ -43,7 +46,10 @@ export class CreateDeliverySlotDto {
   @Min(1)
   maxOrders?: number;
 
-  @ApiPropertyOptional({ description: 'Additional fee for this slot', default: 0 })
+  @ApiPropertyOptional({
+    description: 'Additional fee for this slot',
+    default: 0,
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)

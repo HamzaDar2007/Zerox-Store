@@ -28,7 +28,12 @@ import { GuardsModule } from '../../common/modules/guards.module';
     SharedModule,
     GuardsModule,
   ],
-  controllers: [PaymentsController, RefundsController, PaymentMethodsController, StripeWebhookController],
+  controllers: [
+    PaymentsController,
+    RefundsController,
+    PaymentMethodsController,
+    StripeWebhookController,
+  ],
   providers: [PaymentsService, StripeService],
   exports: [PaymentsService, StripeService, TypeOrmModule],
 })

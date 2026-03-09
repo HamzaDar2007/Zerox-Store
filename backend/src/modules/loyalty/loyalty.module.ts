@@ -12,7 +12,13 @@ import { GuardsModule } from '../../common/modules/guards.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([LoyaltyPoints, LoyaltyTier, LoyaltyTransaction, ReferralCode, Referral]),
+    TypeOrmModule.forFeature([
+      LoyaltyPoints,
+      LoyaltyTier,
+      LoyaltyTransaction,
+      ReferralCode,
+      Referral,
+    ]),
     SharedModule,
     GuardsModule,
   ],

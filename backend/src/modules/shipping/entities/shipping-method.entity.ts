@@ -18,7 +18,18 @@ export class ShippingMethod {
   @Column({ type: 'varchar', length: 50, unique: true })
   code: string;
 
-  @Column({ type: 'enum', enum: ['standard', 'express', 'same_day', 'overnight', 'economy', 'freight'], default: 'standard' })
+  @Column({
+    type: 'enum',
+    enum: [
+      'standard',
+      'express',
+      'same_day',
+      'overnight',
+      'economy',
+      'freight',
+    ],
+    default: 'standard',
+  })
   type: string;
 
   @Column({ type: 'text', nullable: true })

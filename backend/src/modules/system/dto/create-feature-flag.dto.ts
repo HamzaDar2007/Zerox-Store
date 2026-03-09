@@ -31,7 +31,10 @@ export class CreateFeatureFlagDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ description: 'Whether the feature is enabled globally', default: false })
+  @ApiPropertyOptional({
+    description: 'Whether the feature is enabled globally',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isEnabled?: boolean;
@@ -46,7 +49,10 @@ export class CreateFeatureFlagDto {
   @Max(100)
   rolloutPercentage?: number;
 
-  @ApiPropertyOptional({ description: 'Custom conditions as JSON', type: Object })
+  @ApiPropertyOptional({
+    description: 'Custom conditions as JSON',
+    type: Object,
+  })
   @IsOptional()
   conditions?: Record<string, any>;
 

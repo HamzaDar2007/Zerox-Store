@@ -10,10 +10,11 @@ import { Review } from './entities/review.entity';
 import { ReviewHelpfulness } from './entities/review-helpfulness.entity';
 import { ReviewReport } from './entities/review-report.entity';
 import { ServiceResponse } from '../../common/interfaces/service-response.interface';
-import { ReviewStatus, ReviewReportReason } from '@common/enums';
+import { ReviewStatus, ReviewReportReason, OrderStatus } from '@common/enums';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { MailService } from '../../common/modules/mail/mail.service';
+import { Order } from '../orders/entities/order.entity';
 
 @Injectable()
 export class ReviewsService {
@@ -24,10 +25,15 @@ export class ReviewsService {
     private helpfulnessRepository: Repository<ReviewHelpfulness>,
     @InjectRepository(ReviewReport)
     private reportRepository: Repository<ReviewReport>,
+    @InjectRepository(Order)
+    private orderRepository: Repository<Order>,
     private readonly mailService: MailService,
   ) {}
 
-  async create(dto: CreateReviewDto, userId: string): Promise<ServiceResponse<Review>> {
+  async create(
+    dto: CreateReviewDto,
+    userId: string,
+  ): Promise<ServiceResponse<Review>> {
     // Check if user already reviewed this product
     const existing = await this.reviewRepository.findOne({
       where: { userId, productId: dto.productId },
@@ -37,11 +43,25 @@ export class ReviewsService {
       throw new ConflictException('You have already reviewed this product');
     }
 
+    // Verify the user actually purchased this product
+    const purchasedOrder = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.items', 'item')
+      .where('order.userId = :userId', { userId })
+      .andWhere('item.productId = :productId', { productId: dto.productId })
+      .andWhere('order.status IN (:...statuses)', {
+        statuses: [OrderStatus.DELIVERED, OrderStatus.COMPLETED],
+      })
+      .getOne();
+
+    const isVerifiedPurchase = !!purchasedOrder;
+
     const review = new Review();
     Object.assign(review, {
       ...dto,
       userId,
       status: ReviewStatus.PENDING,
+      isVerifiedPurchase,
     });
 
     const saved = await this.reviewRepository.save(review);
@@ -72,7 +92,9 @@ export class ReviewsService {
       .orderBy('review.createdAt', 'DESC');
 
     if (options?.productId) {
-      query.andWhere('review.productId = :productId', { productId: options.productId });
+      query.andWhere('review.productId = :productId', {
+        productId: options.productId,
+      });
     }
 
     if (options?.userId) {
@@ -84,7 +106,9 @@ export class ReviewsService {
     }
 
     if (options?.minRating) {
-      query.andWhere('review.rating >= :minRating', { minRating: options.minRating });
+      query.andWhere('review.rating >= :minRating', {
+        minRating: options.minRating,
+      });
     }
 
     const page = options?.page || 1;
@@ -118,7 +142,11 @@ export class ReviewsService {
     };
   }
 
-  async update(id: string, dto: UpdateReviewDto, userId: string): Promise<ServiceResponse<Review>> {
+  async update(
+    id: string,
+    dto: UpdateReviewDto,
+    userId: string,
+  ): Promise<ServiceResponse<Review>> {
     const review = await this.reviewRepository.findOne({ where: { id } });
 
     if (!review) {
@@ -158,7 +186,10 @@ export class ReviewsService {
     };
   }
 
-  async updateStatus(id: string, status: ReviewStatus): Promise<ServiceResponse<Review>> {
+  async updateStatus(
+    id: string,
+    status: ReviewStatus,
+  ): Promise<ServiceResponse<Review>> {
     const review = await this.reviewRepository.findOne({ where: { id } });
 
     if (!review) {
@@ -178,7 +209,11 @@ export class ReviewsService {
     };
   }
 
-  async markHelpful(reviewId: string, userId: string, isHelpful: boolean): Promise<ServiceResponse<void>> {
+  async markHelpful(
+    reviewId: string,
+    userId: string,
+    isHelpful: boolean,
+  ): Promise<ServiceResponse<void>> {
     const existing = await this.helpfulnessRepository.findOne({
       where: { reviewId, userId },
     });
@@ -215,8 +250,15 @@ export class ReviewsService {
     };
   }
 
-  async reportReview(reviewId: string, userId: string, reason: ReviewReportReason, details?: string): Promise<ServiceResponse<ReviewReport>> {
-    const review = await this.reviewRepository.findOne({ where: { id: reviewId } });
+  async reportReview(
+    reviewId: string,
+    userId: string,
+    reason: ReviewReportReason,
+    details?: string,
+  ): Promise<ServiceResponse<ReviewReport>> {
+    const review = await this.reviewRepository.findOne({
+      where: { id: reviewId },
+    });
 
     if (!review) {
       throw new NotFoundException('Review not found');
@@ -239,22 +281,25 @@ export class ReviewsService {
     };
   }
 
-  async getProductRatingSummary(productId: string): Promise<ServiceResponse<any>> {
+  async getProductRatingSummary(
+    productId: string,
+  ): Promise<ServiceResponse<any>> {
     const reviews = await this.reviewRepository.find({
       where: { productId, status: ReviewStatus.APPROVED },
     });
 
     const totalReviews = reviews.length;
-    const averageRating = totalReviews > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
-      : 0;
+    const averageRating =
+      totalReviews > 0
+        ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+        : 0;
 
     const ratingDistribution = {
-      5: reviews.filter(r => r.rating === 5).length,
-      4: reviews.filter(r => r.rating === 4).length,
-      3: reviews.filter(r => r.rating === 3).length,
-      2: reviews.filter(r => r.rating === 2).length,
-      1: reviews.filter(r => r.rating === 1).length,
+      5: reviews.filter((r) => r.rating === 5).length,
+      4: reviews.filter((r) => r.rating === 4).length,
+      3: reviews.filter((r) => r.rating === 3).length,
+      2: reviews.filter((r) => r.rating === 2).length,
+      1: reviews.filter((r) => r.rating === 1).length,
     };
 
     return {
@@ -276,7 +321,9 @@ export class ReviewsService {
       });
       if (!full?.product?.name || !full?.user?.name) return;
       // For now, no direct seller user relation on product — skip seller email if not available
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 
   private async sendReviewStatusNotification(review: Review): Promise<void> {
@@ -287,9 +334,13 @@ export class ReviewsService {
       });
       if (!full?.user?.email) return;
       await this.mailService.sendReviewStatusEmail(
-        full.user.email, full.user.name || 'Customer',
-        full.product?.name || 'Product', full.status,
+        full.user.email,
+        full.user.name || 'Customer',
+        full.product?.name || 'Product',
+        full.status,
       );
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 }

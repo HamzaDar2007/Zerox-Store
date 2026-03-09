@@ -1,7 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TaxService } from './tax.service';
-import { TaxZonesController, TaxRatesController, TaxClassesController, TaxCalculatorController } from './tax.controller';
+import {
+  TaxZonesController,
+  TaxRatesController,
+  TaxClassesController,
+  TaxCalculatorController,
+} from './tax.controller';
 import { TaxZone } from './entities/tax-zone.entity';
 import { TaxRate } from './entities/tax-rate.entity';
 import { TaxClass } from './entities/tax-class.entity';
@@ -15,7 +20,12 @@ import { GuardsModule } from '../../common/modules/guards.module';
     SharedModule,
     GuardsModule,
   ],
-  controllers: [TaxZonesController, TaxRatesController, TaxClassesController, TaxCalculatorController],
+  controllers: [
+    TaxZonesController,
+    TaxRatesController,
+    TaxClassesController,
+    TaxCalculatorController,
+  ],
   providers: [TaxService],
   exports: [TaxService, TypeOrmModule],
 })

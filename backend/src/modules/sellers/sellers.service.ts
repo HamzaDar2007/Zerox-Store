@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -44,7 +43,10 @@ export class SellersService {
 
   // ==================== SELLER CRUD ====================
 
-  async createSeller(dto: CreateSellerDto, userId: string): Promise<ServiceResponse<Seller>> {
+  async createSeller(
+    dto: CreateSellerDto,
+    userId: string,
+  ): Promise<ServiceResponse<Seller>> {
     const existingSeller = await this.sellerRepository.findOne({
       where: { userId },
     });
@@ -120,7 +122,10 @@ export class SellersService {
     });
   }
 
-  async updateSeller(id: string, dto: UpdateSellerDto): Promise<ServiceResponse<Seller>> {
+  async updateSeller(
+    id: string,
+    dto: UpdateSellerDto,
+  ): Promise<ServiceResponse<Seller>> {
     const seller = await this.sellerRepository.findOne({ where: { id } });
 
     if (!seller) {
@@ -187,8 +192,13 @@ export class SellersService {
 
   // ==================== STORE CRUD ====================
 
-  async createStore(sellerId: string, dto: CreateStoreDto): Promise<ServiceResponse<Store>> {
-    const seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
+  async createStore(
+    sellerId: string,
+    dto: CreateStoreDto,
+  ): Promise<ServiceResponse<Store>> {
+    const seller = await this.sellerRepository.findOne({
+      where: { id: sellerId },
+    });
 
     if (!seller) {
       throw new NotFoundException('Seller not found');
@@ -264,7 +274,10 @@ export class SellersService {
     };
   }
 
-  async updateStore(id: string, dto: UpdateStoreDto): Promise<ServiceResponse<Store>> {
+  async updateStore(
+    id: string,
+    dto: UpdateStoreDto,
+  ): Promise<ServiceResponse<Store>> {
     const store = await this.storeRepository.findOne({ where: { id } });
 
     if (!store) {
@@ -298,8 +311,13 @@ export class SellersService {
 
   // ==================== DOCUMENTS ====================
 
-  async addDocument(sellerId: string, dto: CreateSellerDocumentDto): Promise<ServiceResponse<SellerDocument>> {
-    const seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
+  async addDocument(
+    sellerId: string,
+    dto: CreateSellerDocumentDto,
+  ): Promise<ServiceResponse<SellerDocument>> {
+    const seller = await this.sellerRepository.findOne({
+      where: { id: sellerId },
+    });
 
     if (!seller) {
       throw new NotFoundException('Seller not found');
@@ -320,7 +338,9 @@ export class SellersService {
     };
   }
 
-  async getSellerDocuments(sellerId: string): Promise<ServiceResponse<SellerDocument[]>> {
+  async getSellerDocuments(
+    sellerId: string,
+  ): Promise<ServiceResponse<SellerDocument[]>> {
     const documents = await this.documentRepository.find({
       where: { sellerId },
       order: { createdAt: 'DESC' },
@@ -335,7 +355,9 @@ export class SellersService {
 
   // ==================== WALLET ====================
 
-  async getSellerWallet(sellerId: string): Promise<ServiceResponse<SellerWallet>> {
+  async getSellerWallet(
+    sellerId: string,
+  ): Promise<ServiceResponse<SellerWallet>> {
     const wallet = await this.walletRepository.findOne({
       where: { sellerId },
     });
@@ -351,7 +373,9 @@ export class SellersService {
     };
   }
 
-  async getWalletTransactions(sellerId: string): Promise<ServiceResponse<WalletTransaction[]>> {
+  async getWalletTransactions(
+    sellerId: string,
+  ): Promise<ServiceResponse<WalletTransaction[]>> {
     const wallet = await this.walletRepository.findOne({ where: { sellerId } });
 
     if (!wallet) {
@@ -372,8 +396,13 @@ export class SellersService {
 
   // ==================== FOLLOWERS ====================
 
-  async followStore(storeId: string, userId: string): Promise<ServiceResponse<StoreFollower>> {
-    const store = await this.storeRepository.findOne({ where: { id: storeId } });
+  async followStore(
+    storeId: string,
+    userId: string,
+  ): Promise<ServiceResponse<StoreFollower>> {
+    const store = await this.storeRepository.findOne({
+      where: { id: storeId },
+    });
 
     if (!store) {
       throw new NotFoundException('Store not found');
@@ -405,7 +434,10 @@ export class SellersService {
     };
   }
 
-  async unfollowStore(storeId: string, userId: string): Promise<ServiceResponse<void>> {
+  async unfollowStore(
+    storeId: string,
+    userId: string,
+  ): Promise<ServiceResponse<void>> {
     const follower = await this.followerRepository.findOne({
       where: { storeId, userId },
     });
@@ -433,15 +465,23 @@ export class SellersService {
       });
       if (!full?.user?.email) return;
       await this.mailService.sendSellerApplicationReceivedEmail(
-        full.user.email, full.user.name || 'Seller',
+        full.user.email,
+        full.user.name || 'Seller',
       );
-      this.mailService.sendAdminNewSellerAlert(
-        full.businessName || full.user.name || 'Seller', full.user.email,
-      ).catch(() => {});
-    } catch (_) { /* silently ignore */ }
+      this.mailService
+        .sendAdminNewSellerAlert(
+          full.businessName || full.user.name || 'Seller',
+          full.user.email,
+        )
+        .catch(() => {});
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 
-  private async sendSellerVerificationNotification(seller: Seller): Promise<void> {
+  private async sendSellerVerificationNotification(
+    seller: Seller,
+  ): Promise<void> {
     try {
       const full = await this.sellerRepository.findOne({
         where: { id: seller.id },
@@ -449,9 +489,50 @@ export class SellersService {
       });
       if (!full?.user?.email) return;
       await this.mailService.sendSellerVerificationEmail(
-        full.user.email, full.user.name || 'Seller',
-        full.verificationStatus, full.rejectionReason,
+        full.user.email,
+        full.user.name || 'Seller',
+        full.verificationStatus,
+        full.rejectionReason,
       );
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
+  }
+
+  // ==================== ANALYTICS ====================
+
+  async getSellerStats(
+    sellerId: string,
+  ): Promise<ServiceResponse<Record<string, any>>> {
+    const seller = await this.sellerRepository.findOne({
+      where: { id: sellerId },
+    });
+    if (!seller) {
+      throw new NotFoundException('Seller not found');
+    }
+
+    const stores = await this.storeRepository.find({ where: { sellerId } });
+    const documents = await this.documentRepository.count({
+      where: { sellerId },
+    });
+    const wallet = await this.walletRepository.findOne({ where: { sellerId } });
+    const totalFollowers = stores.reduce(
+      (sum, s) => sum + (s.totalFollowers || 0),
+      0,
+    );
+
+    const stats = {
+      totalStores: stores.length,
+      totalDocuments: documents,
+      totalFollowers,
+      walletBalance: wallet ? Number(wallet.balance) : 0,
+      verificationStatus: seller.verificationStatus,
+    };
+
+    return {
+      success: true,
+      message: 'Seller stats retrieved successfully',
+      data: stats,
+    };
   }
 }

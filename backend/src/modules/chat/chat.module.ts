@@ -9,7 +9,7 @@ import { GuardsModule } from '../../common/modules/guards.module';
 
 @Module({
   imports: [
-   TypeOrmModule.forFeature([Conversation, Message]),
+    TypeOrmModule.forFeature([Conversation, Message]),
     SharedModule,
     GuardsModule,
   ],

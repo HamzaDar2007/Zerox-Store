@@ -1,4 +1,9 @@
-import { MigrationInterface, QueryRunner, Table, TableIndex, TableForeignKey } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+} from 'typeorm';
 
 export class CreateEcommerceShipping1700000000018 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -7,14 +12,34 @@ export class CreateEcommerceShipping1700000000018 implements MigrationInterface 
       new Table({
         name: 'shipping_methods',
         columns: [
-          { name: 'id', type: 'uuid', isPrimary: true, default: 'uuid_generate_v4()' },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
           { name: 'name', type: 'varchar', length: '100', isNullable: false },
-          { name: 'code', type: 'varchar', length: '50', isNullable: false, isUnique: true },
-          { name: 'type', type: 'shipping_method_type_enum', default: `'standard'` },
+          {
+            name: 'code',
+            type: 'varchar',
+            length: '50',
+            isNullable: false,
+            isUnique: true,
+          },
+          {
+            name: 'type',
+            type: 'shipping_method_type_enum',
+            default: `'standard'`,
+          },
           { name: 'description', type: 'text', isNullable: true },
           { name: 'is_active', type: 'boolean', default: true },
           { name: 'sort_order', type: 'integer', default: 0 },
-          { name: 'created_at', type: 'timestamptz', isNullable: false, default: 'NOW()' },
+          {
+            name: 'created_at',
+            type: 'timestamptz',
+            isNullable: false,
+            default: 'NOW()',
+          },
         ],
       }),
       true,
@@ -25,15 +50,35 @@ export class CreateEcommerceShipping1700000000018 implements MigrationInterface 
       new Table({
         name: 'shipping_zones',
         columns: [
-          { name: 'id', type: 'uuid', isPrimary: true, default: 'uuid_generate_v4()' },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
           { name: 'name', type: 'varchar', length: '100', isNullable: false },
-          { name: 'countries', type: 'text[]', isNullable: false, default: `ARRAY['PK']` },
+          {
+            name: 'countries',
+            type: 'text[]',
+            isNullable: false,
+            default: `ARRAY['PK']`,
+          },
           { name: 'states', type: 'text[]', isNullable: true },
           { name: 'cities', type: 'text[]', isNullable: true },
           { name: 'postal_code_ranges', type: 'jsonb', isNullable: true },
           { name: 'is_active', type: 'boolean', default: true },
-          { name: 'created_at', type: 'timestamptz', isNullable: false, default: 'NOW()' },
-          { name: 'updated_at', type: 'timestamptz', isNullable: false, default: 'NOW()' },
+          {
+            name: 'created_at',
+            type: 'timestamptz',
+            isNullable: false,
+            default: 'NOW()',
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamptz',
+            isNullable: false,
+            default: 'NOW()',
+          },
         ],
       }),
       true,
@@ -44,29 +89,113 @@ export class CreateEcommerceShipping1700000000018 implements MigrationInterface 
       new Table({
         name: 'shipping_rates',
         columns: [
-          { name: 'id', type: 'uuid', isPrimary: true, default: 'uuid_generate_v4()' },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
           { name: 'shipping_zone_id', type: 'uuid', isNullable: false },
           { name: 'shipping_method_id', type: 'uuid', isNullable: false },
           { name: 'seller_id', type: 'uuid', isNullable: true },
-          { name: 'min_weight', type: 'decimal', precision: 10, scale: 3, default: 0 },
-          { name: 'max_weight', type: 'decimal', precision: 10, scale: 3, isNullable: true },
-          { name: 'min_order_amount', type: 'decimal', precision: 12, scale: 2, default: 0 },
-          { name: 'max_order_amount', type: 'decimal', precision: 12, scale: 2, isNullable: true },
-          { name: 'base_rate', type: 'decimal', precision: 12, scale: 2, isNullable: false, default: 0 },
-          { name: 'per_kg_rate', type: 'decimal', precision: 12, scale: 2, default: 0 },
-          { name: 'per_item_rate', type: 'decimal', precision: 12, scale: 2, default: 0 },
-          { name: 'free_shipping_threshold', type: 'decimal', precision: 12, scale: 2, isNullable: true },
+          {
+            name: 'min_weight',
+            type: 'decimal',
+            precision: 10,
+            scale: 3,
+            default: 0,
+          },
+          {
+            name: 'max_weight',
+            type: 'decimal',
+            precision: 10,
+            scale: 3,
+            isNullable: true,
+          },
+          {
+            name: 'min_order_amount',
+            type: 'decimal',
+            precision: 12,
+            scale: 2,
+            default: 0,
+          },
+          {
+            name: 'max_order_amount',
+            type: 'decimal',
+            precision: 12,
+            scale: 2,
+            isNullable: true,
+          },
+          {
+            name: 'base_rate',
+            type: 'decimal',
+            precision: 12,
+            scale: 2,
+            isNullable: false,
+            default: 0,
+          },
+          {
+            name: 'per_kg_rate',
+            type: 'decimal',
+            precision: 12,
+            scale: 2,
+            default: 0,
+          },
+          {
+            name: 'per_item_rate',
+            type: 'decimal',
+            precision: 12,
+            scale: 2,
+            default: 0,
+          },
+          {
+            name: 'free_shipping_threshold',
+            type: 'decimal',
+            precision: 12,
+            scale: 2,
+            isNullable: true,
+          },
           { name: 'estimated_days_min', type: 'integer', isNullable: true },
           { name: 'estimated_days_max', type: 'integer', isNullable: true },
-          { name: 'currency_code', type: 'varchar', length: '3', default: `'PKR'` },
+          {
+            name: 'currency_code',
+            type: 'varchar',
+            length: '3',
+            default: `'PKR'`,
+          },
           { name: 'is_active', type: 'boolean', default: true },
-          { name: 'created_at', type: 'timestamptz', isNullable: false, default: 'NOW()' },
-          { name: 'updated_at', type: 'timestamptz', isNullable: false, default: 'NOW()' },
+          {
+            name: 'created_at',
+            type: 'timestamptz',
+            isNullable: false,
+            default: 'NOW()',
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamptz',
+            isNullable: false,
+            default: 'NOW()',
+          },
         ],
         foreignKeys: [
-          new TableForeignKey({ columnNames: ['shipping_zone_id'], referencedTableName: 'shipping_zones', referencedColumnNames: ['id'], onDelete: 'CASCADE' }),
-          new TableForeignKey({ columnNames: ['shipping_method_id'], referencedTableName: 'shipping_methods', referencedColumnNames: ['id'], onDelete: 'CASCADE' }),
-          new TableForeignKey({ columnNames: ['seller_id'], referencedTableName: 'sellers', referencedColumnNames: ['id'], onDelete: 'CASCADE' }),
+          new TableForeignKey({
+            columnNames: ['shipping_zone_id'],
+            referencedTableName: 'shipping_zones',
+            referencedColumnNames: ['id'],
+            onDelete: 'CASCADE',
+          }),
+          new TableForeignKey({
+            columnNames: ['shipping_method_id'],
+            referencedTableName: 'shipping_methods',
+            referencedColumnNames: ['id'],
+            onDelete: 'CASCADE',
+          }),
+          new TableForeignKey({
+            columnNames: ['seller_id'],
+            referencedTableName: 'sellers',
+            referencedColumnNames: ['id'],
+            onDelete: 'CASCADE',
+          }),
         ],
       }),
       true,
@@ -77,21 +206,62 @@ export class CreateEcommerceShipping1700000000018 implements MigrationInterface 
       new Table({
         name: 'shipping_carriers',
         columns: [
-          { name: 'id', type: 'uuid', isPrimary: true, default: 'uuid_generate_v4()' },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
           { name: 'name', type: 'varchar', length: '100', isNullable: false },
-          { name: 'code', type: 'varchar', length: '50', isNullable: false, isUnique: true },
-          { name: 'logo_url', type: 'varchar', length: '500', isNullable: true },
-          { name: 'website_url', type: 'varchar', length: '500', isNullable: true },
-          { name: 'tracking_url_template', type: 'varchar', length: '500', isNullable: true },
-          { name: 'api_endpoint', type: 'varchar', length: '500', isNullable: true },
+          {
+            name: 'code',
+            type: 'varchar',
+            length: '50',
+            isNullable: false,
+            isUnique: true,
+          },
+          {
+            name: 'logo_url',
+            type: 'varchar',
+            length: '500',
+            isNullable: true,
+          },
+          {
+            name: 'website_url',
+            type: 'varchar',
+            length: '500',
+            isNullable: true,
+          },
+          {
+            name: 'tracking_url_template',
+            type: 'varchar',
+            length: '500',
+            isNullable: true,
+          },
+          {
+            name: 'api_endpoint',
+            type: 'varchar',
+            length: '500',
+            isNullable: true,
+          },
           { name: 'api_key_encrypted', type: 'text', isNullable: true },
           { name: 'supports_cod', type: 'boolean', default: false },
           { name: 'supports_insurance', type: 'boolean', default: false },
           { name: 'supports_signature', type: 'boolean', default: false },
           { name: 'is_active', type: 'boolean', default: true },
           { name: 'sort_order', type: 'integer', default: 0 },
-          { name: 'created_at', type: 'timestamptz', isNullable: false, default: 'NOW()' },
-          { name: 'updated_at', type: 'timestamptz', isNullable: false, default: 'NOW()' },
+          {
+            name: 'created_at',
+            type: 'timestamptz',
+            isNullable: false,
+            default: 'NOW()',
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamptz',
+            isNullable: false,
+            default: 'NOW()',
+          },
         ],
       }),
       true,
@@ -102,34 +272,77 @@ export class CreateEcommerceShipping1700000000018 implements MigrationInterface 
       new Table({
         name: 'delivery_slots',
         columns: [
-          { name: 'id', type: 'uuid', isPrimary: true, default: 'uuid_generate_v4()' },
+          {
+            name: 'id',
+            type: 'uuid',
+            isPrimary: true,
+            default: 'uuid_generate_v4()',
+          },
           { name: 'shipping_zone_id', type: 'uuid', isNullable: true },
           { name: 'shipping_method_id', type: 'uuid', isNullable: true },
           { name: 'day_of_week', type: 'smallint', isNullable: true },
           { name: 'start_time', type: 'time', isNullable: false },
           { name: 'end_time', type: 'time', isNullable: false },
-          { name: 'max_orders', type: 'integer', isNullable: false, default: 50 },
+          {
+            name: 'max_orders',
+            type: 'integer',
+            isNullable: false,
+            default: 50,
+          },
           { name: 'current_orders', type: 'integer', default: 0 },
           { name: 'cutoff_time', type: 'time', isNullable: true },
-          { name: 'surcharge', type: 'decimal', precision: 8, scale: 2, default: 0.00 },
+          {
+            name: 'surcharge',
+            type: 'decimal',
+            precision: 8,
+            scale: 2,
+            default: 0.0,
+          },
           { name: 'is_active', type: 'boolean', default: true },
-          { name: 'created_at', type: 'timestamptz', isNullable: false, default: 'NOW()' },
+          {
+            name: 'created_at',
+            type: 'timestamptz',
+            isNullable: false,
+            default: 'NOW()',
+          },
         ],
         foreignKeys: [
-          new TableForeignKey({ columnNames: ['shipping_zone_id'], referencedTableName: 'shipping_zones', referencedColumnNames: ['id'], onDelete: 'CASCADE' }),
-          new TableForeignKey({ columnNames: ['shipping_method_id'], referencedTableName: 'shipping_methods', referencedColumnNames: ['id'], onDelete: 'CASCADE' }),
+          new TableForeignKey({
+            columnNames: ['shipping_zone_id'],
+            referencedTableName: 'shipping_zones',
+            referencedColumnNames: ['id'],
+            onDelete: 'CASCADE',
+          }),
+          new TableForeignKey({
+            columnNames: ['shipping_method_id'],
+            referencedTableName: 'shipping_methods',
+            referencedColumnNames: ['id'],
+            onDelete: 'CASCADE',
+          }),
         ],
       }),
       true,
     );
 
     // Indexes
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_shipping_rates_zone_method ON shipping_rates(shipping_zone_id, shipping_method_id) WHERE is_active = TRUE`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_shipping_rates_seller ON shipping_rates(seller_id) WHERE seller_id IS NOT NULL`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_shipping_zones_countries ON shipping_zones USING GIN (countries)`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_shipping_zones_cities ON shipping_zones USING GIN (cities) WHERE cities IS NOT NULL`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_shipping_carriers_code ON shipping_carriers(code) WHERE is_active = TRUE`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_delivery_slots_zone ON delivery_slots(shipping_zone_id, day_of_week) WHERE is_active = TRUE`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_shipping_rates_zone_method ON shipping_rates(shipping_zone_id, shipping_method_id) WHERE is_active = TRUE`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_shipping_rates_seller ON shipping_rates(seller_id) WHERE seller_id IS NOT NULL`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_shipping_zones_countries ON shipping_zones USING GIN (countries)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_shipping_zones_cities ON shipping_zones USING GIN (cities) WHERE cities IS NOT NULL`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_shipping_carriers_code ON shipping_carriers(code) WHERE is_active = TRUE`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_delivery_slots_zone ON delivery_slots(shipping_zone_id, day_of_week) WHERE is_active = TRUE`,
+    );
 
     // Check constraints
     await queryRunner.query(`

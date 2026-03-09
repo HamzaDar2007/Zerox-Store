@@ -1,7 +1,6 @@
 import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
@@ -20,7 +19,9 @@ export class CreateCheckoutSessionDto {
   @IsUuidString()
   userId?: string;
 
-  @ApiPropertyOptional({ description: 'Cart ID (auto-detected from user if omitted)' })
+  @ApiPropertyOptional({
+    description: 'Cart ID (auto-detected from user if omitted)',
+  })
   @IsOptional()
   @IsUuidString()
   cartId?: string;

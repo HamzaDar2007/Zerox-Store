@@ -28,7 +28,7 @@ export class SupabaseService {
     try {
       // Test connection first
       await this.testConnection();
-      
+
       // Validate file exists
       if (!file) {
         throw new BadRequestException('No file provided');

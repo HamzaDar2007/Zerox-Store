@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@/test/test-utils';
+import { render, screen, waitFor } from '@/test/test-utils';
 import { AppRouter } from '@/routes/router';
 
 describe('AppRouter', () => {
@@ -9,17 +9,19 @@ describe('AppRouter', () => {
     expect(document.body).toBeTruthy();
   });
 
-  it('renders login page at /login', () => {
+  it('renders login page at /login', async () => {
     window.history.pushState({}, '', '/login');
     render(<AppRouter />);
-    // Login page has a password field
-    expect(screen.getByPlaceholderText(/enter your password/i)).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/enter your password/i)).toBeTruthy();
+    });
   });
 
-  it('renders register page at /register', () => {
+  it('renders register page at /register', async () => {
     window.history.pushState({}, '', '/register');
     render(<AppRouter />);
-    // Register page has a "Create a password" placeholder
-    expect(screen.getByPlaceholderText(/create a password/i)).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/at least 6 characters/i)).toBeTruthy();
+    });
   });
 });

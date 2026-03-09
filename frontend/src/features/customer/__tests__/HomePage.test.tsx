@@ -6,15 +6,15 @@ describe('HomePage', () => {
   it('renders hero section with welcome heading', async () => {
     render(<HomePage />);
     await waitFor(() => {
-      expect(screen.getByText(/welcome to/i)).toBeInTheDocument();
+      expect(screen.getByText(/discover\.\s*shop\./i)).toBeInTheDocument();
     });
   });
 
-  it('renders Shop Now and Browse Categories buttons', async () => {
+  it('renders Shop Now and New Arrivals buttons', async () => {
     render(<HomePage />);
     await waitFor(() => {
       expect(screen.getByRole('link', { name: /shop now/i })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /browse categories/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /new arrivals/i })).toBeInTheDocument();
     });
   });
 

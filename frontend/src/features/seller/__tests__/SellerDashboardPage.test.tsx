@@ -1,6 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@/test/test-utils';
 import SellerDashboardPage from '../pages/SellerDashboardPage';
+
+vi.mock('@/store/api', () => ({
+  useGetOrdersQuery: () => ({ data: { data: { items: [], total: 2 } }, isLoading: false, isError: false, refetch: vi.fn() }),
+  useGetProductsQuery: () => ({ data: { data: { items: [], total: 4 } }, isLoading: false, isError: false, refetch: vi.fn() }),
+}));
 
 describe('SellerDashboardPage', () => {
   it('renders dashboard heading', async () => {

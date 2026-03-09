@@ -21,7 +21,10 @@ export class CreateFlashSaleDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ description: 'Flash sale status', enum: FlashSaleStatus })
+  @ApiPropertyOptional({
+    description: 'Flash sale status',
+    enum: FlashSaleStatus,
+  })
   @IsOptional()
   @IsEnum(FlashSaleStatus)
   status?: FlashSaleStatus;

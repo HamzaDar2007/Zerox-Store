@@ -24,7 +24,12 @@ export class TaxZone {
   @Column({ type: 'varchar', length: 100, nullable: true })
   city: string | null;
 
-  @Column({ name: 'postal_code_pattern', type: 'varchar', length: 50, nullable: true })
+  @Column({
+    name: 'postal_code_pattern',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   postalCodePattern: string | null;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })

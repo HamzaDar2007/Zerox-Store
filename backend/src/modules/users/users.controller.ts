@@ -9,7 +9,6 @@ import {
   Query,
   UseGuards,
   NotFoundException,
-  Request,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -43,7 +42,7 @@ export class UsersController extends BaseController {
   }
 
   // ==================== USER PROFILE ====================
-  
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
@@ -67,7 +66,9 @@ export class UsersController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get current user addresses' })
   getMyAddresses(@CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.usersService.getUserAddresses(user.id));
+    return this.handleAsyncOperation(
+      this.usersService.getUserAddresses(user.id),
+    );
   }
 
   @Post('me/addresses')
@@ -75,7 +76,9 @@ export class UsersController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new address for current user' })
   createAddress(@CurrentUser() user: User, @Body() dto: CreateAddressDto) {
-    return this.handleAsyncOperation(this.usersService.createAddress(user.id, dto));
+    return this.handleAsyncOperation(
+      this.usersService.createAddress(user.id, dto),
+    );
   }
 
   @Patch('me/addresses/:addressId')
@@ -87,15 +90,22 @@ export class UsersController extends BaseController {
     @Param('addressId') addressId: string,
     @Body() dto: Partial<CreateAddressDto>,
   ) {
-    return this.handleAsyncOperation(this.usersService.updateAddress(user.id, addressId, dto));
+    return this.handleAsyncOperation(
+      this.usersService.updateAddress(user.id, addressId, dto),
+    );
   }
 
   @Delete('me/addresses/:addressId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete an address for current user' })
-  deleteAddress(@CurrentUser() user: User, @Param('addressId') addressId: string) {
-    return this.handleAsyncOperation(this.usersService.deleteAddress(user.id, addressId));
+  deleteAddress(
+    @CurrentUser() user: User,
+    @Param('addressId') addressId: string,
+  ) {
+    return this.handleAsyncOperation(
+      this.usersService.deleteAddress(user.id, addressId),
+    );
   }
 
   // ====================  PERMISSIONS ====================
@@ -107,7 +117,9 @@ export class UsersController extends BaseController {
   @Permissions('users.read')
   getUserPermissions(@Param('id') id: string) {
     const validId = SecurityUtil.validateId(id);
-    return this.handleAsyncOperation(this.usersService.getUserPermissions(validId));
+    return this.handleAsyncOperation(
+      this.usersService.getUserPermissions(validId),
+    );
   }
 
   @Get()
@@ -150,9 +162,15 @@ export class UsersController extends BaseController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'update user by id' })
   @Permissions('users.update')
-  update(@Param('id') id: string, @Body() dto: UpdateUserDto, @CurrentUser() caller: User) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserDto,
+    @CurrentUser() caller: User,
+  ) {
     const validId = SecurityUtil.validateId(id);
-    return this.handleAsyncOperation(this.usersService.update(validId, dto, caller.role));
+    return this.handleAsyncOperation(
+      this.usersService.update(validId, dto, caller.role),
+    );
   }
 
   @Delete(':id')

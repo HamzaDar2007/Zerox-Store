@@ -5,7 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { NotificationType, NotificationChannel } from '@common/enums';
+import { NotificationChannel } from '@common/enums';
 
 @Entity('notification_templates')
 export class NotificationTemplate {

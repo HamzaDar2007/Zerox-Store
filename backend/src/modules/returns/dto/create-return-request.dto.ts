@@ -59,7 +59,10 @@ export class CreateReturnRequestDto {
   @Min(0)
   refundAmount?: number;
 
-  @ApiPropertyOptional({ description: 'Resolution type', enum: ReturnResolution })
+  @ApiPropertyOptional({
+    description: 'Resolution type',
+    enum: ReturnResolution,
+  })
   @IsOptional()
   @IsEnum(ReturnResolution)
   resolution?: ReturnResolution;

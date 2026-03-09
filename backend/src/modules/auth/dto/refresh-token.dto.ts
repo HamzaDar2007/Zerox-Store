@@ -44,7 +44,8 @@ export class ResetPasswordDto {
   token: string;
 
   @ApiProperty({
-    description: 'New password. Must contain at least one uppercase letter, one lowercase letter, and one number',
+    description:
+      'New password. Must contain at least one uppercase letter, one lowercase letter, and one number',
     example: 'NewStrongPass123',
     minLength: 8,
     maxLength: 128,

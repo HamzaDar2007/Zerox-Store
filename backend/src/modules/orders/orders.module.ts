@@ -10,6 +10,8 @@ import { Shipment } from './entities/shipment.entity';
 import { ShipmentItem } from './entities/shipment-item.entity';
 import { SharedModule } from '../shared/shared.module';
 import { GuardsModule } from '../../common/modules/guards.module';
+import { InventoryModule } from '../inventory/inventory.module';
+import { LoyaltyModule } from '../loyalty/loyalty.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { GuardsModule } from '../../common/modules/guards.module';
     ]),
     SharedModule,
     GuardsModule,
+    InventoryModule,
+    LoyaltyModule,
   ],
   controllers: [OrdersController, ShipmentsController],
   providers: [OrdersService],

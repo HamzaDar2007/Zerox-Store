@@ -1,11 +1,6 @@
 import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsEnum,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsEnum } from 'class-validator';
 import { ReviewReportReason, ReviewReportStatus } from '@common/enums';
 
 export class CreateReviewReportDto {
@@ -29,7 +24,10 @@ export class CreateReviewReportDto {
   @IsString()
   details?: string;
 
-  @ApiPropertyOptional({ description: 'Report status', enum: ReviewReportStatus })
+  @ApiPropertyOptional({
+    description: 'Report status',
+    enum: ReviewReportStatus,
+  })
   @IsOptional()
   @IsEnum(ReviewReportStatus)
   status?: ReviewReportStatus;

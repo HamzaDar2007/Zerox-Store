@@ -21,11 +21,15 @@ export class CreateCategoryDto {
   @Transform(({ value }) => value?.trim())
   name: string;
 
-  @ApiPropertyOptional({ description: 'Category slug (auto-generated if not provided)' })
+  @ApiPropertyOptional({
+    description: 'Category slug (auto-generated if not provided)',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(100)
-  @Matches(/^[a-z0-9-]+$/, { message: 'Slug must contain only lowercase letters, numbers, and hyphens' })
+  @Matches(/^[a-z0-9-]+$/, {
+    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+  })
   slug?: string;
 
   @ApiPropertyOptional({ description: 'Parent category ID' })

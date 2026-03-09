@@ -23,7 +23,9 @@ export class CreateEcommerceMaterializedViews1700000000034 implements MigrationI
       GROUP BY c.id, c.name, c.slug
     `);
 
-    await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_category_stats_id ON mv_category_stats (category_id)`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_category_stats_id ON mv_category_stats (category_id)`,
+    );
 
     // 2. mv_seller_dashboard
     await queryRunner.query(`
@@ -52,7 +54,9 @@ export class CreateEcommerceMaterializedViews1700000000034 implements MigrationI
       GROUP BY s.id, s.business_name, s.verification_status, sw.balance
     `);
 
-    await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_seller_dashboard_id ON mv_seller_dashboard (seller_id)`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_seller_dashboard_id ON mv_seller_dashboard (seller_id)`,
+    );
 
     // 3. mv_trending_products
     await queryRunner.query(`
@@ -94,8 +98,12 @@ export class CreateEcommerceMaterializedViews1700000000034 implements MigrationI
       LIMIT 500
     `);
 
-    await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_trending_products_id ON mv_trending_products (product_id)`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_mv_trending_score ON mv_trending_products (trending_score DESC)`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_trending_products_id ON mv_trending_products (product_id)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_mv_trending_score ON mv_trending_products (trending_score DESC)`,
+    );
 
     // 4. mv_platform_kpis
     await queryRunner.query(`
@@ -135,8 +143,12 @@ export class CreateEcommerceMaterializedViews1700000000034 implements MigrationI
       WHERE p.status = 'active' AND p.deleted_at IS NULL AND p.total_sold > 0
     `);
 
-    await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_bestsellers_cat_prod ON mv_bestsellers_by_category (category_id, product_id)`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_mv_bestsellers_rank ON mv_bestsellers_by_category (category_id, rank_in_category)`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_bestsellers_cat_prod ON mv_bestsellers_by_category (category_id, product_id)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_mv_bestsellers_rank ON mv_bestsellers_by_category (category_id, rank_in_category)`,
+    );
 
     // 6. mv_daily_sales_summary
     await queryRunner.query(`
@@ -159,7 +171,9 @@ export class CreateEcommerceMaterializedViews1700000000034 implements MigrationI
       ORDER BY sale_date DESC
     `);
 
-    await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_daily_sales_date ON mv_daily_sales_summary (sale_date)`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_daily_sales_date ON mv_daily_sales_summary (sale_date)`,
+    );
 
     // 7. mv_product_search_cache
     await queryRunner.query(`
@@ -196,21 +210,44 @@ export class CreateEcommerceMaterializedViews1700000000034 implements MigrationI
       WHERE p.deleted_at IS NULL AND p.status = 'active'
     `);
 
-    await queryRunner.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_product_search_id ON mv_product_search_cache (product_id)`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_mv_product_search_vector ON mv_product_search_cache USING GIN (search_vector)`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_mv_product_search_price ON mv_product_search_cache (price)`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_mv_product_search_rating ON mv_product_search_cache (avg_rating DESC)`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_mv_product_search_sold ON mv_product_search_cache (total_sold DESC)`);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_product_search_id ON mv_product_search_cache (product_id)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_mv_product_search_vector ON mv_product_search_cache USING GIN (search_vector)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_mv_product_search_price ON mv_product_search_cache (price)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_mv_product_search_rating ON mv_product_search_cache (avg_rating DESC)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_mv_product_search_sold ON mv_product_search_cache (total_sold DESC)`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP MATERIALIZED VIEW IF EXISTS mv_product_search_cache`);
-    await queryRunner.query(`DROP MATERIALIZED VIEW IF EXISTS mv_daily_sales_summary`);
-    await queryRunner.query(`DROP MATERIALIZED VIEW IF EXISTS mv_bestsellers_by_category`);
-    await queryRunner.query(`DROP MATERIALIZED VIEW IF EXISTS mv_platform_kpis`);
-    await queryRunner.query(`DROP MATERIALIZED VIEW IF EXISTS mv_trending_products`);
-    await queryRunner.query(`DROP MATERIALIZED VIEW IF EXISTS mv_seller_dashboard`);
-    await queryRunner.query(`DROP MATERIALIZED VIEW IF EXISTS mv_category_stats`);
+    await queryRunner.query(
+      `DROP MATERIALIZED VIEW IF EXISTS mv_product_search_cache`,
+    );
+    await queryRunner.query(
+      `DROP MATERIALIZED VIEW IF EXISTS mv_daily_sales_summary`,
+    );
+    await queryRunner.query(
+      `DROP MATERIALIZED VIEW IF EXISTS mv_bestsellers_by_category`,
+    );
+    await queryRunner.query(
+      `DROP MATERIALIZED VIEW IF EXISTS mv_platform_kpis`,
+    );
+    await queryRunner.query(
+      `DROP MATERIALIZED VIEW IF EXISTS mv_trending_products`,
+    );
+    await queryRunner.query(
+      `DROP MATERIALIZED VIEW IF EXISTS mv_seller_dashboard`,
+    );
+    await queryRunner.query(
+      `DROP MATERIALIZED VIEW IF EXISTS mv_category_stats`,
+    );
   }
 }
-

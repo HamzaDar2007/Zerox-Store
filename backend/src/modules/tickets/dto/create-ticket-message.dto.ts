@@ -1,11 +1,6 @@
 import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsBoolean,
-  IsArray,
-} from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsArray } from 'class-validator';
 
 export class CreateTicketMessageDto {
   @ApiProperty({ description: 'Ticket ID' })
@@ -16,12 +11,18 @@ export class CreateTicketMessageDto {
   @IsString()
   message: string;
 
-  @ApiPropertyOptional({ description: 'Whether the message is from staff', default: false })
+  @ApiPropertyOptional({
+    description: 'Whether the message is from staff',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isStaff?: boolean;
 
-  @ApiPropertyOptional({ description: 'Whether the message is internal (staff only)', default: false })
+  @ApiPropertyOptional({
+    description: 'Whether the message is internal (staff only)',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isInternal?: boolean;

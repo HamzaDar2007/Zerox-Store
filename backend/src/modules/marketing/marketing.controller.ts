@@ -9,9 +9,19 @@ import {
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { MarketingService } from './marketing.service';
-import { CreateCampaignDto, UpdateCampaignDto, CreateFlashSaleDto, CreateVoucherDto } from './dto';
+import {
+  CreateCampaignDto,
+  UpdateCampaignDto,
+  CreateFlashSaleDto,
+  CreateVoucherDto,
+} from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Permissions } from '../../common/decorators/permissions.decorator';
@@ -40,7 +50,9 @@ export class CampaignsController extends BaseController {
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   @Permissions('marketing.read')
   findAll(@Query('isActive') isActive?: boolean) {
-    return this.handleAsyncOperation(this.marketingService.findAllCampaigns({ isActive }));
+    return this.handleAsyncOperation(
+      this.marketingService.findAllCampaigns({ isActive }),
+    );
   }
 
   @Get(':id')
@@ -53,8 +65,13 @@ export class CampaignsController extends BaseController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update campaign' })
   @Permissions('marketing.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateCampaignDto) {
-    return this.handleAsyncOperation(this.marketingService.updateCampaign(id, dto));
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCampaignDto,
+  ) {
+    return this.handleAsyncOperation(
+      this.marketingService.updateCampaign(id, dto),
+    );
   }
 }
 
@@ -71,19 +88,25 @@ export class FlashSalesController extends BaseController {
   @ApiOperation({ summary: 'Create flash sale' })
   @Permissions('marketing.create')
   create(@Body() dto: CreateFlashSaleDto) {
-    return this.handleAsyncOperation(this.marketingService.createFlashSale(dto));
+    return this.handleAsyncOperation(
+      this.marketingService.createFlashSale(dto),
+    );
   }
 
   @Get('active')
   @ApiOperation({ summary: 'Get active flash sales' })
   getActive() {
-    return this.handleAsyncOperation(this.marketingService.getActiveFlashSales());
+    return this.handleAsyncOperation(
+      this.marketingService.getActiveFlashSales(),
+    );
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get flash sale by ID' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.marketingService.findOneFlashSale(id));
+    return this.handleAsyncOperation(
+      this.marketingService.findOneFlashSale(id),
+    );
   }
 }
 
@@ -110,13 +133,17 @@ export class VouchersController extends BaseController {
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   @Permissions('marketing.read')
   findAll(@Query('isActive') isActive?: boolean) {
-    return this.handleAsyncOperation(this.marketingService.findAllVouchers({ isActive }));
+    return this.handleAsyncOperation(
+      this.marketingService.findAllVouchers({ isActive }),
+    );
   }
 
   @Get('code/:code')
   @ApiOperation({ summary: 'Get voucher by code' })
   findByCode(@Param('code') code: string) {
-    return this.handleAsyncOperation(this.marketingService.findVoucherByCode(code));
+    return this.handleAsyncOperation(
+      this.marketingService.findVoucherByCode(code),
+    );
   }
 
   @Post('validate')
@@ -128,7 +155,11 @@ export class VouchersController extends BaseController {
     @CurrentUser() user: User,
   ) {
     return this.handleAsyncOperation(
-      this.marketingService.validateVoucher(body.code, user.id, body.orderTotal),
+      this.marketingService.validateVoucher(
+        body.code,
+        user.id,
+        body.orderTotal,
+      ),
     );
   }
 

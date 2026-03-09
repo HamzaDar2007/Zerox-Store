@@ -26,7 +26,12 @@ export class Brand {
   @Column({ name: 'website_url', type: 'varchar', length: 500, nullable: true })
   websiteUrl: string | null;
 
-  @Column({ name: 'country_of_origin', type: 'varchar', length: 3, nullable: true })
+  @Column({
+    name: 'country_of_origin',
+    type: 'varchar',
+    length: 3,
+    nullable: true,
+  })
   countryOfOrigin: string | null;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
@@ -38,7 +43,12 @@ export class Brand {
   @Column({ name: 'meta_title', type: 'varchar', length: 255, nullable: true })
   metaTitle: string | null;
 
-  @Column({ name: 'meta_description', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'meta_description',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   metaDescription: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

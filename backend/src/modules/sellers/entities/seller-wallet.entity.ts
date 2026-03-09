@@ -26,13 +26,31 @@ export class SellerWallet {
   @Column({ type: 'decimal', precision: 14, scale: 2, default: 0.0 })
   balance: number;
 
-  @Column({ name: 'pending_balance', type: 'decimal', precision: 14, scale: 2, default: 0.0 })
+  @Column({
+    name: 'pending_balance',
+    type: 'decimal',
+    precision: 14,
+    scale: 2,
+    default: 0.0,
+  })
   pendingBalance: number;
 
-  @Column({ name: 'total_earned', type: 'decimal', precision: 16, scale: 2, default: 0.0 })
+  @Column({
+    name: 'total_earned',
+    type: 'decimal',
+    precision: 16,
+    scale: 2,
+    default: 0.0,
+  })
   totalEarned: number;
 
-  @Column({ name: 'total_withdrawn', type: 'decimal', precision: 16, scale: 2, default: 0.0 })
+  @Column({
+    name: 'total_withdrawn',
+    type: 'decimal',
+    precision: 16,
+    scale: 2,
+    default: 0.0,
+  })
   totalWithdrawn: number;
 
   @Column({ name: 'currency_code', type: 'varchar', length: 3, default: 'PKR' })

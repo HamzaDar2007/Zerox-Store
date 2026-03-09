@@ -44,10 +44,22 @@ export class Voucher {
   @Column({ name: 'discount_value', type: 'decimal', precision: 12, scale: 2 })
   discountValue: number;
 
-  @Column({ name: 'min_order_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'min_order_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   minOrderAmount: number;
 
-  @Column({ name: 'max_discount', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'max_discount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   maxDiscount: number | null;
 
   @Column({

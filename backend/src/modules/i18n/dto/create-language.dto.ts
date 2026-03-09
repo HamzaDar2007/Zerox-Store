@@ -21,7 +21,10 @@ export class CreateLanguageDto {
   @MaxLength(100)
   name: string;
 
-  @ApiPropertyOptional({ description: 'Language name in native language', maxLength: 100 })
+  @ApiPropertyOptional({
+    description: 'Language name in native language',
+    maxLength: 100,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(100)
@@ -36,12 +39,18 @@ export class CreateLanguageDto {
   @IsEnum(TextDirection)
   direction?: TextDirection;
 
-  @ApiPropertyOptional({ description: 'Set as default language', default: false })
+  @ApiPropertyOptional({
+    description: 'Set as default language',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isDefault?: boolean;
 
-  @ApiPropertyOptional({ description: 'Whether the language is active', default: true })
+  @ApiPropertyOptional({
+    description: 'Whether the language is active',
+    default: true,
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

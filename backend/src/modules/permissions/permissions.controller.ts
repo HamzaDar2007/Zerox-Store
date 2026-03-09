@@ -55,7 +55,9 @@ export class PermissionsController extends BaseController {
   @Permissions('permissions.read')
   @ApiOperation({ summary: 'Retrieve all permissions by module' })
   findByModule(@Query('module') module: string) {
-    return this.handleAsyncOperation(this.permissionsService.findByModule(module));
+    return this.handleAsyncOperation(
+      this.permissionsService.findByModule(module),
+    );
   }
 
   @Get(':id')
@@ -76,7 +78,9 @@ export class PermissionsController extends BaseController {
   @Roles(RoleEnum.ADMIN)
   update(@Param('id') id: string, @Body() dto: UpdatePermissionDto) {
     const validId = SecurityUtil.validateId(id);
-    return this.handleAsyncOperation(this.permissionsService.update(validId, dto));
+    return this.handleAsyncOperation(
+      this.permissionsService.update(validId, dto),
+    );
   }
 
   @Delete(':id')

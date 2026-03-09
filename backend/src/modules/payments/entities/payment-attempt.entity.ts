@@ -17,7 +17,9 @@ export class PaymentAttempt {
   @Column({ name: 'payment_id', type: 'uuid' })
   paymentId: string;
 
-  @ManyToOne(() => Payment, (payment) => payment.attempts, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Payment, (payment) => payment.attempts, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'payment_id' })
   payment: Payment;
 

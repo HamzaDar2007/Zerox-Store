@@ -48,7 +48,10 @@ export class CreateSubscriptionDto {
   @Min(0.01)
   unitPrice: number;
 
-  @ApiPropertyOptional({ description: 'Discount percentage (0-50)', default: 0 })
+  @ApiPropertyOptional({
+    description: 'Discount percentage (0-50)',
+    default: 0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)

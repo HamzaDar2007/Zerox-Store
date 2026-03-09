@@ -58,10 +58,20 @@ export class Conversation {
   @Column({ name: 'last_message_at', type: 'timestamptz', nullable: true })
   lastMessageAt: Date | null;
 
-  @Column({ name: 'customer_unread_count', type: 'integer', default: 0, nullable: true })
+  @Column({
+    name: 'customer_unread_count',
+    type: 'integer',
+    default: 0,
+    nullable: true,
+  })
   customerUnreadCount: number;
 
-  @Column({ name: 'store_unread_count', type: 'integer', default: 0, nullable: true })
+  @Column({
+    name: 'store_unread_count',
+    type: 'integer',
+    default: 0,
+    nullable: true,
+  })
   storeUnreadCount: number;
 
   @OneToMany(() => Message, (message) => message.conversation)

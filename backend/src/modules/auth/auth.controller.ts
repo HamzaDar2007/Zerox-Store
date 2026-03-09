@@ -1,4 +1,12 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
@@ -7,8 +15,11 @@ import {
   PasswordResetDto,
   ResetPasswordDto,
 } from './dto/refresh-token.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { VerifyEmailDto, ResendVerificationDto } from './dto/verify-email.dto';
+import { ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { BaseController } from '../../common/controllers/base.controller';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -48,7 +59,9 @@ export class AuthController extends BaseController {
   @ApiOperation({ summary: 'Request a password reset' })
   @HttpCode(HttpStatus.OK)
   requestPasswordReset(@Body() dto: PasswordResetDto) {
-    return this.handleAsyncOperation(this.authService.requestPasswordReset(dto));
+    return this.handleAsyncOperation(
+      this.authService.requestPasswordReset(dto),
+    );
   }
 
   @Post('reset-password')
@@ -56,5 +69,32 @@ export class AuthController extends BaseController {
   @HttpCode(HttpStatus.OK)
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.handleAsyncOperation(this.authService.resetPassword(dto));
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change password (authenticated)' })
+  @HttpCode(HttpStatus.OK)
+  changePassword(@Req() req: any, @Body() dto: ChangePasswordDto) {
+    return this.handleAsyncOperation(
+      this.authService.changePassword(req.user.id, dto),
+    );
+  }
+
+  @Post('verify-email')
+  @ApiOperation({ summary: 'Verify email address with token' })
+  @HttpCode(HttpStatus.OK)
+  verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.handleAsyncOperation(this.authService.verifyEmail(dto));
+  }
+
+  @Post('resend-verification')
+  @ApiOperation({ summary: 'Resend email verification link' })
+  @HttpCode(HttpStatus.OK)
+  resendVerification(@Body() dto: ResendVerificationDto) {
+    return this.handleAsyncOperation(
+      this.authService.resendVerificationEmail(dto),
+    );
   }
 }

@@ -74,7 +74,9 @@ export class CreateProductBundleDto {
   @Min(0.01)
   discountValue: number;
 
-  @ApiPropertyOptional({ description: 'Fixed bundle price (overrides calculated price)' })
+  @ApiPropertyOptional({
+    description: 'Fixed bundle price (overrides calculated price)',
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)
@@ -90,7 +92,10 @@ export class CreateProductBundleDto {
   @IsDateString()
   endsAt?: string;
 
-  @ApiPropertyOptional({ description: 'Whether the bundle is active', default: true })
+  @ApiPropertyOptional({
+    description: 'Whether the bundle is active',
+    default: true,
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

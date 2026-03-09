@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   UseGuards,
   ParseUUIDPipe,
   Query,
@@ -77,7 +76,9 @@ export class OrdersController extends BaseController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.handleAsyncOperation(this.ordersService.getUserOrders(user.id, page, limit));
+    return this.handleAsyncOperation(
+      this.ordersService.getUserOrders(user.id, page, limit),
+    );
   }
 
   @Get(':id')
@@ -90,7 +91,9 @@ export class OrdersController extends BaseController {
   @Get('number/:orderNumber')
   @ApiOperation({ summary: 'Get order by order number' })
   findByOrderNumber(@Param('orderNumber') orderNumber: string) {
-    return this.handleAsyncOperation(this.ordersService.findByOrderNumber(orderNumber));
+    return this.handleAsyncOperation(
+      this.ordersService.findByOrderNumber(orderNumber),
+    );
   }
 
   @Patch(':id')
@@ -123,7 +126,9 @@ export class OrdersController extends BaseController {
     @Body('reason') reason: string,
     @CurrentUser() user: User,
   ) {
-    return this.handleAsyncOperation(this.ordersService.cancel(id, reason, user.id));
+    return this.handleAsyncOperation(
+      this.ordersService.cancel(id, reason, user.id),
+    );
   }
 
   @Get(':id/status-history')
@@ -142,7 +147,9 @@ export class OrdersController extends BaseController {
     @Param('orderId', ParseUUIDPipe) orderId: string,
     @Body() dto: CreateShipmentDto,
   ) {
-    return this.handleAsyncOperation(this.ordersService.createShipment(orderId, dto));
+    return this.handleAsyncOperation(
+      this.ordersService.createShipment(orderId, dto),
+    );
   }
 
   @Get(':orderId/shipments')
@@ -164,8 +171,13 @@ export class ShipmentsController extends BaseController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update shipment' })
   @Permissions('orders.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateShipmentDto) {
-    return this.handleAsyncOperation(this.ordersService.updateShipment(id, dto));
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateShipmentDto,
+  ) {
+    return this.handleAsyncOperation(
+      this.ordersService.updateShipment(id, dto),
+    );
   }
 
   @Patch(':id/status')
@@ -175,12 +187,16 @@ export class ShipmentsController extends BaseController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body('status') status: ShipmentStatus,
   ) {
-    return this.handleAsyncOperation(this.ordersService.updateShipmentStatus(id, status));
+    return this.handleAsyncOperation(
+      this.ordersService.updateShipmentStatus(id, status),
+    );
   }
 
   @Get('track/:trackingNumber')
   @ApiOperation({ summary: 'Track shipment by tracking number' })
   track(@Param('trackingNumber') trackingNumber: string) {
-    return this.handleAsyncOperation(this.ordersService.trackShipment(trackingNumber));
+    return this.handleAsyncOperation(
+      this.ordersService.trackShipment(trackingNumber),
+    );
   }
 }

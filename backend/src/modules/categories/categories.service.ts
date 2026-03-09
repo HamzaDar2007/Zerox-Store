@@ -41,7 +41,9 @@ export class CategoriesService {
 
   // ==================== CATEGORY CRUD ====================
 
-  async createCategory(dto: CreateCategoryDto): Promise<ServiceResponse<Category>> {
+  async createCategory(
+    dto: CreateCategoryDto,
+  ): Promise<ServiceResponse<Category>> {
     const existingCategory = await this.categoryRepository.findOne({
       where: { slug: dto.slug },
     });
@@ -130,7 +132,10 @@ export class CategoriesService {
     };
   }
 
-  async updateCategory(id: string, dto: UpdateCategoryDto): Promise<ServiceResponse<Category>> {
+  async updateCategory(
+    id: string,
+    dto: UpdateCategoryDto,
+  ): Promise<ServiceResponse<Category>> {
     const category = await this.categoryRepository.findOne({ where: { id } });
 
     if (!category) {
@@ -243,7 +248,10 @@ export class CategoriesService {
     };
   }
 
-  async updateBrand(id: string, dto: UpdateBrandDto): Promise<ServiceResponse<Brand>> {
+  async updateBrand(
+    id: string,
+    dto: UpdateBrandDto,
+  ): Promise<ServiceResponse<Brand>> {
     const brand = await this.brandRepository.findOne({ where: { id } });
 
     if (!brand) {
@@ -277,7 +285,9 @@ export class CategoriesService {
 
   // ==================== ATTRIBUTE CRUD ====================
 
-  async createAttribute(dto: CreateAttributeDto): Promise<ServiceResponse<Attribute>> {
+  async createAttribute(
+    dto: CreateAttributeDto,
+  ): Promise<ServiceResponse<Attribute>> {
     // Auto-generate slug from name if not provided
     if (!dto.slug) {
       dto.slug = dto.name
@@ -325,7 +335,10 @@ export class CategoriesService {
     };
   }
 
-  async updateAttribute(id: string, dto: UpdateAttributeDto): Promise<ServiceResponse<Attribute>> {
+  async updateAttribute(
+    id: string,
+    dto: UpdateAttributeDto,
+  ): Promise<ServiceResponse<Attribute>> {
     const attribute = await this.attributeRepository.findOne({ where: { id } });
 
     if (!attribute) {
@@ -359,11 +372,18 @@ export class CategoriesService {
 
   // ==================== CATEGORY-BRAND ASSOCIATIONS ====================
 
-  async assignBrandToCategory(categoryId: string, brandId: string): Promise<ServiceResponse<void>> {
-    const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
+  async assignBrandToCategory(
+    categoryId: string,
+    brandId: string,
+  ): Promise<ServiceResponse<void>> {
+    const category = await this.categoryRepository.findOne({
+      where: { id: categoryId },
+    });
     if (!category) throw new NotFoundException('Category not found');
 
-    const brand = await this.brandRepository.findOne({ where: { id: brandId } });
+    const brand = await this.brandRepository.findOne({
+      where: { id: brandId },
+    });
     if (!brand) throw new NotFoundException('Brand not found');
 
     const existing = await this.brandCategoryRepository.findOne({
@@ -374,7 +394,10 @@ export class CategoriesService {
       throw new ConflictException('Brand is already assigned to this category');
     }
 
-    const brandCategory = this.brandCategoryRepository.create({ categoryId, brandId });
+    const brandCategory = this.brandCategoryRepository.create({
+      categoryId,
+      brandId,
+    });
     await this.brandCategoryRepository.save(brandCategory);
 
     return {
@@ -383,7 +406,10 @@ export class CategoriesService {
     };
   }
 
-  async removeBrandFromCategory(categoryId: string, brandId: string): Promise<ServiceResponse<void>> {
+  async removeBrandFromCategory(
+    categoryId: string,
+    brandId: string,
+  ): Promise<ServiceResponse<void>> {
     const brandCategory = await this.brandCategoryRepository.findOne({
       where: { categoryId, brandId },
     });

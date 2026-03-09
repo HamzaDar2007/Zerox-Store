@@ -14,13 +14,19 @@ export class CreateImportExportJobDto {
   @IsEnum(ImportJobType)
   type: ImportJobType;
 
-  @ApiPropertyOptional({ description: 'Source file URL (for imports)', maxLength: 500 })
+  @ApiPropertyOptional({
+    description: 'Source file URL (for imports)',
+    maxLength: 500,
+  })
   @IsOptional()
   @IsUrl()
   @MaxLength(500)
   sourceFileUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Total number of rows to process', default: 0 })
+  @ApiPropertyOptional({
+    description: 'Total number of rows to process',
+    default: 0,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)

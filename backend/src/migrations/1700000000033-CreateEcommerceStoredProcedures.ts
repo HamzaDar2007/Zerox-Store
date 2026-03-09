@@ -680,74 +680,154 @@ export class CreateEcommerceStoredProcedures1700000000033 implements MigrationIn
 
     // 13. Row-Level Security Policies
     await queryRunner.query(`ALTER TABLE addresses ENABLE ROW LEVEL SECURITY`);
-    await queryRunner.query(`DO $$ BEGIN CREATE POLICY addresses_user_policy ON addresses USING (user_id = fn_current_user_id()) WITH CHECK (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE POLICY addresses_user_policy ON addresses USING (user_id = fn_current_user_id()) WITH CHECK (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+    );
 
     await queryRunner.query(`ALTER TABLE orders ENABLE ROW LEVEL SECURITY`);
-    await queryRunner.query(`DO $$ BEGIN CREATE POLICY orders_buyer_policy ON orders FOR SELECT USING (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE POLICY orders_buyer_policy ON orders FOR SELECT USING (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+    );
 
-    await queryRunner.query(`ALTER TABLE order_items ENABLE ROW LEVEL SECURITY`);
-    await queryRunner.query(`DO $$ BEGIN CREATE POLICY order_items_seller_policy ON order_items FOR SELECT USING (seller_id = fn_current_seller_id() OR order_id IN (SELECT id FROM orders WHERE user_id = fn_current_user_id())); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
+    await queryRunner.query(
+      `ALTER TABLE order_items ENABLE ROW LEVEL SECURITY`,
+    );
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE POLICY order_items_seller_policy ON order_items FOR SELECT USING (seller_id = fn_current_seller_id() OR order_id IN (SELECT id FROM orders WHERE user_id = fn_current_user_id())); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+    );
 
-    await queryRunner.query(`ALTER TABLE seller_wallets ENABLE ROW LEVEL SECURITY`);
-    await queryRunner.query(`DO $$ BEGIN CREATE POLICY wallet_owner_policy ON seller_wallets USING (seller_id = fn_current_seller_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
+    await queryRunner.query(
+      `ALTER TABLE seller_wallets ENABLE ROW LEVEL SECURITY`,
+    );
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE POLICY wallet_owner_policy ON seller_wallets USING (seller_id = fn_current_seller_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+    );
 
-    await queryRunner.query(`ALTER TABLE saved_payment_methods ENABLE ROW LEVEL SECURITY`);
-    await queryRunner.query(`DO $$ BEGIN CREATE POLICY saved_payments_user_policy ON saved_payment_methods USING (user_id = fn_current_user_id()) WITH CHECK (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
+    await queryRunner.query(
+      `ALTER TABLE saved_payment_methods ENABLE ROW LEVEL SECURITY`,
+    );
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE POLICY saved_payments_user_policy ON saved_payment_methods USING (user_id = fn_current_user_id()) WITH CHECK (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+    );
 
     await queryRunner.query(`ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY`);
-    await queryRunner.query(`DO $$ BEGIN CREATE POLICY wishlists_user_policy ON wishlists USING (user_id = fn_current_user_id()) WITH CHECK (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE POLICY wishlists_user_policy ON wishlists USING (user_id = fn_current_user_id()) WITH CHECK (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+    );
 
     await queryRunner.query(`ALTER TABLE sessions ENABLE ROW LEVEL SECURITY`);
-    await queryRunner.query(`DO $$ BEGIN CREATE POLICY sessions_user_policy ON sessions USING (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE POLICY sessions_user_policy ON sessions USING (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+    );
 
-    await queryRunner.query(`ALTER TABLE notifications ENABLE ROW LEVEL SECURITY`);
-    await queryRunner.query(`DO $$ BEGIN CREATE POLICY notifications_user_policy ON notifications FOR SELECT USING (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
+    await queryRunner.query(
+      `ALTER TABLE notifications ENABLE ROW LEVEL SECURITY`,
+    );
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE POLICY notifications_user_policy ON notifications FOR SELECT USING (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+    );
 
-    await queryRunner.query(`ALTER TABLE login_history ENABLE ROW LEVEL SECURITY`);
-    await queryRunner.query(`DO $$ BEGIN CREATE POLICY login_history_user_policy ON login_history FOR SELECT USING (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`);
+    await queryRunner.query(
+      `ALTER TABLE login_history ENABLE ROW LEVEL SECURITY`,
+    );
+    await queryRunner.query(
+      `DO $$ BEGIN CREATE POLICY login_history_user_policy ON login_history FOR SELECT USING (user_id = fn_current_user_id()); EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop RLS policies
-    await queryRunner.query(`DROP POLICY IF EXISTS login_history_user_policy ON login_history`);
-    await queryRunner.query(`ALTER TABLE login_history DISABLE ROW LEVEL SECURITY`);
+    await queryRunner.query(
+      `DROP POLICY IF EXISTS login_history_user_policy ON login_history`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE login_history DISABLE ROW LEVEL SECURITY`,
+    );
 
-    await queryRunner.query(`DROP POLICY IF EXISTS notifications_user_policy ON notifications`);
-    await queryRunner.query(`ALTER TABLE notifications DISABLE ROW LEVEL SECURITY`);
+    await queryRunner.query(
+      `DROP POLICY IF EXISTS notifications_user_policy ON notifications`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE notifications DISABLE ROW LEVEL SECURITY`,
+    );
 
-    await queryRunner.query(`DROP POLICY IF EXISTS sessions_user_policy ON sessions`);
+    await queryRunner.query(
+      `DROP POLICY IF EXISTS sessions_user_policy ON sessions`,
+    );
     await queryRunner.query(`ALTER TABLE sessions DISABLE ROW LEVEL SECURITY`);
 
-    await queryRunner.query(`DROP POLICY IF EXISTS wishlists_user_policy ON wishlists`);
+    await queryRunner.query(
+      `DROP POLICY IF EXISTS wishlists_user_policy ON wishlists`,
+    );
     await queryRunner.query(`ALTER TABLE wishlists DISABLE ROW LEVEL SECURITY`);
 
-    await queryRunner.query(`DROP POLICY IF EXISTS saved_payments_user_policy ON saved_payment_methods`);
-    await queryRunner.query(`ALTER TABLE saved_payment_methods DISABLE ROW LEVEL SECURITY`);
+    await queryRunner.query(
+      `DROP POLICY IF EXISTS saved_payments_user_policy ON saved_payment_methods`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE saved_payment_methods DISABLE ROW LEVEL SECURITY`,
+    );
 
-    await queryRunner.query(`DROP POLICY IF EXISTS wallet_owner_policy ON seller_wallets`);
-    await queryRunner.query(`ALTER TABLE seller_wallets DISABLE ROW LEVEL SECURITY`);
+    await queryRunner.query(
+      `DROP POLICY IF EXISTS wallet_owner_policy ON seller_wallets`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE seller_wallets DISABLE ROW LEVEL SECURITY`,
+    );
 
-    await queryRunner.query(`DROP POLICY IF EXISTS order_items_seller_policy ON order_items`);
-    await queryRunner.query(`ALTER TABLE order_items DISABLE ROW LEVEL SECURITY`);
+    await queryRunner.query(
+      `DROP POLICY IF EXISTS order_items_seller_policy ON order_items`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE order_items DISABLE ROW LEVEL SECURITY`,
+    );
 
-    await queryRunner.query(`DROP POLICY IF EXISTS orders_buyer_policy ON orders`);
+    await queryRunner.query(
+      `DROP POLICY IF EXISTS orders_buyer_policy ON orders`,
+    );
     await queryRunner.query(`ALTER TABLE orders DISABLE ROW LEVEL SECURITY`);
 
-    await queryRunner.query(`DROP POLICY IF EXISTS addresses_user_policy ON addresses`);
+    await queryRunner.query(
+      `DROP POLICY IF EXISTS addresses_user_policy ON addresses`,
+    );
     await queryRunner.query(`ALTER TABLE addresses DISABLE ROW LEVEL SECURITY`);
 
     // Drop stored procedures
-    await queryRunner.query(`DROP FUNCTION IF EXISTS sp_merge_guest_cart(VARCHAR, UUID)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS sp_apply_voucher(VARCHAR, UUID, UUID)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_wallet_debit(UUID, NUMERIC, VARCHAR, UUID, TEXT)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_reserve_flash_sale_stock(UUID, UUID, INT)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS sp_generate_subscription_orders()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS sp_expire_loyalty_points()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS sp_expire_stock_reservations()`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS sp_calculate_seller_payout(UUID)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS sp_commit_order_stock(UUID)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS sp_cancel_order(UUID, TEXT, UUID)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS sp_process_refund(UUID, UUID, NUMERIC, TEXT, refund_method_enum, UUID)`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS sp_place_order(UUID, payment_method_enum)`);
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS sp_merge_guest_cart(VARCHAR, UUID)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS sp_apply_voucher(VARCHAR, UUID, UUID)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_wallet_debit(UUID, NUMERIC, VARCHAR, UUID, TEXT)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_reserve_flash_sale_stock(UUID, UUID, INT)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS sp_generate_subscription_orders()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS sp_expire_loyalty_points()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS sp_expire_stock_reservations()`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS sp_calculate_seller_payout(UUID)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS sp_commit_order_stock(UUID)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS sp_cancel_order(UUID, TEXT, UUID)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS sp_process_refund(UUID, UUID, NUMERIC, TEXT, refund_method_enum, UUID)`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS sp_place_order(UUID, payment_method_enum)`,
+    );
   }
 }

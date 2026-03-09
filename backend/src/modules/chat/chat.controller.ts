@@ -1,5 +1,19 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -13,7 +27,9 @@ import { CreateMessageDto } from './dto/create-message.dto';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class ChatController extends BaseController {
-  constructor(private readonly chatService: ChatService) { super(); }
+  constructor(private readonly chatService: ChatService) {
+    super();
+  }
 
   @Post('conversations')
   @ApiOperation({ summary: 'Create conversation' })
@@ -24,7 +40,9 @@ export class ChatController extends BaseController {
   @Get('conversations')
   @ApiOperation({ summary: 'Get user conversations' })
   getConversations(@CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.chatService.findConversations(user.id));
+    return this.handleAsyncOperation(
+      this.chatService.findConversations(user.id),
+    );
   }
 
   @Get('conversations/:id')
@@ -35,8 +53,14 @@ export class ChatController extends BaseController {
 
   @Post('conversations/:id/messages')
   @ApiOperation({ summary: 'Send message' })
-  sendMessage(@Param('id', ParseUUIDPipe) id: string, @Body() dto: CreateMessageDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.chatService.sendMessage(id, user.id, dto));
+  sendMessage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateMessageDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.handleAsyncOperation(
+      this.chatService.sendMessage(id, user.id, dto),
+    );
   }
 
   @Get('conversations/:id/messages')
@@ -48,12 +72,17 @@ export class ChatController extends BaseController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.handleAsyncOperation(this.chatService.getMessages(id, page, limit));
+    return this.handleAsyncOperation(
+      this.chatService.getMessages(id, page, limit),
+    );
   }
 
   @Post('conversations/:id/read')
   @ApiOperation({ summary: 'Mark conversation as read' })
-  markAsRead(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+  markAsRead(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
     return this.handleAsyncOperation(this.chatService.markAsRead(id, user.id));
   }
 

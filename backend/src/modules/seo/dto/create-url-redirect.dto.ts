@@ -9,7 +9,10 @@ import {
 import { RedirectType } from '@common/enums';
 
 export class CreateUrlRedirectDto {
-  @ApiProperty({ description: 'Source URL path to redirect from', maxLength: 500 })
+  @ApiProperty({
+    description: 'Source URL path to redirect from',
+    maxLength: 500,
+  })
   @IsString()
   @MaxLength(500)
   sourceUrl: string;
@@ -28,7 +31,10 @@ export class CreateUrlRedirectDto {
   @IsEnum(RedirectType)
   redirectType?: RedirectType;
 
-  @ApiPropertyOptional({ description: 'Whether the redirect is active', default: true })
+  @ApiPropertyOptional({
+    description: 'Whether the redirect is active',
+    default: true,
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

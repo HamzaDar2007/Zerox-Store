@@ -139,6 +139,35 @@ export const cartApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Checkout', 'Cart', { type: 'Order', id: 'LIST' }],
     }),
+
+    // ── Voucher ──
+    applyCartVoucher: builder.mutation<
+      ApiResponse<{ discount: number; message: string }>,
+      { code: string }
+    >({
+      query: (data) => ({
+        url: '/cart/voucher',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Cart'],
+    }),
+
+    removeCartVoucher: builder.mutation<ApiResponse<void>, void>({
+      query: () => ({
+        url: '/cart/voucher',
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Cart'],
+    }),
+
+    getCartSummary: builder.query<
+      ApiResponse<{ subtotal: number; itemCount: number; discount: number; total: number }>,
+      void
+    >({
+      query: () => '/cart/summary',
+      providesTags: ['Cart'],
+    }),
   }),
 });
 
@@ -156,4 +185,7 @@ export const {
   useGetCheckoutSessionQuery,
   useUpdateCheckoutSessionMutation,
   useCompleteCheckoutMutation,
+  useApplyCartVoucherMutation,
+  useRemoveCartVoucherMutation,
+  useGetCartSummaryQuery,
 } = cartApi;

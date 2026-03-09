@@ -30,7 +30,12 @@ export class LoginHistory {
   @Column({ name: 'user_agent', type: 'text', nullable: true })
   userAgent: string | null;
 
-  @Column({ name: 'device_fingerprint', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'device_fingerprint',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   deviceFingerprint: string | null;
 
   @Column({
@@ -43,9 +48,19 @@ export class LoginHistory {
   @Column({ name: 'failure_reason', type: 'text', nullable: true })
   failureReason: string | null;
 
-  @Column({ name: 'location_country', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'location_country',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   locationCountry: string | null;
 
-  @Column({ name: 'location_city', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'location_city',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   locationCity: string | null;
 }

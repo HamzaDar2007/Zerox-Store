@@ -17,7 +17,9 @@ export class DisputeEvidence {
   @Column({ name: 'dispute_id', type: 'uuid' })
   disputeId: string;
 
-  @ManyToOne(() => Dispute, (dispute) => dispute.evidence, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Dispute, (dispute) => dispute.evidence, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'dispute_id' })
   dispute: Dispute;
 

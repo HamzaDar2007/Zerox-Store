@@ -3,8 +3,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsNotEmpty,
   IsOptional,
-  IsString,
-  MaxLength,
   IsEnum,
   IsNumber,
   Min,

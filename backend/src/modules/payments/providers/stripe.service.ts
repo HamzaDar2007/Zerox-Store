@@ -11,12 +11,15 @@ export class StripeService {
   constructor(private readonly configService: ConfigService) {
     const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (!secretKey) {
-      this.logger.warn('STRIPE_SECRET_KEY not configured – Stripe calls will fail');
+      this.logger.warn(
+        'STRIPE_SECRET_KEY not configured – Stripe calls will fail',
+      );
     }
     this.stripe = new Stripe(secretKey || '', {
       apiVersion: '2026-02-25.clover',
     });
-    this.webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET') || '';
+    this.webhookSecret =
+      this.configService.get<string>('STRIPE_WEBHOOK_SECRET') || '';
   }
 
   // ==================== PAYMENT INTENTS ====================
@@ -32,7 +35,10 @@ export class StripeService {
     metadata?: Record<string, string>;
     confirm?: boolean;
   }): Promise<Stripe.PaymentIntent> {
-    const currency = params.currency || this.configService.get<string>('STRIPE_CURRENCY') || 'pkr';
+    const currency =
+      params.currency ||
+      this.configService.get<string>('STRIPE_CURRENCY') ||
+      'pkr';
 
     try {
       const intentParams: Stripe.PaymentIntentCreateParams = {
@@ -52,7 +58,9 @@ export class StripeService {
 
       if (params.confirm) {
         intentParams.confirm = true;
-        intentParams.return_url = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+        intentParams.return_url =
+          this.configService.get<string>('FRONTEND_URL') ||
+          'http://localhost:5173';
       }
 
       const intent = await this.stripe.paymentIntents.create(intentParams);
@@ -79,16 +87,23 @@ export class StripeService {
   /**
    * Confirm a PaymentIntent (server-side confirmation).
    */
-  async confirmPaymentIntent(intentId: string, paymentMethodId?: string): Promise<Stripe.PaymentIntent> {
+  async confirmPaymentIntent(
+    intentId: string,
+    paymentMethodId?: string,
+  ): Promise<Stripe.PaymentIntent> {
     try {
       const params: Stripe.PaymentIntentConfirmParams = {
-        return_url: this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173',
+        return_url:
+          this.configService.get<string>('FRONTEND_URL') ||
+          'http://localhost:5173',
       };
       if (paymentMethodId) {
         params.payment_method = paymentMethodId;
       }
       const intent = await this.stripe.paymentIntents.confirm(intentId, params);
-      this.logger.log(`PaymentIntent confirmed: ${intent.id} – status ${intent.status}`);
+      this.logger.log(
+        `PaymentIntent confirmed: ${intent.id} – status ${intent.status}`,
+      );
       return intent;
     } catch (error) {
       this.logger.error(`Failed to confirm PaymentIntent: ${error.message}`);
@@ -167,7 +182,9 @@ export class StripeService {
   /**
    * Retrieve a Stripe Customer by ID.
    */
-  async retrieveCustomer(customerId: string): Promise<Stripe.Customer | Stripe.DeletedCustomer> {
+  async retrieveCustomer(
+    customerId: string,
+  ): Promise<Stripe.Customer | Stripe.DeletedCustomer> {
     return this.stripe.customers.retrieve(customerId);
   }
 
@@ -176,7 +193,10 @@ export class StripeService {
   /**
    * Attach a PaymentMethod to a Customer.
    */
-  async attachPaymentMethod(paymentMethodId: string, customerId: string): Promise<Stripe.PaymentMethod> {
+  async attachPaymentMethod(
+    paymentMethodId: string,
+    customerId: string,
+  ): Promise<Stripe.PaymentMethod> {
     try {
       return await this.stripe.paymentMethods.attach(paymentMethodId, {
         customer: customerId,
@@ -190,7 +210,9 @@ export class StripeService {
   /**
    * Detach a PaymentMethod from its Customer.
    */
-  async detachPaymentMethod(paymentMethodId: string): Promise<Stripe.PaymentMethod> {
+  async detachPaymentMethod(
+    paymentMethodId: string,
+  ): Promise<Stripe.PaymentMethod> {
     try {
       return await this.stripe.paymentMethods.detach(paymentMethodId);
     } catch (error) {
@@ -202,7 +224,10 @@ export class StripeService {
   /**
    * List PaymentMethods for a customer.
    */
-  async listPaymentMethods(customerId: string, type: Stripe.PaymentMethodListParams.Type = 'card'): Promise<Stripe.PaymentMethod[]> {
+  async listPaymentMethods(
+    customerId: string,
+    type: Stripe.PaymentMethodListParams.Type = 'card',
+  ): Promise<Stripe.PaymentMethod[]> {
     try {
       const result = await this.stripe.paymentMethods.list({
         customer: customerId,
@@ -218,7 +243,9 @@ export class StripeService {
   /**
    * Retrieve a single PaymentMethod.
    */
-  async retrievePaymentMethod(paymentMethodId: string): Promise<Stripe.PaymentMethod> {
+  async retrievePaymentMethod(
+    paymentMethodId: string,
+  ): Promise<Stripe.PaymentMethod> {
     return this.stripe.paymentMethods.retrieve(paymentMethodId);
   }
 
@@ -251,14 +278,19 @@ export class StripeService {
       return subscription;
     } catch (error) {
       this.logger.error(`Failed to create subscription: ${error.message}`);
-      throw new BadRequestException(`Stripe subscription error: ${error.message}`);
+      throw new BadRequestException(
+        `Stripe subscription error: ${error.message}`,
+      );
     }
   }
 
   /**
    * Cancel a Stripe Subscription.
    */
-  async cancelSubscription(subscriptionId: string, atPeriodEnd = true): Promise<Stripe.Subscription> {
+  async cancelSubscription(
+    subscriptionId: string,
+    atPeriodEnd = true,
+  ): Promise<Stripe.Subscription> {
     try {
       if (atPeriodEnd) {
         return await this.stripe.subscriptions.update(subscriptionId, {
@@ -275,7 +307,9 @@ export class StripeService {
   /**
    * Pause a Stripe Subscription (set pause_collection).
    */
-  async pauseSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
+  async pauseSubscription(
+    subscriptionId: string,
+  ): Promise<Stripe.Subscription> {
     try {
       return await this.stripe.subscriptions.update(subscriptionId, {
         pause_collection: { behavior: 'void' },
@@ -289,7 +323,9 @@ export class StripeService {
   /**
    * Resume a paused Stripe Subscription.
    */
-  async resumeSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
+  async resumeSubscription(
+    subscriptionId: string,
+  ): Promise<Stripe.Subscription> {
     try {
       return await this.stripe.subscriptions.update(subscriptionId, {
         pause_collection: '',
@@ -303,7 +339,9 @@ export class StripeService {
   /**
    * Retrieve a Stripe Subscription.
    */
-  async retrieveSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
+  async retrieveSubscription(
+    subscriptionId: string,
+  ): Promise<Stripe.Subscription> {
     return this.stripe.subscriptions.retrieve(subscriptionId);
   }
 
@@ -314,9 +352,15 @@ export class StripeService {
    */
   constructWebhookEvent(rawBody: Buffer, signature: string): Stripe.Event {
     try {
-      return this.stripe.webhooks.constructEvent(rawBody, signature, this.webhookSecret);
+      return this.stripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        this.webhookSecret,
+      );
     } catch (error) {
-      this.logger.error(`Webhook signature verification failed: ${error.message}`);
+      this.logger.error(
+        `Webhook signature verification failed: ${error.message}`,
+      );
       throw new BadRequestException(`Webhook error: ${error.message}`);
     }
   }

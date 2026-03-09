@@ -321,46 +321,98 @@ export class CreateEcommerceTriggers1700000000032 implements MigrationInterface 
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_product_question_count ON product_questions`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_update_product_question_count()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_product_question_count ON product_questions`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_update_product_question_count()`,
+    );
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_store_followers_count ON store_followers`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_update_store_followers()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_store_followers_count ON store_followers`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_update_store_followers()`,
+    );
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_voucher_usage_increment ON voucher_usages`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_increment_voucher_usage()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_voucher_usage_increment ON voucher_usages`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_increment_voucher_usage()`,
+    );
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_message_update_conversation ON messages`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_update_conversation_stats()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_message_update_conversation ON messages`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_update_conversation_stats()`,
+    );
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_review_report_count ON review_reports`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_update_review_report_count()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_review_report_count ON review_reports`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_update_review_report_count()`,
+    );
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_review_helpfulness_count ON review_helpfulness`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_update_review_helpfulness()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_review_helpfulness_count ON review_helpfulness`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_update_review_helpfulness()`,
+    );
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_order_items_status_history ON order_items`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_track_order_item_status()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_order_items_status_history ON order_items`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_track_order_item_status()`,
+    );
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_orders_status_history ON orders`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_orders_status_history ON orders`,
+    );
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_track_order_status()`);
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_products_soft_delete_cascade ON products`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_soft_delete_cascade_products()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_products_soft_delete_cascade ON products`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_soft_delete_cascade_products()`,
+    );
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_variants_price_change ON product_variants`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_track_variant_price_change()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_variants_price_change ON product_variants`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_track_variant_price_change()`,
+    );
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_products_price_change ON products`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_track_product_price_change()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_products_price_change ON products`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_track_product_price_change()`,
+    );
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_review_update_store_rating ON reviews`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_review_update_store_rating ON reviews`,
+    );
     await queryRunner.query(`DROP FUNCTION IF EXISTS fn_update_store_rating()`);
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_review_update_product_rating ON reviews`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_update_product_rating()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_review_update_product_rating ON reviews`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_update_product_rating()`,
+    );
 
-    await queryRunner.query(`DROP TRIGGER IF EXISTS trg_products_search_vector ON products`);
-    await queryRunner.query(`DROP FUNCTION IF EXISTS fn_update_product_search_vector()`);
+    await queryRunner.query(
+      `DROP TRIGGER IF EXISTS trg_products_search_vector ON products`,
+    );
+    await queryRunner.query(
+      `DROP FUNCTION IF EXISTS fn_update_product_search_vector()`,
+    );
   }
 }

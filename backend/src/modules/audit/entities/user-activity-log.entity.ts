@@ -44,7 +44,12 @@ export class UserActivityLog {
   @Column({ name: 'device_type', type: 'varchar', length: 20, nullable: true })
   deviceType: string | null;
 
-  @Column({ name: 'referrer_url', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'referrer_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   referrerUrl: string | null;
 
   @Column({ name: 'page_url', type: 'varchar', length: 500, nullable: true })

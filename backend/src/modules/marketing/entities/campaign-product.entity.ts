@@ -18,7 +18,9 @@ export class CampaignProduct {
   @Column({ name: 'campaign_id', type: 'uuid' })
   campaignId: string;
 
-  @ManyToOne(() => Campaign, (campaign) => campaign.products, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Campaign, (campaign) => campaign.products, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'campaign_id' })
   campaign: Campaign;
 
@@ -29,10 +31,22 @@ export class CampaignProduct {
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @Column({ name: 'sale_price', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  @Column({
+    name: 'sale_price',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    nullable: true,
+  })
   salePrice: number | null;
 
-  @Column({ name: 'discount_percentage', type: 'decimal', precision: 5, scale: 2, nullable: true })
+  @Column({
+    name: 'discount_percentage',
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    nullable: true,
+  })
   discountPercentage: number | null;
 
   @Column({ name: 'stock_limit', type: 'integer', nullable: true })

@@ -18,7 +18,9 @@ export class VoucherProduct {
   @Column({ name: 'voucher_id', type: 'uuid' })
   voucherId: string;
 
-  @ManyToOne(() => Voucher, (voucher) => voucher.products, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Voucher, (voucher) => voucher.products, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'voucher_id' })
   voucher: Voucher;
 

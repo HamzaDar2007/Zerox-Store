@@ -1,13 +1,6 @@
 import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsOptional,
-  IsEnum,
-  IsInt,
-  IsString,
-  Min,
-  Max,
-} from 'class-validator';
+import { IsOptional, IsEnum, IsInt, IsString, Min, Max } from 'class-validator';
 import { TicketStatus, TicketPriority } from '@common/enums';
 
 export class UpdateTicketDto {

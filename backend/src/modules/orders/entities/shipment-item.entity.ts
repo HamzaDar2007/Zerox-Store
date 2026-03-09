@@ -17,7 +17,9 @@ export class ShipmentItem {
   @Column({ name: 'shipment_id', type: 'uuid' })
   shipmentId: string;
 
-  @ManyToOne(() => Shipment, (shipment) => shipment.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Shipment, (shipment) => shipment.items, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'shipment_id' })
   shipment: Shipment;
 

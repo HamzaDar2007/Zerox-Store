@@ -61,14 +61,23 @@ export class ReviewsController extends BaseController {
     @Query('limit') limit?: number,
   ) {
     return this.handleAsyncOperation(
-      this.reviewsService.findAll({ productId, userId, status, minRating, page, limit }),
+      this.reviewsService.findAll({
+        productId,
+        userId,
+        status,
+        minRating,
+        page,
+        limit,
+      }),
     );
   }
 
   @Get('product/:productId/summary')
   @ApiOperation({ summary: 'Get product rating summary' })
   getRatingSummary(@Param('productId', ParseUUIDPipe) productId: string) {
-    return this.handleAsyncOperation(this.reviewsService.getProductRatingSummary(productId));
+    return this.handleAsyncOperation(
+      this.reviewsService.getProductRatingSummary(productId),
+    );
   }
 
   @Get(':id')
@@ -86,7 +95,9 @@ export class ReviewsController extends BaseController {
     @Body() dto: UpdateReviewDto,
     @CurrentUser() user: User,
   ) {
-    return this.handleAsyncOperation(this.reviewsService.update(id, dto, user.id));
+    return this.handleAsyncOperation(
+      this.reviewsService.update(id, dto, user.id),
+    );
   }
 
   @Delete(':id')
@@ -106,7 +117,9 @@ export class ReviewsController extends BaseController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body('status') status: ReviewStatus,
   ) {
-    return this.handleAsyncOperation(this.reviewsService.updateStatus(id, status));
+    return this.handleAsyncOperation(
+      this.reviewsService.updateStatus(id, status),
+    );
   }
 
   @Post(':id/helpful')
@@ -118,7 +131,9 @@ export class ReviewsController extends BaseController {
     @Body('isHelpful') isHelpful: boolean,
     @CurrentUser() user: User,
   ) {
-    return this.handleAsyncOperation(this.reviewsService.markHelpful(id, user.id, isHelpful));
+    return this.handleAsyncOperation(
+      this.reviewsService.markHelpful(id, user.id, isHelpful),
+    );
   }
 
   @Post(':id/report')
@@ -130,6 +145,8 @@ export class ReviewsController extends BaseController {
     @Body('reason') reason: ReviewReportReason,
     @CurrentUser() user: User,
   ) {
-    return this.handleAsyncOperation(this.reviewsService.reportReview(id, user.id, reason));
+    return this.handleAsyncOperation(
+      this.reviewsService.reportReview(id, user.id, reason),
+    );
   }
 }

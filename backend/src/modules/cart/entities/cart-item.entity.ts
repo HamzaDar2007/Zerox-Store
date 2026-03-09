@@ -41,7 +41,12 @@ export class CartItem {
   @Column({ type: 'integer', default: 1 })
   quantity: number;
 
-  @Column({ name: 'price_at_addition', type: 'decimal', precision: 12, scale: 2 })
+  @Column({
+    name: 'price_at_addition',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+  })
   priceAtAddition: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

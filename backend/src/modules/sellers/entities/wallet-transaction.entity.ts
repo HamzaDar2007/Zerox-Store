@@ -33,7 +33,13 @@ export class WalletTransaction {
   @Column({ type: 'decimal', precision: 14, scale: 2 })
   amount: number;
 
-  @Column({ name: 'commission_amount', type: 'decimal', precision: 12, scale: 2, default: 0.0 })
+  @Column({
+    name: 'commission_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0.0,
+  })
   commissionAmount: number;
 
   @Column({ name: 'net_amount', type: 'decimal', precision: 14, scale: 2 })
@@ -45,7 +51,12 @@ export class WalletTransaction {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
-  @Column({ name: 'reference_type', type: 'varchar', length: 50, nullable: true })
+  @Column({
+    name: 'reference_type',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   referenceType: string | null;
 
   @Column({ name: 'reference_id', type: 'uuid', nullable: true })

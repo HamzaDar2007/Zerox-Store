@@ -82,7 +82,9 @@ export class CreateProductVariantDto {
   @Min(0)
   height?: number;
 
-  @ApiPropertyOptional({ description: 'Variant options (e.g., {size: "XL", color: "Red"})' })
+  @ApiPropertyOptional({
+    description: 'Variant options (e.g., {size: "XL", color: "Red"})',
+  })
   @IsOptional()
   @IsObject()
   options?: Record<string, string>;

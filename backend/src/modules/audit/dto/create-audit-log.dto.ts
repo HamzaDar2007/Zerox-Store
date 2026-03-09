@@ -30,7 +30,10 @@ export class CreateAuditLogDto {
   @IsUuidString()
   entityId?: string;
 
-  @ApiPropertyOptional({ description: 'Previous values before change', type: Object })
+  @ApiPropertyOptional({
+    description: 'Previous values before change',
+    type: Object,
+  })
   @IsOptional()
   oldValues?: Record<string, any>;
 
@@ -38,7 +41,10 @@ export class CreateAuditLogDto {
   @IsOptional()
   newValues?: Record<string, any>;
 
-  @ApiPropertyOptional({ description: 'List of changed field names', type: [String] })
+  @ApiPropertyOptional({
+    description: 'List of changed field names',
+    type: [String],
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

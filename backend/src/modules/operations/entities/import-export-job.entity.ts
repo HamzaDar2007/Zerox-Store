@@ -35,10 +35,20 @@ export class ImportExportJob {
   })
   status: JobStatus;
 
-  @Column({ name: 'source_file_url', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'source_file_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   sourceFileUrl: string | null;
 
-  @Column({ name: 'result_file_url', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'result_file_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   resultFileUrl: string | null;
 
   @Column({ name: 'total_rows', type: 'integer', default: 0 })

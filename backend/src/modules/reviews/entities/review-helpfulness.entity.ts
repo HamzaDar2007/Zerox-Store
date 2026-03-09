@@ -19,7 +19,9 @@ export class ReviewHelpfulness {
   @Column({ name: 'review_id', type: 'uuid' })
   reviewId: string;
 
-  @ManyToOne(() => Review, (review) => review.helpfulness, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Review, (review) => review.helpfulness, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'review_id' })
   review: Review;
 

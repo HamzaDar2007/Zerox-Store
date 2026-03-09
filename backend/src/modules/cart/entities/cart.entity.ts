@@ -32,7 +32,13 @@ export class Cart {
   @Column({ name: 'voucher_id', type: 'uuid', nullable: true })
   voucherId: string | null;
 
-  @Column({ name: 'discount_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'discount_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   discountAmount: number;
 
   @Column({ name: 'last_activity_at', type: 'timestamptz', nullable: true })

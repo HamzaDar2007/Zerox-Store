@@ -26,7 +26,12 @@ export class ProductComparison {
   @Column({ name: 'product_ids', type: 'uuid', array: true })
   productIds: string[];
 
-  @Column({ name: 'comparison_key', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'comparison_key',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   comparisonKey: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

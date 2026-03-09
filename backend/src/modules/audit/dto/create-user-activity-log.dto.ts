@@ -1,12 +1,6 @@
 import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsIP,
-  IsUrl,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsOptional, IsIP, IsUrl, MaxLength } from 'class-validator';
 
 export class CreateUserActivityLogDto {
   @ApiPropertyOptional({ description: 'User ID' })
@@ -20,12 +14,18 @@ export class CreateUserActivityLogDto {
   @MaxLength(255)
   sessionId?: string;
 
-  @ApiProperty({ description: 'Activity type (e.g., view, click, search)', maxLength: 50 })
+  @ApiProperty({
+    description: 'Activity type (e.g., view, click, search)',
+    maxLength: 50,
+  })
   @IsString()
   @MaxLength(50)
   activityType: string;
 
-  @ApiPropertyOptional({ description: 'Entity type viewed/interacted with', maxLength: 50 })
+  @ApiPropertyOptional({
+    description: 'Entity type viewed/interacted with',
+    maxLength: 50,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(50)
@@ -36,7 +36,10 @@ export class CreateUserActivityLogDto {
   @IsUuidString()
   entityId?: string;
 
-  @ApiPropertyOptional({ description: 'Additional activity metadata', type: Object })
+  @ApiPropertyOptional({
+    description: 'Additional activity metadata',
+    type: Object,
+  })
   @IsOptional()
   metadata?: Record<string, any>;
 
@@ -50,7 +53,10 @@ export class CreateUserActivityLogDto {
   @IsString()
   userAgent?: string;
 
-  @ApiPropertyOptional({ description: 'Device type (desktop, mobile, tablet)', maxLength: 20 })
+  @ApiPropertyOptional({
+    description: 'Device type (desktop, mobile, tablet)',
+    maxLength: 20,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(20)

@@ -22,16 +22,31 @@ export class Currency {
   @Column({ type: 'varchar', length: 10 })
   symbol: string;
 
-  @Column({ name: 'symbol_position', type: 'varchar', length: 10, default: 'before' })
+  @Column({
+    name: 'symbol_position',
+    type: 'varchar',
+    length: 10,
+    default: 'before',
+  })
   symbolPosition: string;
 
   @Column({ name: 'decimal_places', type: 'smallint', default: 2 })
   decimalPlaces: number;
 
-  @Column({ name: 'thousands_separator', type: 'varchar', length: 3, default: ',' })
+  @Column({
+    name: 'thousands_separator',
+    type: 'varchar',
+    length: 3,
+    default: ',',
+  })
   thousandsSeparator: string;
 
-  @Column({ name: 'decimal_separator', type: 'varchar', length: 3, default: '.' })
+  @Column({
+    name: 'decimal_separator',
+    type: 'varchar',
+    length: 3,
+    default: '.',
+  })
   decimalSeparator: string;
 
   @Column({

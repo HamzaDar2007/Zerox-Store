@@ -24,7 +24,12 @@ export class Banner {
   @Column({ name: 'image_url', type: 'varchar', length: 500 })
   imageUrl: string;
 
-  @Column({ name: 'mobile_image_url', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'mobile_image_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   mobileImageUrl: string | null;
 
   @Column({ name: 'link_url', type: 'varchar', length: 500, nullable: true })

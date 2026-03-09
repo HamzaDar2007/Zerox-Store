@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { LoyaltyService } from './loyalty.service';
 import { CreateLoyaltyTierDto } from './dto/create-loyalty-tier.dto';
@@ -16,12 +27,16 @@ import { BaseController } from '../../common/controllers/base.controller';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class LoyaltyController extends BaseController {
-  constructor(private readonly loyaltyService: LoyaltyService) { super(); }
+  constructor(private readonly loyaltyService: LoyaltyService) {
+    super();
+  }
 
   @Get('points')
   @ApiOperation({ summary: 'Get my loyalty points' })
   getMyPoints(@CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.loyaltyService.getOrCreatePoints(user.id));
+    return this.handleAsyncOperation(
+      this.loyaltyService.getOrCreatePoints(user.id),
+    );
   }
 
   @Post('points/earn')
@@ -29,19 +44,32 @@ export class LoyaltyController extends BaseController {
   @ApiOperation({ summary: 'Earn points (admin)' })
   @Permissions('loyalty.create')
   earnPoints(@Body() dto: CreateLoyaltyTransactionDto) {
-    return this.handleAsyncOperation(this.loyaltyService.earnPoints(dto.userId, dto));
+    return this.handleAsyncOperation(
+      this.loyaltyService.earnPoints(dto.userId, dto),
+    );
   }
 
   @Post('points/redeem')
   @ApiOperation({ summary: 'Redeem points' })
-  redeemPoints(@CurrentUser() user: User, @Body() dto: { points: number; orderId?: string }) {
-    return this.handleAsyncOperation(this.loyaltyService.redeemPoints(user.id, dto));
+  redeemPoints(
+    @CurrentUser() user: User,
+    @Body() dto: { points: number; orderId?: string },
+  ) {
+    return this.handleAsyncOperation(
+      this.loyaltyService.redeemPoints(user.id, dto),
+    );
   }
 
   @Get('transactions')
   @ApiOperation({ summary: 'Get my transactions' })
-  getMyTransactions(@CurrentUser() user: User, @Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.handleAsyncOperation(this.loyaltyService.getTransactions(user.id, page, limit));
+  getMyTransactions(
+    @CurrentUser() user: User,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.handleAsyncOperation(
+      this.loyaltyService.getTransactions(user.id, page, limit),
+    );
   }
 
   @Get('tiers')
@@ -62,7 +90,10 @@ export class LoyaltyController extends BaseController {
   @UseGuards(PermissionsGuard)
   @ApiOperation({ summary: 'Update tier' })
   @Permissions('loyalty.update')
-  updateTier(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateLoyaltyTierDto) {
+  updateTier(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateLoyaltyTierDto,
+  ) {
     return this.handleAsyncOperation(this.loyaltyService.updateTier(id, dto));
   }
 
@@ -77,13 +108,17 @@ export class LoyaltyController extends BaseController {
   @Get('referral-code')
   @ApiOperation({ summary: 'Get my referral code' })
   getMyReferralCode(@CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.loyaltyService.getOrCreateReferralCode(user.id));
+    return this.handleAsyncOperation(
+      this.loyaltyService.getOrCreateReferralCode(user.id),
+    );
   }
 
   @Post('referral/apply')
   @ApiOperation({ summary: 'Apply referral code' })
   applyReferral(@CurrentUser() user: User, @Body('code') code: string) {
-    return this.handleAsyncOperation(this.loyaltyService.applyReferralCode(user.id, code));
+    return this.handleAsyncOperation(
+      this.loyaltyService.applyReferralCode(user.id, code),
+    );
   }
 
   @Get('referrals')

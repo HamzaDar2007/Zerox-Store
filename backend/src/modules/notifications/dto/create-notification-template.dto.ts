@@ -28,7 +28,11 @@ export class CreateNotificationTemplateDto {
   @IsEnum(NotificationType)
   type: NotificationType;
 
-  @ApiPropertyOptional({ description: 'Notification channels', type: [String], enum: NotificationChannel })
+  @ApiPropertyOptional({
+    description: 'Notification channels',
+    type: [String],
+    enum: NotificationChannel,
+  })
   @IsOptional()
   @IsArray()
   @IsEnum(NotificationChannel, { each: true })

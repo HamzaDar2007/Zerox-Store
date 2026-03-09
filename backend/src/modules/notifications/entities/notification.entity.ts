@@ -6,7 +6,11 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { NotificationType, NotificationChannel, NotificationStatus } from '@common/enums';
+import {
+  NotificationType,
+  NotificationChannel,
+  NotificationStatus,
+} from '@common/enums';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('notifications')

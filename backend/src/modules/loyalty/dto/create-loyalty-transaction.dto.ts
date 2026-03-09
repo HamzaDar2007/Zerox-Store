@@ -15,15 +15,23 @@ export class CreateLoyaltyTransactionDto {
   @IsUuidString()
   userId: string;
 
-  @ApiProperty({ description: 'Transaction type', enum: LoyaltyTransactionType })
+  @ApiProperty({
+    description: 'Transaction type',
+    enum: LoyaltyTransactionType,
+  })
   @IsEnum(LoyaltyTransactionType)
   type: LoyaltyTransactionType;
 
-  @ApiProperty({ description: 'Points amount (positive for earn, negative for redeem)' })
+  @ApiProperty({
+    description: 'Points amount (positive for earn, negative for redeem)',
+  })
   @IsInt()
   points: number;
 
-  @ApiPropertyOptional({ description: 'Reference entity type (e.g., order, review)', maxLength: 50 })
+  @ApiPropertyOptional({
+    description: 'Reference entity type (e.g., order, review)',
+    maxLength: 50,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(50)

@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ReturnRequest } from './entities/return-request.entity';
@@ -16,6 +12,7 @@ import { UpdateReturnReasonDto } from './dto/update-return-reason.dto';
 import { ServiceResponse } from '../../common/interfaces/service-response.interface';
 import { ReturnStatus } from '@common/enums';
 import { MailService } from '../../common/modules/mail/mail.service';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class ReturnsService {
@@ -29,13 +26,17 @@ export class ReturnsService {
     @InjectRepository(ReturnShipment)
     private shipmentRepository: Repository<ReturnShipment>,
     private readonly mailService: MailService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   // ==================== RETURN REQUESTS ====================
 
-  async createReturn(dto: CreateReturnRequestDto, userId: string): Promise<ServiceResponse<ReturnRequest>> {
+  async createReturn(
+    dto: CreateReturnRequestDto,
+    userId: string,
+  ): Promise<ServiceResponse<ReturnRequest>> {
     const returnNumber = await this.generateReturnNumber();
-    
+
     const returnRequest = new ReturnRequest();
     Object.assign(returnRequest, {
       ...dto,
@@ -113,8 +114,13 @@ export class ReturnsService {
     };
   }
 
-  async updateReturn(id: string, dto: UpdateReturnRequestDto): Promise<ServiceResponse<ReturnRequest>> {
-    const returnRequest = await this.returnRepository.findOne({ where: { id } });
+  async updateReturn(
+    id: string,
+    dto: UpdateReturnRequestDto,
+  ): Promise<ServiceResponse<ReturnRequest>> {
+    const returnRequest = await this.returnRepository.findOne({
+      where: { id },
+    });
 
     if (!returnRequest) {
       throw new NotFoundException('Return request not found');
@@ -130,8 +136,14 @@ export class ReturnsService {
     };
   }
 
-  async updateStatus(id: string, status: ReturnStatus, notes?: string): Promise<ServiceResponse<ReturnRequest>> {
-    const returnRequest = await this.returnRepository.findOne({ where: { id } });
+  async updateStatus(
+    id: string,
+    status: ReturnStatus,
+    notes?: string,
+  ): Promise<ServiceResponse<ReturnRequest>> {
+    const returnRequest = await this.returnRepository.findOne({
+      where: { id },
+    });
 
     if (!returnRequest) {
       throw new NotFoundException('Return request not found');
@@ -144,6 +156,21 @@ export class ReturnsService {
       returnRequest.reviewedAt = new Date();
     } else if (status === ReturnStatus.COMPLETED) {
       returnRequest.completedAt = new Date();
+
+      // Auto-create refund when return is completed
+      if (returnRequest.refundAmount && returnRequest.orderId) {
+        this.paymentsService
+          .createRefund(
+            {
+              paymentId: returnRequest.orderId,
+              amount: Number(returnRequest.refundAmount),
+              reason: undefined,
+              reasonDetails: `Refund for return ${returnRequest.returnNumber}`,
+            },
+            'system',
+          )
+          .catch(() => {});
+      }
     }
 
     const updated = await this.returnRepository.save(returnRequest);
@@ -158,8 +185,13 @@ export class ReturnsService {
     };
   }
 
-  async addReturnImage(returnId: string, imageUrl: string): Promise<ServiceResponse<ReturnImage>> {
-    const returnRequest = await this.returnRepository.findOne({ where: { id: returnId } });
+  async addReturnImage(
+    returnId: string,
+    imageUrl: string,
+  ): Promise<ServiceResponse<ReturnImage>> {
+    const returnRequest = await this.returnRepository.findOne({
+      where: { id: returnId },
+    });
 
     if (!returnRequest) {
       throw new NotFoundException('Return request not found');
@@ -182,7 +214,9 @@ export class ReturnsService {
 
   // ==================== RETURN REASONS ====================
 
-  async createReason(dto: CreateReturnReasonDto): Promise<ServiceResponse<ReturnReason>> {
+  async createReason(
+    dto: CreateReturnReasonDto,
+  ): Promise<ServiceResponse<ReturnReason>> {
     const reason = new ReturnReason();
     Object.assign(reason, dto);
     const saved = await this.reasonRepository.save(reason);
@@ -207,7 +241,10 @@ export class ReturnsService {
     };
   }
 
-  async updateReason(id: string, dto: UpdateReturnReasonDto): Promise<ServiceResponse<ReturnReason>> {
+  async updateReason(
+    id: string,
+    dto: UpdateReturnReasonDto,
+  ): Promise<ServiceResponse<ReturnReason>> {
     const reason = await this.reasonRepository.findOne({ where: { id } });
 
     if (!reason) {
@@ -231,7 +268,9 @@ export class ReturnsService {
     return `${prefix}${String(count + 1).padStart(6, '0')}`;
   }
 
-  private async sendReturnCreatedEmails(returnRequest: ReturnRequest): Promise<void> {
+  private async sendReturnCreatedEmails(
+    returnRequest: ReturnRequest,
+  ): Promise<void> {
     try {
       const full = await this.returnRepository.findOne({
         where: { id: returnRequest.id },
@@ -239,13 +278,19 @@ export class ReturnsService {
       });
       if (!full?.user?.email) return;
       await this.mailService.sendReturnRequestedEmail(
-        full.user.email, full.user.name || 'Customer',
-        full.returnNumber, full.order?.orderNumber || 'N/A',
+        full.user.email,
+        full.user.name || 'Customer',
+        full.returnNumber,
+        full.order?.orderNumber || 'N/A',
       );
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 
-  private async sendReturnStatusEmail(returnRequest: ReturnRequest): Promise<void> {
+  private async sendReturnStatusEmail(
+    returnRequest: ReturnRequest,
+  ): Promise<void> {
     try {
       const full = await this.returnRepository.findOne({
         where: { id: returnRequest.id },
@@ -253,9 +298,14 @@ export class ReturnsService {
       });
       if (!full?.user?.email) return;
       await this.mailService.sendReturnStatusUpdateEmail(
-        full.user.email, full.user.name || 'Customer',
-        full.returnNumber, full.status, full.reviewerNotes,
+        full.user.email,
+        full.user.name || 'Customer',
+        full.returnNumber,
+        full.status,
+        full.reviewerNotes,
       );
-    } catch (_) { /* silently ignore */ }
+    } catch (_) {
+      /* silently ignore */
+    }
   }
 }

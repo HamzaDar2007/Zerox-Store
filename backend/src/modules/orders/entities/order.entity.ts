@@ -50,13 +50,31 @@ export class Order {
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   subtotal: number;
 
-  @Column({ name: 'discount_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'discount_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   discountAmount: number;
 
-  @Column({ name: 'tax_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'tax_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   taxAmount: number;
 
-  @Column({ name: 'shipping_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'shipping_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   shippingAmount: number;
 
   @Column({ name: 'total_amount', type: 'decimal', precision: 14, scale: 2 })
@@ -74,10 +92,20 @@ export class Order {
   @Column({ name: 'billing_address', type: 'jsonb', nullable: true })
   billingAddress: Record<string, any> | null;
 
-  @Column({ name: 'shipping_method', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'shipping_method',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   shippingMethod: string | null;
 
-  @Column({ name: 'payment_method', type: 'varchar', length: 50, nullable: true })
+  @Column({
+    name: 'payment_method',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   paymentMethod: string | null;
 
   @Column({ name: 'customer_notes', type: 'text', nullable: true })
@@ -92,7 +120,12 @@ export class Order {
   @Column({ name: 'is_gift', type: 'boolean', default: false })
   isGift: boolean;
 
-  @Column({ name: 'gift_message', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'gift_message',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   giftMessage: string | null;
 
   @Column({ name: 'gift_wrap_requested', type: 'boolean', default: false })
@@ -104,7 +137,13 @@ export class Order {
   @Column({ name: 'loyalty_points_used', type: 'integer', default: 0 })
   loyaltyPointsUsed: number;
 
-  @Column({ name: 'loyalty_discount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'loyalty_discount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   loyaltyDiscount: number;
 
   @Column({ name: 'estimated_delivery_date', type: 'date', nullable: true })
@@ -113,7 +152,12 @@ export class Order {
   @Column({ name: 'actual_delivery_date', type: 'date', nullable: true })
   actualDeliveryDate: Date | null;
 
-  @Column({ name: 'source_platform', type: 'varchar', length: 50, default: 'web' })
+  @Column({
+    name: 'source_platform',
+    type: 'varchar',
+    length: 50,
+    default: 'web',
+  })
   sourcePlatform: string;
 
   @Column({ name: 'device_type', type: 'varchar', length: 20, nullable: true })

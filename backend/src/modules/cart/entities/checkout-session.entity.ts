@@ -49,7 +49,12 @@ export class CheckoutSession {
   @Column({ name: 'shipping_method_id', type: 'uuid', nullable: true })
   shippingMethodId: string | null;
 
-  @Column({ name: 'payment_method', type: 'varchar', length: 50, nullable: true })
+  @Column({
+    name: 'payment_method',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   paymentMethod: string | null;
 
   @Column({ name: 'cart_snapshot', type: 'jsonb', nullable: true })
@@ -58,28 +63,63 @@ export class CheckoutSession {
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
   subtotal: number;
 
-  @Column({ name: 'discount_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'discount_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   discountAmount: number;
 
-  @Column({ name: 'tax_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'tax_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   taxAmount: number;
 
-  @Column({ name: 'shipping_amount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'shipping_amount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   shippingAmount: number;
 
-  @Column({ name: 'total_amount', type: 'decimal', precision: 14, scale: 2, default: 0 })
+  @Column({
+    name: 'total_amount',
+    type: 'decimal',
+    precision: 14,
+    scale: 2,
+    default: 0,
+  })
   totalAmount: number;
 
   @Column({ name: 'loyalty_points_used', type: 'integer', default: 0 })
   loyaltyPointsUsed: number;
 
-  @Column({ name: 'loyalty_discount', type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({
+    name: 'loyalty_discount',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    default: 0,
+  })
   loyaltyDiscount: number;
 
   @Column({ name: 'gift_wrap_requested', type: 'boolean', default: false })
   giftWrapRequested: boolean;
 
-  @Column({ name: 'gift_message', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'gift_message',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   giftMessage: string | null;
 
   @Column({ name: 'device_type', type: 'varchar', length: 20, nullable: true })

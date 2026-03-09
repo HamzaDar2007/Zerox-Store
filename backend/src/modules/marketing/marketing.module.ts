@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MarketingService } from './marketing.service';
-import { CampaignsController, FlashSalesController, VouchersController } from './marketing.controller';
+import {
+  CampaignsController,
+  FlashSalesController,
+  VouchersController,
+} from './marketing.controller';
 import { Campaign } from './entities/campaign.entity';
 import { CampaignProduct } from './entities/campaign-product.entity';
 import { FlashSale } from './entities/flash-sale.entity';

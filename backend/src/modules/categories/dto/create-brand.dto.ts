@@ -17,11 +17,15 @@ export class CreateBrandDto {
   @Transform(({ value }) => value?.trim())
   name: string;
 
-  @ApiPropertyOptional({ description: 'Brand slug (auto-generated if not provided)' })
+  @ApiPropertyOptional({
+    description: 'Brand slug (auto-generated if not provided)',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(100)
-  @Matches(/^[a-z0-9-]+$/, { message: 'Slug must contain only lowercase letters, numbers, and hyphens' })
+  @Matches(/^[a-z0-9-]+$/, {
+    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+  })
   slug?: string;
 
   @ApiPropertyOptional({ description: 'Logo URL' })
@@ -41,7 +45,9 @@ export class CreateBrandDto {
   @MaxLength(500)
   websiteUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Country of origin code (ISO 3166-1 alpha-2)' })
+  @ApiPropertyOptional({
+    description: 'Country of origin code (ISO 3166-1 alpha-2)',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(3)

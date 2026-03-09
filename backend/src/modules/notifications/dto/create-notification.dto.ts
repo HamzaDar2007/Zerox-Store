@@ -8,7 +8,11 @@ import {
   IsEnum,
   IsObject,
 } from 'class-validator';
-import { NotificationType, NotificationChannel, NotificationStatus } from '@common/enums';
+import {
+  NotificationType,
+  NotificationChannel,
+  NotificationStatus,
+} from '@common/enums';
 
 export class CreateNotificationDto {
   @ApiProperty({ description: 'User ID' })
@@ -21,7 +25,10 @@ export class CreateNotificationDto {
   @IsEnum(NotificationType)
   type: NotificationType;
 
-  @ApiProperty({ description: 'Notification channel', enum: NotificationChannel })
+  @ApiProperty({
+    description: 'Notification channel',
+    enum: NotificationChannel,
+  })
   @IsNotEmpty()
   @IsEnum(NotificationChannel)
   channel: NotificationChannel;
@@ -42,7 +49,10 @@ export class CreateNotificationDto {
   @IsObject()
   data?: Record<string, any>;
 
-  @ApiPropertyOptional({ description: 'Notification status', enum: NotificationStatus })
+  @ApiPropertyOptional({
+    description: 'Notification status',
+    enum: NotificationStatus,
+  })
   @IsOptional()
   @IsEnum(NotificationStatus)
   status?: NotificationStatus;

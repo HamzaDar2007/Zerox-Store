@@ -11,7 +11,10 @@ import {
 } from 'class-validator';
 
 export class CreateCurrencyDto {
-  @ApiProperty({ description: 'ISO 4217 currency code (e.g., USD, EUR)', maxLength: 3 })
+  @ApiProperty({
+    description: 'ISO 4217 currency code (e.g., USD, EUR)',
+    maxLength: 3,
+  })
   @IsString()
   @MaxLength(3)
   code: string;
@@ -36,37 +39,57 @@ export class CreateCurrencyDto {
   @MaxLength(10)
   symbolPosition?: string;
 
-  @ApiPropertyOptional({ description: 'Number of decimal places (0-6)', default: 2 })
+  @ApiPropertyOptional({
+    description: 'Number of decimal places (0-6)',
+    default: 2,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(6)
   decimalPlaces?: number;
 
-  @ApiPropertyOptional({ description: 'Thousands separator', maxLength: 3, default: ',' })
+  @ApiPropertyOptional({
+    description: 'Thousands separator',
+    maxLength: 3,
+    default: ',',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(3)
   thousandsSeparator?: string;
 
-  @ApiPropertyOptional({ description: 'Decimal separator', maxLength: 3, default: '.' })
+  @ApiPropertyOptional({
+    description: 'Decimal separator',
+    maxLength: 3,
+    default: '.',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(3)
   decimalSeparator?: string;
 
-  @ApiPropertyOptional({ description: 'Exchange rate relative to base currency', default: 1.0 })
+  @ApiPropertyOptional({
+    description: 'Exchange rate relative to base currency',
+    default: 1.0,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0.000001)
   exchangeRate?: number;
 
-  @ApiPropertyOptional({ description: 'Set as default currency', default: false })
+  @ApiPropertyOptional({
+    description: 'Set as default currency',
+    default: false,
+  })
   @IsOptional()
   @IsBoolean()
   isDefault?: boolean;
 
-  @ApiPropertyOptional({ description: 'Whether the currency is active', default: true })
+  @ApiPropertyOptional({
+    description: 'Whether the currency is active',
+    default: true,
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

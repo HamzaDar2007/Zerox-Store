@@ -8,8 +8,11 @@ import {
   useCreateOrderMutation,
   useCreatePaymentMutation,
   useCreateStripeIntentMutation,
+  useApplyCartVoucherMutation,
+  useRemoveCartVoucherMutation,
 } from '@/store/api';
 import { useGetProfileQuery } from '@/store/api';
+import { useGetMyLoyaltyPointsQuery, useRedeemPointsMutation } from '@/store/api';
 import { PaymentMethod as PaymentMethodEnum } from '@/common/types/enums';
 import { PageHeader } from '@/common/components/PageHeader';
 import { PriceDisplay } from '@/common/components/PriceDisplay';
@@ -33,6 +36,8 @@ import {
   Loader2,
   ShieldCheck,
   AlertCircle,
+  Tag,
+  Coins,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { shippingSchema } from '@/common/schemas/checkout.schema';
@@ -159,6 +164,10 @@ export default function CheckoutPage() {
   const [createOrder] = useCreateOrderMutation();
   const [createPayment] = useCreatePaymentMutation();
   const [createStripeIntent] = useCreateStripeIntentMutation();
+  const [applyVoucher] = useApplyCartVoucherMutation();
+  const [removeVoucher] = useRemoveCartVoucherMutation();
+  const { data: loyaltyData } = useGetMyLoyaltyPointsQuery();
+  const [redeemPoints] = useRedeemPointsMutation();
 
   const [currentStep, setCurrentStep] = useState<Step>('Shipping');
   const [placing, setPlacing] = useState(false);
@@ -183,9 +192,28 @@ export default function CheckoutPage() {
   const [stripePmId, setStripePmId] = useState<string | null>(null);
   const [cardInfo, setCardInfo] = useState<{ brand: string; last4: string } | null>(null);
 
+  // Voucher state
+  const [voucherCode, setVoucherCode] = useState('');
+  const [appliedVoucher, setAppliedVoucher] = useState<string | null>(null);
+  const [voucherDiscount, setVoucherDiscount] = useState(0);
+  const [applyingVoucher, setApplyingVoucher] = useState(false);
+
+  // Loyalty points state
+  const [usePoints, setUsePoints] = useState(false);
+
   const cart = cartData?.data;
   const items = cart?.items ?? [];
   const user = profileData?.data;
+
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.priceAtAddition * item.quantity,
+    0,
+  );
+
+  const availablePoints = loyaltyData?.data?.availableBalance ?? 0;
+  const pointsValue = Math.min(availablePoints, Math.floor(subtotal * 100)) / 100; // 1 point = 0.01 currency
+  const loyaltyDiscount = usePoints ? pointsValue : 0;
+  const finalTotal = Math.max(0, subtotal - voucherDiscount - loyaltyDiscount);
 
   // Pre-fill name from profile
   useEffect(() => {
@@ -199,12 +227,32 @@ export default function CheckoutPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.priceAtAddition * item.quantity,
-    0,
-  );
-
   const stepIndex = STEPS.indexOf(currentStep);
+
+  // ── Voucher handlers ──────────────────────────────────────────────
+  const handleApplyVoucher = async () => {
+    if (!voucherCode.trim()) return;
+    setApplyingVoucher(true);
+    try {
+      const res = await applyVoucher({ code: voucherCode.trim() }).unwrap();
+      setAppliedVoucher(voucherCode.trim());
+      setVoucherDiscount(res.data?.discount ?? 0);
+      toast.success('Voucher applied!');
+    } catch {
+      toast.error('Invalid or expired voucher code');
+    } finally {
+      setApplyingVoucher(false);
+    }
+  };
+
+  const handleRemoveVoucher = async () => {
+    try {
+      await removeVoucher().unwrap();
+    } catch { /* ignore */ }
+    setAppliedVoucher(null);
+    setVoucherDiscount(0);
+    setVoucherCode('');
+  };
 
   // ── Step handlers ─────────────────────────────────────────────────
   const handleShippingNext = () => {
@@ -262,7 +310,7 @@ export default function CheckoutPage() {
         userId: user.id,
         storeId,
         subtotal,
-        totalAmount: subtotal,
+        totalAmount: finalTotal,
         shippingAddress: { ...shippingForm },
         paymentMethod: paymentMethod === 'card' ? 'stripe' : paymentMethod,
         customerNotes: customerNotes || undefined,
@@ -270,6 +318,11 @@ export default function CheckoutPage() {
         giftMessage: isGift ? giftMessage : undefined,
       }).unwrap();
       const orderId = orderRes.data.id;
+
+      // 2b. Redeem loyalty points if used
+      if (usePoints && loyaltyDiscount > 0) {
+        redeemPoints({ points: Math.round(loyaltyDiscount * 100), orderId }).catch(() => {});
+      }
 
       // 3. If COD or bank transfer → done
       if (paymentMethod !== 'card') {
@@ -289,7 +342,7 @@ export default function CheckoutPage() {
       const paymentRes = await createPayment({
         orderId,
         userId: user.id,
-        amount: subtotal,
+        amount: finalTotal,
         paymentMethod: PaymentMethodEnum.STRIPE,
         gatewayName: 'stripe',
         stripePaymentMethodId: stripePmId,
@@ -743,7 +796,7 @@ export default function CheckoutPage() {
                     ) : paymentMethod === 'card' ? (
                       <>
                         <ShieldCheck className="mr-2 h-4 w-4" />
-                        Pay {formatCurrency(subtotal)} &amp; Place Order
+                        Pay {formatCurrency(finalTotal)} &amp; Place Order
                       </>
                     ) : (
                       'Place Order'
@@ -771,10 +824,74 @@ export default function CheckoutPage() {
               <span className="text-muted-foreground">Shipping</span>
               <span className="text-green-600 font-medium">Free</span>
             </div>
+
+            {/* Voucher Code Input */}
+            <Separator />
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5 text-sm font-medium">
+                <Tag className="h-3.5 w-3.5" /> Voucher Code
+              </Label>
+              {appliedVoucher ? (
+                <div className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 p-2 dark:border-green-800 dark:bg-green-950/20">
+                  <span className="text-sm font-medium text-green-700 dark:text-green-400">{appliedVoucher}</span>
+                  <Button variant="ghost" size="sm" onClick={handleRemoveVoucher} className="h-6 text-xs">Remove</Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter code"
+                    value={voucherCode}
+                    onChange={(e) => setVoucherCode(e.target.value)}
+                    className="h-8 text-sm"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleApplyVoucher}
+                    disabled={applyingVoucher || !voucherCode.trim()}
+                    className="h-8 text-xs"
+                  >
+                    {applyingVoucher ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Apply'}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {voucherDiscount > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Voucher Discount</span>
+                <span>-{formatCurrency(voucherDiscount)}</span>
+              </div>
+            )}
+
+            {/* Loyalty Points */}
+            {availablePoints > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-1.5 text-sm font-medium">
+                      <Coins className="h-3.5 w-3.5" /> Use Loyalty Points
+                    </Label>
+                    <Switch checked={usePoints} onCheckedChange={setUsePoints} />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {availablePoints.toLocaleString()} points available (worth {formatCurrency(pointsValue)})
+                  </p>
+                  {usePoints && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Points Discount</span>
+                      <span>-{formatCurrency(loyaltyDiscount)}</span>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
             <Separator />
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
-              <span className="text-brand-600">{formatCurrency(subtotal)}</span>
+              <span className="text-brand-600">{formatCurrency(finalTotal)}</span>
             </div>
             {paymentMethod === 'card' && (
               <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-xs text-muted-foreground">
