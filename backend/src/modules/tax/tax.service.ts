@@ -136,6 +136,13 @@ export class TaxService {
     return { success: true, message: 'Tax class updated', data: updated };
   }
 
+  async deleteClass(id: string): Promise<ServiceResponse<void>> {
+    const taxClass = await this.classRepository.findOne({ where: { id } });
+    if (!taxClass) throw new NotFoundException('Tax class not found');
+    await this.classRepository.remove(taxClass);
+    return { success: true, message: 'Tax class deleted' };
+  }
+
   // ==================== TAX CALCULATION ====================
 
   async calculateTax(

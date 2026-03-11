@@ -31,6 +31,7 @@ import {
   CreateShippingRateDto,
   UpdateShippingRateDto,
   CreateDeliverySlotDto,
+  UpdateDeliverySlotDto,
 } from './dto';
 
 @ApiTags('Shipping Zones')
@@ -164,6 +165,13 @@ export class ShippingCarriersController extends BaseController {
       this.shippingService.updateCarrier(id, dto),
     );
   }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete shipping carrier' })
+  @Permissions('shipping.delete')
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.handleAsyncOperation(this.shippingService.removeCarrier(id));
+  }
 }
 
 @ApiTags('Shipping Rates')
@@ -204,6 +212,13 @@ export class ShippingRatesController extends BaseController {
     @Body() dto: UpdateShippingRateDto,
   ) {
     return this.handleAsyncOperation(this.shippingService.updateRate(id, dto));
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete shipping rate' })
+  @Permissions('shipping.delete')
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.handleAsyncOperation(this.shippingService.removeRate(id));
   }
 }
 
@@ -249,5 +264,32 @@ export class DeliverySlotsController extends BaseController {
   @ApiOperation({ summary: 'Get available delivery slots' })
   findAvailable() {
     return this.handleAsyncOperation(this.shippingService.getAvailableSlots());
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get delivery slot by ID' })
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.handleAsyncOperation(this.shippingService.findOneSlot(id));
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Update delivery slot' })
+  @Permissions('shipping.update')
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateDeliverySlotDto,
+  ) {
+    return this.handleAsyncOperation(this.shippingService.updateSlot(id, dto));
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Delete delivery slot' })
+  @Permissions('shipping.delete')
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.handleAsyncOperation(this.shippingService.removeSlot(id));
   }
 }

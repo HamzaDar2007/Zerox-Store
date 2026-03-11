@@ -520,7 +520,11 @@ export class ProductsService {
       });
     }
 
-    const related = await query.orderBy('RANDOM()').take(limit).getMany();
+    const related = await query
+      .addSelect('RANDOM()', 'rand')
+      .orderBy('rand')
+      .limit(limit)
+      .getMany();
 
     return {
       success: true,

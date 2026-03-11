@@ -271,7 +271,7 @@ export class ProductsController extends BaseController {
     @Query('limit') limit?: number,
   ) {
     return this.handleAsyncOperation(
-      this.productsService.getRelatedProducts(productId, limit),
+      this.productsService.getRelatedProducts(productId, limit ? Number(limit) : undefined),
     );
   }
 }

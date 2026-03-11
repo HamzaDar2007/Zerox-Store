@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Patch,
+  Delete,
   Param,
   UseGuards,
   ParseUUIDPipe,
@@ -142,5 +143,14 @@ export class ReturnReasonsController extends BaseController {
     @Body() dto: UpdateReturnReasonDto,
   ) {
     return this.handleAsyncOperation(this.returnsService.updateReason(id, dto));
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Delete return reason' })
+  @Permissions('returns.delete')
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.handleAsyncOperation(this.returnsService.deleteReason(id));
   }
 }

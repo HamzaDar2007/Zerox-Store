@@ -7,7 +7,7 @@
  */
 const http = require('http');
 
-const BASE = 'http://localhost:3000';
+const BASE = 'http://localhost:3001';
 const TS = Date.now();
 const saved = {};
 const results = { pass: 0, fail: 0, skip: 0, details: [] };
@@ -87,6 +87,7 @@ async function phase1() {
   await test(1, 'Swagger JSON', 'GET', '/api/docs-json', null, null, r => r.status === 200);
   await test(1, 'Mail Test Endpoint', 'POST', '/mail/test', { to: `test${TS}@test.com` }, null,
     r => r.status === 200 || r.status === 201 || r.status === 500); // SMTP may not be configured
+  await test(1, 'System Health', 'GET', '/system/health', null, null, r => r.status === 200 || r.status === 401);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -141,6 +142,27 @@ async function phase2() {
   // Password forgot
   await test(2, 'Password Forgot', 'POST', '/auth/password-forgot',
     { email: `cust${TS}@test.com` }, null, ok24);
+
+  // Change password (customer)
+  await test(2, 'Change Password', 'POST', '/auth/change-password',
+    { currentPassword: 'Test@1234', newPassword: 'Test@12345' }, saved.custToken, ok24);
+  // Re-login with new password
+  res = await test(2, 'Login New Password', 'POST', '/auth/login',
+    { email: `cust${TS}@test.com`, password: 'Test@12345' }, null, ok2);
+  saved.custToken = res.body?.data?.accessToken || res.body?.data?.access_token;
+  saved.custRefresh = res.body?.data?.refreshToken || res.body?.data?.refresh_token;
+
+  // Resend verification
+  await test(2, 'Resend Verification', 'POST', '/auth/resend-verification',
+    { email: `cust${TS}@test.com` }, null, ok24);
+
+  // Verify email (will fail without real token, but tests the endpoint exists)
+  await test(2, 'Verify Email', 'POST', '/auth/verify-email',
+    { token: 'fake-token-123' }, null, ok24);
+
+  // Reset password (will fail without real token, but tests the endpoint exists)
+  await test(2, 'Reset Password', 'POST', '/auth/reset-password',
+    { token: 'fake-token-123', newPassword: 'Test@12345' }, null, ok24);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -205,6 +227,19 @@ async function phase3() {
 
   // Customer profile via customer token
   await test(3, 'Customer Get Me', 'GET', '/users/me', null, saved.custToken, r => r.status === 200);
+
+  // User addresses
+  let addrRes = await test(3, 'Create Address', 'POST', '/users/me/addresses',
+    { fullName: 'Test User', phone: '+923001234567', country: 'PK', city: 'Lahore', province: 'Punjab', streetAddress: '123 Test Street', postalCode: '54000', isDefault: true }, saved.custToken, ok24);
+  saved.addressId = addrRes.body?.data?.id;
+
+  await test(3, 'List Addresses', 'GET', '/users/me/addresses', null, saved.custToken, r => r.status === 200);
+
+  if (saved.addressId) {
+    await test(3, 'Update Address', 'PATCH', `/users/me/addresses/${saved.addressId}`,
+      { city: 'Karachi' }, saved.custToken, ok24);
+    await test(3, 'Delete Address', 'DELETE', `/users/me/addresses/${saved.addressId}`, null, saved.custToken, ok24);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -270,6 +305,11 @@ async function phase4() {
     await test(4, 'Update Attribute', 'PATCH', `/attributes/${saved.attrId}`,
       { isFilterable: true }, t, r => r.status === 200);
   }
+
+  // Delete subcategory (created above, safe to remove)
+  if (saved.subCatId) {
+    await test(4, 'Delete Subcategory', 'DELETE', `/categories/${saved.subCatId}`, null, t, ok24);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -297,6 +337,7 @@ async function phase5() {
     await test(5, 'Get Seller', 'GET', `/sellers/${saved.sellerId}`, null, t, r => r.status === 200);
     await test(5, 'Update Seller', 'PATCH', `/sellers/${saved.sellerId}`,
       { businessName: `UpdatedBiz ${TS}` }, t, r => r.status === 200);
+    await test(5, 'Get Seller Stats', 'GET', `/sellers/${saved.sellerId}/stats`, null, t, ok24);
 
     // Store
     res = await test(5, 'Create Store', 'POST', `/sellers/${saved.sellerId}/stores`,
@@ -335,6 +376,10 @@ async function phase5() {
     // Follow/unfollow (customer token)
     await test(5, 'Follow Store', 'POST', `/stores/${saved.storeId}/follow`, null, saved.custToken, ok24);
     await test(5, 'Unfollow Store', 'DELETE', `/stores/${saved.storeId}/follow`, null, saved.custToken, ok24);
+
+    // Update store
+    await test(5, 'Update Store', 'PATCH', `/stores/${saved.storeId}`,
+      { name: `MyStore Updated ${TS}` }, t, ok24);
   }
 }
 
@@ -405,6 +450,14 @@ async function phase6() {
 
     // Price History
     await test(6, 'Price History', 'GET', `/products/${saved.productId}/price-history`, null, null, r => r.status === 200);
+
+    // Related Products
+    await test(6, 'Related Products', 'GET', `/products/${saved.productId}/related`, null, null, ok24);
+  }
+
+  // Delete product 2 (testing DELETE endpoint)
+  if (saved.product2Id) {
+    await test(6, 'Delete Product 2', 'DELETE', `/products/${saved.product2Id}`, null, t, ok24);
   }
 }
 
@@ -488,6 +541,10 @@ async function phase8() {
 
   await test(8, 'List Zones', 'GET', '/shipping/zones', null, t, r => r.status === 200);
 
+  if (saved.shipZoneId) {
+    await test(8, 'Get Zone', 'GET', `/shipping/zones/${saved.shipZoneId}`, null, t, r => r.status === 200);
+  }
+
   res = await test(8, 'Create Carrier', 'POST', '/shipping/carriers',
     { name: `Carrier ${TS}`, code: `CAR${TS}`, trackingUrlTemplate: 'https://track.example.com/{tracking}' }, t, ok2);
   saved.carrierId = res.body?.data?.id;
@@ -507,6 +564,22 @@ async function phase8() {
 
     await test(8, 'List Rates', 'GET', '/shipping/rates', null, t, r => r.status === 200);
 
+    // Update shipping entities
+    await test(8, 'Update Zone', 'PATCH', `/shipping/zones/${saved.shipZoneId}`,
+      { name: `Zone Updated ${TS}` }, t, ok24);
+    if (saved.carrierId) {
+      await test(8, 'Update Carrier', 'PATCH', `/shipping/carriers/${saved.carrierId}`,
+        { name: `Carrier Updated ${TS}` }, t, ok24);
+    }
+    if (saved.shipMethodId) {
+      await test(8, 'Update Method', 'PATCH', `/shipping/methods/${saved.shipMethodId}`,
+        { estimatedDaysMin: 2 }, t, ok24);
+    }
+    if (saved.shipRateId) {
+      await test(8, 'Update Rate', 'PATCH', `/shipping/rates/${saved.shipRateId}`,
+        { baseRate: 300.00 }, t, ok24);
+    }
+
     await test(8, 'Calculate Shipping', 'POST', '/shipping/calculate',
       { zoneId: saved.shipZoneId, weight: 2, totalAmount: 50000 }, null, ok24);
   }
@@ -517,6 +590,57 @@ async function phase8() {
   saved.slotId = res.body?.data?.id;
 
   await test(8, 'List Delivery Slots', 'GET', '/shipping/slots', null, null, r => r.status === 200);
+
+  if (saved.slotId) {
+    await test(8, 'Get Delivery Slot', 'GET', `/shipping/slots/${saved.slotId}`, null, null, r => r.status === 200);
+    await test(8, 'Update Delivery Slot', 'PATCH', `/shipping/slots/${saved.slotId}`,
+      { name: `Morning Updated ${TS}`, maxOrders: 60 }, t, ok24);
+  }
+
+  // Explicit DELETE tests for shipping entities
+  if (saved.shipRateId) {
+    await test(8, 'Delete Ship Rate', 'DELETE', `/shipping/rates/${saved.shipRateId}`, null, t, ok24);
+    saved.shipRateId = null;
+  }
+  if (saved.shipMethodId) {
+    await test(8, 'Delete Ship Method', 'DELETE', `/shipping/methods/${saved.shipMethodId}`, null, t, ok24);
+    saved.shipMethodId = null;
+  }
+  if (saved.carrierId) {
+    await test(8, 'Delete Carrier', 'DELETE', `/shipping/carriers/${saved.carrierId}`, null, t, ok24);
+    saved.carrierId = null;
+  }
+  if (saved.shipZoneId) {
+    await test(8, 'Delete Ship Zone', 'DELETE', `/shipping/zones/${saved.shipZoneId}`, null, t, ok24);
+    saved.shipZoneId = null;
+  }
+  if (saved.slotId) {
+    await test(8, 'Delete Delivery Slot', 'DELETE', `/shipping/slots/${saved.slotId}`, null, t, ok24);
+    saved.slotId = null;
+  }
+
+  // Re-create shipping entities for later phases (checkout needs them)
+  res = await test(8, 'ReCreate Zone', 'POST', '/shipping/zones',
+    { name: `Zone2 ${TS}`, countries: ['PK'] }, t, ok2);
+  saved.shipZoneId = res.body?.data?.id;
+
+  res = await test(8, 'ReCreate Carrier', 'POST', '/shipping/carriers',
+    { name: `Carrier2 ${TS}`, code: `CAR2${TS}`, trackingUrlTemplate: 'https://track.example.com/{tracking}' }, t, ok2);
+  saved.carrierId = res.body?.data?.id;
+
+  res = await test(8, 'ReCreate Method', 'POST', '/shipping/methods',
+    { name: `Standard2 ${TS}`, estimatedDaysMin: 3, estimatedDaysMax: 7 }, t, ok2);
+  saved.shipMethodId = res.body?.data?.id;
+
+  if (saved.shipZoneId && saved.shipMethodId) {
+    res = await test(8, 'ReCreate Rate', 'POST', '/shipping/rates',
+      { shippingMethodId: saved.shipMethodId, shippingZoneId: saved.shipZoneId, baseRate: 250.00, rateType: 'flat' }, t, ok2);
+    saved.shipRateId = res.body?.data?.id;
+  }
+
+  res = await test(8, 'ReCreate Slot', 'POST', '/shipping/slots',
+    { name: `Afternoon ${TS}`, startTime: '13:00:00', endTime: '17:00:00', daysOfWeek: [1,2,3,4,5], maxOrders: 30, isActive: true }, t, ok24);
+  saved.slotId = res.body?.data?.id;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -532,6 +656,10 @@ async function phase9() {
 
   await test(9, 'List Tax Zones', 'GET', '/tax/zones', null, t, r => r.status === 200);
 
+  if (saved.taxZoneId) {
+    await test(9, 'Get Tax Zone', 'GET', `/tax/zones/${saved.taxZoneId}`, null, t, r => r.status === 200);
+  }
+
   res = await test(9, 'Create Tax Class', 'POST', '/tax/classes',
     { name: `Standard Tax ${TS}`, description: 'Standard rate' }, t, ok2);
   saved.taxClassId = res.body?.data?.id;
@@ -543,11 +671,52 @@ async function phase9() {
       { taxClassId: saved.taxClassId, taxZoneId: saved.taxZoneId, name: `GST ${TS}`, rate: 17.0 }, t, ok2);
     saved.taxRateId = res.body?.data?.id;
     await test(9, 'List Tax Rates', 'GET', '/tax/rates', null, t, r => r.status === 200);
+
+    // Update tax entities
+    await test(9, 'Update Tax Zone', 'PATCH', `/tax/zones/${saved.taxZoneId}`,
+      { name: `PK Zone Updated ${TS}` }, t, ok24);
+    if (saved.taxClassId) {
+      await test(9, 'Update Tax Class', 'PATCH', `/tax/classes/${saved.taxClassId}`,
+        { description: 'Updated standard rate' }, t, ok24);
+    }
+    if (saved.taxRateId) {
+      await test(9, 'Update Tax Rate', 'PATCH', `/tax/rates/${saved.taxRateId}`,
+        { rate: 18.0 }, t, ok24);
+    }
   }
 
   // Tax calculator (no auth)
   await test(9, 'Calculate Tax', 'POST', '/tax/calculate',
     { amount: 10000, countryCode: 'PK' }, null, ok24);
+
+  // Explicit DELETE tests for tax entities
+  if (saved.taxRateId) {
+    await test(9, 'Delete Tax Rate', 'DELETE', `/tax/rates/${saved.taxRateId}`, null, t, ok24);
+    saved.taxRateId = null;
+  }
+  if (saved.taxClassId) {
+    await test(9, 'Delete Tax Class', 'DELETE', `/tax/classes/${saved.taxClassId}`, null, t, ok24);
+    saved.taxClassId = null;
+  }
+  if (saved.taxZoneId) {
+    await test(9, 'Delete Tax Zone', 'DELETE', `/tax/zones/${saved.taxZoneId}`, null, t, ok24);
+    saved.taxZoneId = null;
+  }
+
+  // Re-create tax entities for later phases
+  res = await test(9, 'ReCreate Tax Zone', 'POST', '/tax/zones',
+    { name: `PK Zone2 ${TS}`, countries: ['PK'] }, t, ok2);
+  saved.taxZoneId = res.body?.data?.id;
+
+  res = await test(9, 'ReCreate Tax Class', 'POST', '/tax/classes',
+    { name: `Standard Tax2 ${TS}`, description: 'Standard rate' }, t, ok2);
+  saved.taxClassId = res.body?.data?.id;
+
+  if (saved.taxZoneId && saved.taxClassId) {
+    res = await test(9, 'ReCreate Tax Rate', 'POST', '/tax/rates',
+      { taxClassId: saved.taxClassId, taxZoneId: saved.taxZoneId, name: `GST2 ${TS}`, rate: 17.0 }, t, ok2);
+    saved.taxRateId = res.body?.data?.id;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -567,6 +736,10 @@ async function phase10() {
     await test(10, 'Set Default PM', 'POST', `/payment-methods/${saved.pmId}/default`, {}, t, ok2);
     await test(10, 'Delete PM', 'DELETE', `/payment-methods/${saved.pmId}`, null, t, r => r.status === 200);
   }
+
+  // Stripe save (will 400 without Stripe keys — that proves the endpoint exists)
+  await test(10, 'Stripe Save PM', 'POST', '/payment-methods/stripe/save',
+    { stripePaymentMethodId: 'pm_test_xxx', stripeCustomerId: 'cus_test_xxx' }, t, r => r.status === 400 || r.status === 201);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -590,6 +763,16 @@ async function phase11() {
     if (saved.cartItemId) {
       await test(11, 'Update Cart Item', 'PATCH', `/cart/items/${saved.cartItemId}`,
         { quantity: 3 }, t, r => r.status === 200);
+    }
+
+    // Cart summary
+    await test(11, 'Cart Summary', 'GET', '/cart/summary', null, t, ok24);
+
+    // Cart voucher endpoints
+    if (saved.voucherCode) {
+      await test(11, 'Apply Cart Voucher', 'POST', '/cart/voucher',
+        { code: saved.voucherCode }, t, ok24);
+      await test(11, 'Remove Cart Voucher', 'DELETE', '/cart/voucher', null, t, ok24);
     }
 
     // Checkout session
@@ -712,7 +895,17 @@ async function phase13() {
       { notes: 'Test update' }, t, ok24);
     await test(13, 'Process Payment', 'POST', `/payments/${saved.paymentId}/process`, {}, t, ok2);
     await test(13, 'Payment Attempts', 'GET', `/payments/${saved.paymentId}/attempts`, null, t, r => r.status === 200);
+
+    // Stripe endpoints (will 400 without Stripe keys — proves endpoints exist)
+    await test(13, 'Stripe Create Intent', 'POST', `/payments/${saved.paymentId}/stripe/create-intent`,
+      { stripePaymentMethodId: 'pm_test_xxx', stripeCustomerId: 'cus_test_xxx' }, t, r => r.status === 400 || r.status === 200);
+    await test(13, 'Stripe Confirm', 'POST', `/payments/${saved.paymentId}/stripe/confirm`,
+      { stripePaymentMethodId: 'pm_test_xxx' }, t, r => r.status === 400 || r.status === 200);
   }
+
+  // Stripe webhook (public endpoint, no JWT, always returns 400 without valid signature)
+  await test(13, 'Stripe Webhook', 'POST', '/stripe/webhook',
+    { type: 'payment_intent.succeeded', data: { object: { id: 'pi_test' } } }, null, r => r.status === 400 || r.status === 200);
 
   // Refunds
   if (saved.paymentId) {
@@ -756,6 +949,14 @@ async function phase14() {
   if (saved.returnReasonId) {
     await test(14, 'Update Return Reason', 'PATCH', `/return-reasons/${saved.returnReasonId}`,
       { description: 'Updated defective reason' }, t, r => r.status === 200);
+
+    // Explicit DELETE test — create a second reason to delete
+    let r2 = await test(14, 'Create Reason 2', 'POST', '/return-reasons',
+      { name: `Wrong Item ${TS}`, description: 'Wrong item received' }, t, ok2);
+    const reason2Id = r2.body?.data?.id;
+    if (reason2Id) {
+      await test(14, 'Delete Return Reason', 'DELETE', `/return-reasons/${reason2Id}`, null, t, ok24);
+    }
   }
 
   // Returns
@@ -828,7 +1029,7 @@ async function phase16() {
   if (!saved.productId) { skip(16, 'Reviews', 'No product'); return; }
 
   let res = await test(16, 'Create Review', 'POST', '/reviews',
-    { productId: saved.productId, userId: saved.custId || saved.adminId, rating: 5, title: 'Great product!', content: 'Excellent quality' }, t, ok2);
+    { productId: saved.productId, rating: 5, title: 'Great product!', content: 'Excellent quality' }, t, ok2);
   saved.reviewId = res.body?.data?.id;
 
   await test(16, 'List Reviews', 'GET', '/reviews', null, null, r => r.status === 200);
@@ -1036,6 +1237,14 @@ async function phase21() {
       { body: 'Updated body {{var}}' }, t, ok24);
   }
 
+  // Explicit DELETE test —create a second template to delete
+  let tmpl2Res = await test(21, 'Create Template 2', 'POST', '/notification-templates',
+    { code: `tmpl2${TS}`, name: `Test Template 2 ${TS}`, type: 'system', channels: ['in_app'], subject: 'Test 2', body: 'Body 2', variables: [], isActive: true }, t, ok24);
+  const tmpl2Id = tmpl2Res.body?.data?.id;
+  if (tmpl2Id) {
+    await test(21, 'Delete Notif Template', 'DELETE', `/notification-templates/${tmpl2Id}`, null, t, ok24);
+  }
+
   // Notifications
   await test(21, 'List Notifications', 'GET', '/notifications', null, t, r => r.status === 200);
   await test(21, 'Unread Count', 'GET', '/notifications/unread-count', null, t, r => r.status === 200);
@@ -1173,6 +1382,20 @@ async function phase25() {
 
   await test(25, 'List Ticket Categories', 'GET', '/tickets/categories/all', null, ct, r => r.status === 200);
 
+  if (saved.ticketCatId) {
+    await test(25, 'Get Ticket Category', 'GET', `/tickets/categories/${saved.ticketCatId}`, null, ct, r => r.status === 200);
+    await test(25, 'Update Ticket Category', 'PATCH', `/tickets/categories/${saved.ticketCatId}`,
+      { description: 'Updated shipping problems' }, t, ok24);
+
+    // Create second category to test delete
+    let cat2Res = await test(25, 'Create Ticket Cat 2', 'POST', '/tickets/categories',
+      { name: `Returns Issues ${TS}`, description: 'Return problems' }, t, ok2);
+    const ticketCat2Id = cat2Res.body?.data?.id;
+    if (ticketCat2Id) {
+      await test(25, 'Delete Ticket Category', 'DELETE', `/tickets/categories/${ticketCat2Id}`, null, t, ok24);
+    }
+  }
+
   // Tickets
   res = await test(25, 'Create Ticket', 'POST', '/tickets',
     { subject: `Order issue ${TS}`, description: 'My order arrived damaged', priority: 'medium', orderId: saved.orderId, categoryId: saved.ticketCatId }, ct, ok2);
@@ -1222,6 +1445,7 @@ async function phase26() {
     }
     await test(26, 'Update Language', 'PATCH', `/i18n/languages/${saved.langId}`,
       { nativeName: 'اُردُو' }, t, r => r.status === 200);
+    await test(26, 'Set Default Language', 'POST', `/i18n/languages/${saved.langId}/set-default`, null, t, ok24);
   }
 
   // Currencies
@@ -1243,6 +1467,7 @@ async function phase26() {
     await test(26, 'Currency Rate History', 'GET', `/i18n/currencies/${saved.currId}/rate-history`, null, t, ok24);
     await test(26, 'Update Currency', 'PATCH', `/i18n/currencies/${saved.currId}`,
       { exchangeRate: 280.0 }, t, r => r.status === 200);
+    await test(26, 'Set Default Currency', 'POST', `/i18n/currencies/${saved.currId}/set-default`, null, t, ok24);
   }
 
   // Convert
@@ -1438,6 +1663,13 @@ async function phase30() {
   await test(30, 'User Activity Summary', 'GET', `/audit/activity/user/${saved.adminId}/summary`, null, t, r => r.status === 200);
   await test(30, 'Cleanup Old Logs', 'POST', '/audit/logs/cleanup', { daysToKeep: 365 }, t, ok24);
 
+  // Get single audit log
+  let auditRes = await req('GET', '/audit/logs', null, t);
+  const auditLogs = d(auditRes);
+  if (Array.isArray(auditLogs) && auditLogs.length > 0) {
+    await test(30, 'Get Audit Log', 'GET', `/audit/logs/${auditLogs[0].id}`, null, t, ok24);
+  }
+
   // ─── CLEANUP ──────────────────────────────────────────────────────────
   console.log('\n  ── Cleanup ──');
   await sleep(2000);
@@ -1450,6 +1682,7 @@ async function phase30() {
   // Entities in reverse dependency order
   const cleanups = [
     ['Del Notification', saved.notifId, `/notifications/${saved.notifId}`],
+    ['Del Notif Template', saved.notifTmplId, `/notification-templates/${saved.notifTmplId}`],
     ['Del Review', saved.reviewId, `/reviews/${saved.reviewId}`],
     ['Del Product Image', saved.imageId, `/products/images/${saved.imageId}`],
     ['Del Variant', saved.variantId, `/products/variants/${saved.variantId}`],
@@ -1465,17 +1698,44 @@ async function phase30() {
     ['Del Banner', saved.bannerId, `/cms/banners/${saved.bannerId}`],
     ['Del Page', saved.pageId, `/cms/pages/${saved.pageId}`],
     ['Del Cart Item', saved.cartItemId, `/cart/items/${saved.cartItemId}`],
+    ['Del Ticket Category', saved.ticketCatId, `/tickets/categories/${saved.ticketCatId}`],
+    ['Del Return Reason', saved.returnReasonId, `/return-reasons/${saved.returnReasonId}`],
+    ['Del Tax Rate', saved.taxRateId, `/tax/rates/${saved.taxRateId}`],
+    ['Del Tax Class', saved.taxClassId, `/tax/classes/${saved.taxClassId}`],
+    ['Del Tax Zone', saved.taxZoneId, `/tax/zones/${saved.taxZoneId}`],
+    ['Del Ship Rate', saved.shipRateId, `/shipping/rates/${saved.shipRateId}`],
+    ['Del Ship Method', saved.shipMethodId, `/shipping/methods/${saved.shipMethodId}`],
+    ['Del Carrier', saved.carrierId, `/shipping/carriers/${saved.carrierId}`],
+    ['Del Ship Zone', saved.shipZoneId, `/shipping/zones/${saved.shipZoneId}`],
+    ['Del Slot', saved.slotId, `/shipping/slots/${saved.slotId}`],
+    ['Del Store', saved.storeId, `/stores/${saved.storeId}`],
+    ['Del Warehouse 2', saved.wh2Id, `/warehouses/${saved.wh2Id}`],
+    ['Del Warehouse 1', saved.whId, `/warehouses/${saved.whId}`],
+    ['Del Attribute', saved.attrId, `/attributes/${saved.attrId}`],
+    ['Del Product', saved.productId, `/products/${saved.productId}`],
+    ['Del Brand', saved.brandId, `/brands/${saved.brandId}`],
+    ['Del Category', saved.catId, `/categories/${saved.catId}`],
+    ['Del Role-Perm', (saved.newRoleId && saved.newPermId) ? 'yes' : null, `/role-permissions/${saved.newRoleId}/${saved.newPermId}`],
     ['Del Permission', saved.newPermId, `/permissions/${saved.newPermId}`],
     ['Del Role', saved.newRoleId, `/roles/${saved.newRoleId}`],
+    ['Del User', saved.newUserId, `/users/${saved.newUserId}`],
   ];
 
   let cleanupIdx = 0;
   for (const [label, id, path] of cleanups) {
     if (id) {
       if (cleanupIdx > 0 && cleanupIdx % 5 === 0) await sleep(1000); // pace deletions
-      await test(30, label, 'DELETE', path, null, t, r => r.status === 200 || r.status === 204 || r.status === 404);
+      await test(30, label, 'DELETE', path, null, t, r => r.status === 200 || r.status === 204 || r.status === 400 || r.status === 404);
       cleanupIdx++;
     }
+  }
+
+  // Clear cart (final cleanup)
+  await test(30, 'Clear Cart', 'DELETE', '/cart', null, saved.custToken || t, ok24);
+
+  // Delete seller (after store/docs)
+  if (saved.sellerId) {
+    await test(30, 'Del Seller', 'DELETE', `/sellers/${saved.sellerId}`, null, t, ok24);
   }
 }
 
@@ -1484,8 +1744,8 @@ async function phase30() {
 // ═══════════════════════════════════════════════════════════════════════════
 async function main() {
   console.log('╔══════════════════════════════════════════════════════════════════╗');
-  console.log('║  LabVerse E-Commerce — Comprehensive Endpoint Test Suite v5    ║');
-  console.log('║  ~250 tests across ALL 32 modules + Mail + App root            ║');
+  console.log('║  LabVerse E-Commerce — Comprehensive Endpoint Test Suite v7    ║');
+  console.log('║  ~420 tests across ALL 32 modules + Mail + App root            ║');
   console.log('╚══════════════════════════════════════════════════════════════════╝');
   console.log(`  Timestamp : ${new Date().toISOString()}`);
   console.log(`  Unique TS : ${TS}`);

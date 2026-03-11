@@ -10,6 +10,7 @@ import {
   UpdateTicketDto,
   CreateTicketMessageDto,
   CreateTicketCategoryDto,
+  UpdateTicketCategoryDto,
 } from './dto';
 import { TicketStatus, TicketPriority } from '@common/enums';
 import { MailService } from '../../common/modules/mail/mail.service';
@@ -197,6 +198,30 @@ export class TicketsService {
     Object.assign(category, dto);
     const saved = await this.categoryRepository.save(category);
     return { success: true, message: 'Category created', data: saved };
+  }
+
+  async getCategory(id: string): Promise<ServiceResponse<TicketCategory>> {
+    const category = await this.categoryRepository.findOne({ where: { id } });
+    if (!category) throw new NotFoundException('Ticket category not found');
+    return { success: true, message: 'Category retrieved', data: category };
+  }
+
+  async updateCategory(
+    id: string,
+    dto: UpdateTicketCategoryDto,
+  ): Promise<ServiceResponse<TicketCategory>> {
+    const category = await this.categoryRepository.findOne({ where: { id } });
+    if (!category) throw new NotFoundException('Ticket category not found');
+    Object.assign(category, dto);
+    const updated = await this.categoryRepository.save(category);
+    return { success: true, message: 'Category updated', data: updated };
+  }
+
+  async deleteCategory(id: string): Promise<ServiceResponse<void>> {
+    const category = await this.categoryRepository.findOne({ where: { id } });
+    if (!category) throw new NotFoundException('Ticket category not found');
+    await this.categoryRepository.remove(category);
+    return { success: true, message: 'Category deleted' };
   }
 
   private async generateTicketNumber(): Promise<string> {

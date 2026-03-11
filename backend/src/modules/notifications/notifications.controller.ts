@@ -148,4 +148,13 @@ export class NotificationTemplatesController extends BaseController {
       this.notificationsService.updateTemplate(id, dto),
     );
   }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete notification template' })
+  @Permissions('notifications.delete')
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.handleAsyncOperation(
+      this.notificationsService.deleteTemplate(id),
+    );
+  }
 }

@@ -163,4 +163,11 @@ export class NotificationsService {
     const updated = await this.templateRepository.save(template);
     return { success: true, message: 'Template updated', data: updated };
   }
+
+  async deleteTemplate(id: string): Promise<ServiceResponse<void>> {
+    const template = await this.templateRepository.findOne({ where: { id } });
+    if (!template) throw new NotFoundException('Template not found');
+    await this.templateRepository.remove(template);
+    return { success: true, message: 'Template deleted' };
+  }
 }

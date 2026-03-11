@@ -5,7 +5,7 @@ import { GlobalValidationPipe } from './common/pipes/global-validation.pipe';
 // import { SecurityConfig } from './config/security.config';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import compression from 'compression';
+import * as compression from 'compression';
 import * as express from 'express';
 
 function getAllowedOrigins() {

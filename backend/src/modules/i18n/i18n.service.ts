@@ -84,7 +84,7 @@ export class I18nService {
   }
 
   async setDefaultLanguage(id: string): Promise<ServiceResponse<Language>> {
-    await this.languageRepository.update({}, { isDefault: false });
+    await this.languageRepository.update({ isDefault: true }, { isDefault: false });
     const language = await this.languageRepository.findOne({ where: { id } });
     if (!language) throw new NotFoundException('Language not found');
     language.isDefault = true;
@@ -153,7 +153,7 @@ export class I18nService {
   }
 
   async setDefaultCurrency(id: string): Promise<ServiceResponse<Currency>> {
-    await this.currencyRepository.update({}, { isDefault: false });
+    await this.currencyRepository.update({ isDefault: true }, { isDefault: false });
     const currency = await this.currencyRepository.findOne({ where: { id } });
     if (!currency) throw new NotFoundException('Currency not found');
     currency.isDefault = true;

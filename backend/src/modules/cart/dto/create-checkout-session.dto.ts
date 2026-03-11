@@ -120,6 +120,12 @@ export class CreateCheckoutSessionDto {
   @IsString()
   ipAddress?: string;
 
+  @ApiPropertyOptional({ description: 'Session token' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  sessionToken?: string;
+
   @ApiPropertyOptional({ description: 'Session expiration date' })
   @IsOptional()
   @IsDateString()

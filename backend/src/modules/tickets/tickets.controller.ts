@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -21,6 +22,7 @@ import {
   UpdateTicketDto,
   CreateTicketMessageDto,
   CreateTicketCategoryDto,
+  UpdateTicketCategoryDto,
 } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
@@ -148,5 +150,30 @@ export class TicketsController extends BaseController {
   @Permissions('tickets.create')
   createCategory(@Body() dto: CreateTicketCategoryDto) {
     return this.handleAsyncOperation(this.ticketsService.createCategory(dto));
+  }
+
+  @Get('categories/:id')
+  @ApiOperation({ summary: 'Get ticket category by ID' })
+  getCategory(@Param('id', ParseUUIDPipe) id: string) {
+    return this.handleAsyncOperation(this.ticketsService.getCategory(id));
+  }
+
+  @Patch('categories/:id')
+  @UseGuards(PermissionsGuard)
+  @ApiOperation({ summary: 'Update ticket category' })
+  @Permissions('tickets.update')
+  updateCategory(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTicketCategoryDto,
+  ) {
+    return this.handleAsyncOperation(this.ticketsService.updateCategory(id, dto));
+  }
+
+  @Delete('categories/:id')
+  @UseGuards(PermissionsGuard)
+  @ApiOperation({ summary: 'Delete ticket category' })
+  @Permissions('tickets.delete')
+  deleteCategory(@Param('id', ParseUUIDPipe) id: string) {
+    return this.handleAsyncOperation(this.ticketsService.deleteCategory(id));
   }
 }

@@ -152,6 +152,13 @@ export class TaxClassesController extends BaseController {
   ) {
     return this.handleAsyncOperation(this.taxService.updateClass(id, dto));
   }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete tax class' })
+  @Permissions('tax.delete')
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.handleAsyncOperation(this.taxService.deleteClass(id));
+  }
 }
 
 @ApiTags('Tax Calculator')

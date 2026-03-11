@@ -261,6 +261,13 @@ export class ReturnsService {
     };
   }
 
+  async deleteReason(id: string): Promise<ServiceResponse<void>> {
+    const reason = await this.reasonRepository.findOne({ where: { id } });
+    if (!reason) throw new NotFoundException('Return reason not found');
+    await this.reasonRepository.remove(reason);
+    return { success: true, message: 'Return reason deleted' };
+  }
+
   private async generateReturnNumber(): Promise<string> {
     const date = new Date();
     const prefix = `RET${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;

@@ -358,12 +358,25 @@ export class SellersService {
   async getSellerWallet(
     sellerId: string,
   ): Promise<ServiceResponse<SellerWallet>> {
-    const wallet = await this.walletRepository.findOne({
+    let wallet = await this.walletRepository.findOne({
       where: { sellerId },
     });
 
     if (!wallet) {
-      throw new NotFoundException('Wallet not found');
+      // Auto-create wallet for sellers that don't have one yet
+      const seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
+      if (!seller) {
+        throw new NotFoundException('Seller not found');
+      }
+      const newWallet = new SellerWallet();
+      Object.assign(newWallet, {
+        sellerId,
+        balance: 0,
+        pendingBalance: 0,
+        totalEarned: 0,
+        totalWithdrawn: 0,
+      });
+      wallet = await this.walletRepository.save(newWallet);
     }
 
     return {
@@ -376,10 +389,23 @@ export class SellersService {
   async getWalletTransactions(
     sellerId: string,
   ): Promise<ServiceResponse<WalletTransaction[]>> {
-    const wallet = await this.walletRepository.findOne({ where: { sellerId } });
+    let wallet = await this.walletRepository.findOne({ where: { sellerId } });
 
     if (!wallet) {
-      throw new NotFoundException('Wallet not found');
+      // Auto-create wallet for sellers that don't have one yet
+      const seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
+      if (!seller) {
+        throw new NotFoundException('Seller not found');
+      }
+      const newWallet = new SellerWallet();
+      Object.assign(newWallet, {
+        sellerId,
+        balance: 0,
+        pendingBalance: 0,
+        totalEarned: 0,
+        totalWithdrawn: 0,
+      });
+      wallet = await this.walletRepository.save(newWallet);
     }
 
     const transactions = await this.transactionRepository.find({

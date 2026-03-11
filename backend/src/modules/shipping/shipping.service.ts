@@ -17,6 +17,7 @@ import {
   CreateShippingRateDto,
   UpdateShippingRateDto,
   CreateDeliverySlotDto,
+  UpdateDeliverySlotDto,
 } from './dto';
 
 @Injectable()
@@ -167,6 +168,13 @@ export class ShippingService {
     };
   }
 
+  async removeCarrier(id: string): Promise<ServiceResponse<void>> {
+    const carrier = await this.carrierRepository.findOne({ where: { id } });
+    if (!carrier) throw new NotFoundException('Shipping carrier not found');
+    await this.carrierRepository.remove(carrier);
+    return { success: true, message: 'Shipping carrier deleted' };
+  }
+
   // ==================== SHIPPING RATES ====================
 
   async createRate(
@@ -209,6 +217,13 @@ export class ShippingService {
     return { success: true, message: 'Shipping rate updated', data: updated };
   }
 
+  async removeRate(id: string): Promise<ServiceResponse<void>> {
+    const rate = await this.rateRepository.findOne({ where: { id } });
+    if (!rate) throw new NotFoundException('Shipping rate not found');
+    await this.rateRepository.remove(rate);
+    return { success: true, message: 'Shipping rate deleted' };
+  }
+
   // ==================== DELIVERY SLOTS ====================
 
   async createSlot(
@@ -223,6 +238,30 @@ export class ShippingService {
   async getAvailableSlots(): Promise<ServiceResponse<DeliverySlot[]>> {
     const slots = await this.slotRepository.find({ where: { isActive: true } });
     return { success: true, message: 'Available slots retrieved', data: slots };
+  }
+
+  async findOneSlot(id: string): Promise<ServiceResponse<DeliverySlot>> {
+    const slot = await this.slotRepository.findOne({ where: { id } });
+    if (!slot) throw new NotFoundException('Delivery slot not found');
+    return { success: true, message: 'Delivery slot retrieved', data: slot };
+  }
+
+  async updateSlot(
+    id: string,
+    dto: UpdateDeliverySlotDto,
+  ): Promise<ServiceResponse<DeliverySlot>> {
+    const slot = await this.slotRepository.findOne({ where: { id } });
+    if (!slot) throw new NotFoundException('Delivery slot not found');
+    Object.assign(slot, dto);
+    const updated = await this.slotRepository.save(slot);
+    return { success: true, message: 'Delivery slot updated', data: updated };
+  }
+
+  async removeSlot(id: string): Promise<ServiceResponse<void>> {
+    const slot = await this.slotRepository.findOne({ where: { id } });
+    if (!slot) throw new NotFoundException('Delivery slot not found');
+    await this.slotRepository.remove(slot);
+    return { success: true, message: 'Delivery slot deleted' };
   }
 
   // ==================== SHIPPING CALCULATION ====================
