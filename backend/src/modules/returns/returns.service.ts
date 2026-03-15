@@ -1,318 +1,167 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ReturnRequest } from './entities/return-request.entity';
-import { ReturnReason } from './entities/return-reason.entity';
-import { ReturnImage } from './entities/return-image.entity';
-import { ReturnShipment } from './entities/return-shipment.entity';
-import { CreateReturnRequestDto } from './dto/create-return-request.dto';
-import { UpdateReturnRequestDto } from './dto/update-return-request.dto';
-import { CreateReturnReasonDto } from './dto/create-return-reason.dto';
-import { UpdateReturnReasonDto } from './dto/update-return-reason.dto';
-import { ServiceResponse } from '../../common/interfaces/service-response.interface';
-import { ReturnStatus } from '@common/enums';
+import { Repository, DataSource } from 'typeorm';
+import { Return } from './entities/return.entity';
+import { ReturnItem } from './entities/return-item.entity';
+import { Order } from '../orders/entities/order.entity';
+import { NotificationHelperService } from '../notifications/notification-helper.service';
 import { MailService } from '../../common/modules/mail/mail.service';
-import { PaymentsService } from '../payments/payments.service';
+import { enforceOwnerOrAdmin } from '../../common/guards/ownership.helper';
 
 @Injectable()
 export class ReturnsService {
   constructor(
-    @InjectRepository(ReturnRequest)
-    private returnRepository: Repository<ReturnRequest>,
-    @InjectRepository(ReturnReason)
-    private reasonRepository: Repository<ReturnReason>,
-    @InjectRepository(ReturnImage)
-    private imageRepository: Repository<ReturnImage>,
-    @InjectRepository(ReturnShipment)
-    private shipmentRepository: Repository<ReturnShipment>,
-    private readonly mailService: MailService,
-    private readonly paymentsService: PaymentsService,
+    @InjectRepository(Return) private returnRepo: Repository<Return>,
+    @InjectRepository(ReturnItem)
+    private returnItemRepo: Repository<ReturnItem>,
+    private dataSource: DataSource,
+    private notificationHelper: NotificationHelperService,
+    private mailService: MailService,
   ) {}
 
-  // ==================== RETURN REQUESTS ====================
-
-  async createReturn(
-    dto: CreateReturnRequestDto,
-    userId: string,
-  ): Promise<ServiceResponse<ReturnRequest>> {
-    const returnNumber = await this.generateReturnNumber();
-
-    const returnRequest = new ReturnRequest();
-    Object.assign(returnRequest, {
-      ...dto,
-      userId,
-      returnNumber,
-      status: ReturnStatus.REQUESTED,
+  async create(
+    dto: Partial<Return>,
+    items?: Partial<ReturnItem>[],
+  ): Promise<Return> {
+    dto.status = 'requested';
+    // Verify the order belongs to the caller
+    if (dto.orderId && dto.userId) {
+      const order = await this.dataSource
+        .getRepository(Order)
+        .findOne({ where: { id: dto.orderId as string } });
+      if (!order) throw new NotFoundException('Order not found');
+      if (order.userId !== dto.userId)
+        throw new BadRequestException('Order does not belong to you');
+    }
+    const saved = await this.dataSource.transaction(async (em) => {
+      const ret = em.create(Return, dto);
+      const savedRet = await em.save(ret);
+      if (items?.length) {
+        const returnItems = items.map((i) =>
+          em.create(ReturnItem, { ...i, returnId: savedRet.id }),
+        );
+        await em.save(returnItems);
+      }
+      return savedRet;
     });
 
-    const savedReturn = await this.returnRepository.save(returnRequest);
-
-    // Send return request emails (fire-and-forget)
-    this.sendReturnCreatedEmails(savedReturn).catch(() => {});
-
-    return {
-      success: true,
-      message: 'Return request created successfully',
-      data: savedReturn,
-    };
-  }
-
-  async findAll(options?: {
-    userId?: string;
-    sellerId?: string;
-    orderId?: string;
-    status?: ReturnStatus;
-    page?: number;
-    limit?: number;
-  }): Promise<ServiceResponse<ReturnRequest[]>> {
-    const query = this.returnRepository
-      .createQueryBuilder('return')
-      .leftJoinAndSelect('return.order', 'order')
-      .leftJoinAndSelect('return.reason', 'reason')
-      .orderBy('return.createdAt', 'DESC');
-
-    if (options?.userId) {
-      query.andWhere('return.userId = :userId', { userId: options.userId });
+    if (dto.userId) {
+      this.notificationHelper
+        .notify(dto.userId as string, 'RETURN_REQUESTED', {
+          orderId: (dto.orderId as string) || '',
+        })
+        .catch(() => {});
     }
 
-    if (options?.orderId) {
-      query.andWhere('return.orderId = :orderId', { orderId: options.orderId });
-    }
-
-    if (options?.status) {
-      query.andWhere('return.status = :status', { status: options.status });
-    }
-
-    const page = options?.page || 1;
-    const limit = options?.limit || 20;
-    query.skip((page - 1) * limit).take(limit);
-
-    const [returns, total] = await query.getManyAndCount();
-
-    return {
-      success: true,
-      message: 'Returns retrieved successfully',
-      data: returns,
-      meta: { total, page, limit },
-    };
-  }
-
-  async findOne(id: string): Promise<ServiceResponse<ReturnRequest>> {
-    const returnRequest = await this.returnRepository.findOne({
-      where: { id },
-      relations: ['order', 'reason', 'images', 'shipments'],
-    });
-
-    if (!returnRequest) {
-      throw new NotFoundException('Return request not found');
-    }
-
-    return {
-      success: true,
-      message: 'Return request retrieved successfully',
-      data: returnRequest,
-    };
-  }
-
-  async updateReturn(
-    id: string,
-    dto: UpdateReturnRequestDto,
-  ): Promise<ServiceResponse<ReturnRequest>> {
-    const returnRequest = await this.returnRepository.findOne({
-      where: { id },
-    });
-
-    if (!returnRequest) {
-      throw new NotFoundException('Return request not found');
-    }
-
-    Object.assign(returnRequest, dto);
-    const updated = await this.returnRepository.save(returnRequest);
-
-    return {
-      success: true,
-      message: 'Return request updated successfully',
-      data: updated,
-    };
-  }
-
-  async updateStatus(
-    id: string,
-    status: ReturnStatus,
-    notes?: string,
-  ): Promise<ServiceResponse<ReturnRequest>> {
-    const returnRequest = await this.returnRepository.findOne({
-      where: { id },
-    });
-
-    if (!returnRequest) {
-      throw new NotFoundException('Return request not found');
-    }
-
-    returnRequest.status = status;
-    if (notes) returnRequest.reviewerNotes = notes;
-
-    if (status === ReturnStatus.APPROVED) {
-      returnRequest.reviewedAt = new Date();
-    } else if (status === ReturnStatus.COMPLETED) {
-      returnRequest.completedAt = new Date();
-
-      // Auto-create refund when return is completed
-      if (returnRequest.refundAmount && returnRequest.orderId) {
-        this.paymentsService
-          .createRefund(
-            {
-              paymentId: returnRequest.orderId,
-              amount: Number(returnRequest.refundAmount),
-              reason: undefined,
-              reasonDetails: `Refund for return ${returnRequest.returnNumber}`,
-            },
-            'system',
+    // Send return request email
+    if (dto.userId) {
+      const ret2 = await this.returnRepo.findOne({
+        where: { id: saved.id },
+        relations: ['user'],
+      });
+      if (ret2?.user) {
+        this.mailService
+          .sendReturnRequestedEmail(
+            ret2.user.email,
+            ret2.user.firstName || 'Customer',
+            saved.id,
+            (dto.orderId as string) || '',
           )
           .catch(() => {});
       }
     }
 
-    const updated = await this.returnRepository.save(returnRequest);
-
-    // Send return status update email (fire-and-forget)
-    this.sendReturnStatusEmail(updated).catch(() => {});
-
-    return {
-      success: true,
-      message: `Return request ${status.toLowerCase()}`,
-      data: updated,
-    };
+    return saved;
   }
 
-  async addReturnImage(
-    returnId: string,
-    imageUrl: string,
-  ): Promise<ServiceResponse<ReturnImage>> {
-    const returnRequest = await this.returnRepository.findOne({
-      where: { id: returnId },
+  async findAll(options?: {
+    userId?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<Return[]> {
+    const where: any = {};
+    if (options?.userId) where.userId = options.userId;
+    if (options?.status) where.status = options.status;
+    const page = options?.page || 1;
+    const limit = options?.limit || 50;
+    return this.returnRepo.find({
+      where,
+      relations: ['order', 'user'],
+      take: limit,
+      skip: (page - 1) * limit,
     });
-
-    if (!returnRequest) {
-      throw new NotFoundException('Return request not found');
-    }
-
-    const image = new ReturnImage();
-    Object.assign(image, {
-      returnRequestId: returnId,
-      imageUrl,
-    });
-
-    const savedImage = await this.imageRepository.save(image);
-
-    return {
-      success: true,
-      message: 'Image added successfully',
-      data: savedImage,
-    };
   }
 
-  // ==================== RETURN REASONS ====================
-
-  async createReason(
-    dto: CreateReturnReasonDto,
-  ): Promise<ServiceResponse<ReturnReason>> {
-    const reason = new ReturnReason();
-    Object.assign(reason, dto);
-    const saved = await this.reasonRepository.save(reason);
-
-    return {
-      success: true,
-      message: 'Return reason created successfully',
-      data: saved,
-    };
-  }
-
-  async findAllReasons(): Promise<ServiceResponse<ReturnReason[]>> {
-    const reasons = await this.reasonRepository.find({
-      where: { isActive: true },
-      order: { sortOrder: 'ASC' },
-    });
-
-    return {
-      success: true,
-      message: 'Return reasons retrieved successfully',
-      data: reasons,
-    };
-  }
-
-  async updateReason(
+  async findOne(
     id: string,
-    dto: UpdateReturnReasonDto,
-  ): Promise<ServiceResponse<ReturnReason>> {
-    const reason = await this.reasonRepository.findOne({ where: { id } });
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<Return> {
+    const ret = await this.returnRepo.findOne({
+      where: { id },
+      relations: ['order', 'user'],
+    });
+    if (!ret) throw new NotFoundException('Return not found');
+    if (callerId) enforceOwnerOrAdmin(callerId, callerRole, ret.userId);
+    return ret;
+  }
 
-    if (!reason) {
-      throw new NotFoundException('Return reason not found');
+  async findItems(
+    returnId: string,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<ReturnItem[]> {
+    if (callerId) {
+      const ret = await this.returnRepo.findOne({ where: { id: returnId } });
+      if (!ret) throw new NotFoundException('Return not found');
+      enforceOwnerOrAdmin(callerId, callerRole, ret.userId);
     }
-
-    Object.assign(reason, dto);
-    const updated = await this.reasonRepository.save(reason);
-
-    return {
-      success: true,
-      message: 'Return reason updated successfully',
-      data: updated,
-    };
+    return this.returnItemRepo.find({
+      where: { returnId },
+      relations: ['orderItem'],
+    });
   }
 
-  async deleteReason(id: string): Promise<ServiceResponse<void>> {
-    const reason = await this.reasonRepository.findOne({ where: { id } });
-    if (!reason) throw new NotFoundException('Return reason not found');
-    await this.reasonRepository.remove(reason);
-    return { success: true, message: 'Return reason deleted' };
-  }
+  async updateStatus(
+    id: string,
+    status: string,
+    reviewedBy?: string,
+    refundAmount?: number,
+  ): Promise<Return> {
+    const ret = await this.findOne(id);
+    ret.status = status;
+    if (reviewedBy) ret.reviewedBy = reviewedBy;
+    if (refundAmount !== undefined) ret.refundAmount = refundAmount;
+    const saved = await this.returnRepo.save(ret);
 
-  private async generateReturnNumber(): Promise<string> {
-    const date = new Date();
-    const prefix = `RET${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
-    const count = await this.returnRepository.count();
-    return `${prefix}${String(count + 1).padStart(6, '0')}`;
-  }
-
-  private async sendReturnCreatedEmails(
-    returnRequest: ReturnRequest,
-  ): Promise<void> {
-    try {
-      const full = await this.returnRepository.findOne({
-        where: { id: returnRequest.id },
-        relations: ['user', 'order'],
-      });
-      if (!full?.user?.email) return;
-      await this.mailService.sendReturnRequestedEmail(
-        full.user.email,
-        full.user.name || 'Customer',
-        full.returnNumber,
-        full.order?.orderNumber || 'N/A',
-      );
-    } catch (_) {
-      /* silently ignore */
-    }
-  }
-
-  private async sendReturnStatusEmail(
-    returnRequest: ReturnRequest,
-  ): Promise<void> {
-    try {
-      const full = await this.returnRepository.findOne({
-        where: { id: returnRequest.id },
+    if (ret.userId) {
+      const templateKey =
+        status === 'approved' ? 'RETURN_APPROVED' : 'ORDER_STATUS_UPDATED';
+      this.notificationHelper
+        .notify(ret.userId, templateKey, { orderId: ret.orderId || '' })
+        .catch(() => {});
+      // Send return status update email
+      const withUser = await this.returnRepo.findOne({
+        where: { id },
         relations: ['user'],
       });
-      if (!full?.user?.email) return;
-      await this.mailService.sendReturnStatusUpdateEmail(
-        full.user.email,
-        full.user.name || 'Customer',
-        full.returnNumber,
-        full.status,
-        full.reviewerNotes,
-      );
-    } catch (_) {
-      /* silently ignore */
+      if (withUser?.user) {
+        this.mailService
+          .sendReturnStatusUpdateEmail(
+            withUser.user.email,
+            withUser.user.firstName || 'Customer',
+            id,
+            status,
+          )
+          .catch(() => {});
+      }
     }
+
+    return saved;
   }
 }

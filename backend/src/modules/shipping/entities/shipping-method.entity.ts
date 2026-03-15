@@ -2,57 +2,58 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  ManyToOne,
+  JoinColumn,
   CreateDateColumn,
-  OneToMany,
+  UpdateDateColumn,
 } from 'typeorm';
-import { ShippingRate } from './shipping-rate.entity';
+import { ShippingZone } from './shipping-zone.entity';
 
 @Entity('shipping_methods')
 export class ShippingMethod {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ name: 'zone_id', type: 'uuid' })
+  zoneId: string;
+
+  @ManyToOne(() => ShippingZone, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'zone_id' })
+  zone: ShippingZone;
+
+  @Column({ type: 'varchar', length: 200 })
   name: string;
 
-  @Column({ type: 'varchar', length: 50, unique: true })
-  code: string;
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  carrier: string | null;
+
+  @Column({ name: 'estimated_days_min', type: 'int', nullable: true })
+  estimatedDaysMin: number | null;
+
+  @Column({ name: 'estimated_days_max', type: 'int', nullable: true })
+  estimatedDaysMax: number | null;
+
+  @Column({ name: 'base_rate', type: 'numeric', precision: 14, scale: 4 })
+  baseRate: number;
+
+  @Column({ name: 'per_kg_rate', type: 'numeric', precision: 14, scale: 4 })
+  perKgRate: number;
 
   @Column({
-    type: 'enum',
-    enum: [
-      'standard',
-      'express',
-      'same_day',
-      'overnight',
-      'economy',
-      'freight',
-    ],
-    default: 'standard',
+    name: 'free_threshold',
+    type: 'numeric',
+    precision: 14,
+    scale: 4,
+    nullable: true,
   })
-  type: string;
-
-  @Column({ type: 'text', nullable: true })
-  description: string | null;
+  freeThreshold: number | null;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
-  @Column({ name: 'sort_order', type: 'integer', default: 0 })
-  sortOrder: number;
-
-  @Column({ name: 'estimated_days_min', type: 'integer', nullable: true })
-  estimatedDaysMin: number | null;
-
-  @Column({ name: 'estimated_days_max', type: 'integer', nullable: true })
-  estimatedDaysMax: number | null;
-
-  @OneToMany(() => ShippingRate, (rate) => rate.shippingMethod)
-  rates: ShippingRate[];
-
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
-  @Column({ name: 'updated_at', type: 'timestamptz', nullable: true })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
 }

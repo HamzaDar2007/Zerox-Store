@@ -1,2 +1,1 @@
-export * from './create-search-history.dto';
-export * from './create-product-recommendation.dto';
+export * from './create-search-query.dto';

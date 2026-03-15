@@ -1,27 +1,22 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, MaxLength } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateWishlistDto {
   @ApiPropertyOptional({
-    description: 'User ID (auto-resolved from auth if omitted)',
+    example: 'Birthday Wishlist',
+    description: 'Wishlist name',
+    maxLength: 200,
   })
   @IsOptional()
-  @IsUuidString()
-  userId?: string;
+  @IsString()
+  @MaxLength(200)
+  name?: string;
 
-  @ApiProperty({ description: 'Product ID' })
-  @IsNotEmpty()
-  @IsUuidString()
-  productId: string;
-
-  @ApiPropertyOptional({ description: 'Notify on sale', default: false })
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Whether the wishlist is publicly visible',
+  })
   @IsOptional()
   @IsBoolean()
-  notifyOnSale?: boolean;
-
-  @ApiPropertyOptional({ description: 'Notify on restock', default: false })
-  @IsOptional()
-  @IsBoolean()
-  notifyOnRestock?: boolean;
+  isPublic?: boolean;
 }

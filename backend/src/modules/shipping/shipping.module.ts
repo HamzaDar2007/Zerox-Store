@@ -1,19 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ShippingService } from './shipping.service';
-import {
-  ShippingZonesController,
-  ShippingMethodsController,
-  ShippingCarriersController,
-  ShippingRatesController,
-  ShippingCalculatorController,
-  DeliverySlotsController,
-} from './shipping.controller';
+import { ShippingController } from './shipping.controller';
 import { ShippingZone } from './entities/shipping-zone.entity';
+import { ShippingZoneCountry } from './entities/shipping-zone-country.entity';
 import { ShippingMethod } from './entities/shipping-method.entity';
-import { ShippingCarrier } from './entities/shipping-carrier.entity';
-import { ShippingRate } from './entities/shipping-rate.entity';
-import { DeliverySlot } from './entities/delivery-slot.entity';
+import { Shipment } from './entities/shipment.entity';
+import { ShipmentEvent } from './entities/shipment-event.entity';
 import { SharedModule } from '../shared/shared.module';
 import { GuardsModule } from '../../common/modules/guards.module';
 
@@ -21,22 +14,15 @@ import { GuardsModule } from '../../common/modules/guards.module';
   imports: [
     TypeOrmModule.forFeature([
       ShippingZone,
+      ShippingZoneCountry,
       ShippingMethod,
-      ShippingCarrier,
-      ShippingRate,
-      DeliverySlot,
+      Shipment,
+      ShipmentEvent,
     ]),
     SharedModule,
     GuardsModule,
   ],
-  controllers: [
-    ShippingZonesController,
-    ShippingMethodsController,
-    ShippingCarriersController,
-    ShippingRatesController,
-    ShippingCalculatorController,
-    DeliverySlotsController,
-  ],
+  controllers: [ShippingController],
   providers: [ShippingService],
   exports: [ShippingService, TypeOrmModule],
 })

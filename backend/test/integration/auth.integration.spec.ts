@@ -40,13 +40,9 @@ describe('Auth Integration Tests', () => {
   describe('/auth/login (POST)', () => {
     it('should login with valid credentials', () => {
       mockAuthService.login.mockResolvedValue({
-        success: true,
-        message: 'Login successful',
-        data: {
-          accessToken: 'mock-access-token',
-          refreshToken: 'mock-refresh-token',
-          user: { id: '1', email: 'admin@labverse.com', name: 'Admin' },
-        },
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+        user: { id: '1', email: 'admin@labverse.com' },
       });
 
       return request(app.getHttpServer())
@@ -55,12 +51,11 @@ describe('Auth Integration Tests', () => {
           email: 'admin_labverse@gmail.com',
           password: 'Admin@12345',
         })
-        .expect(200)
+        .expect(201)
         .expect((res) => {
-          expect(res.body).toHaveProperty('data');
-          expect(res.body.data).toHaveProperty('accessToken');
-          expect(res.body.data).toHaveProperty('refreshToken');
-          expect(res.body.data).toHaveProperty('user');
+          expect(res.body).toHaveProperty('accessToken');
+          expect(res.body).toHaveProperty('refreshToken');
+          expect(res.body).toHaveProperty('user');
         });
     });
 

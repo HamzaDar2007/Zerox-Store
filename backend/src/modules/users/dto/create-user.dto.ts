@@ -1,90 +1,69 @@
 import {
   IsEmail,
   IsString,
-  MinLength,
-  MaxLength,
   IsOptional,
-  IsEnum,
+  MaxLength,
+  MinLength,
   IsNotEmpty,
-  Matches,
-  IsDateString,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UserRole, Gender } from '@common/enums';
 
 export class CreateUserDto {
   @ApiProperty({
-    description: 'User name',
-    example: 'John Doe',
-    maxLength: 100,
-  })
-  @IsString({ message: 'Name must be a string' })
-  @IsNotEmpty({ message: 'Name is required' })
-  @MaxLength(100, { message: 'Name cannot exceed 100 characters' })
-  @Transform(({ value }) => value?.trim())
-  name: string;
-
-  @ApiProperty({
+    example: 'user@example.com',
     description: 'User email address',
-    example: 'john.doe@example.com',
-    maxLength: 150,
+    maxLength: 320,
   })
-  @IsEmail({}, { message: 'Please provide a valid email address' })
-  @IsNotEmpty({ message: 'Email is required' })
-  @MaxLength(150, { message: 'Email cannot exceed 150 characters' })
-  @Transform(({ value }) => value?.trim().toLowerCase())
+  @IsEmail()
+  @IsNotEmpty()
+  @MaxLength(320)
   email: string;
 
   @ApiProperty({
-    description:
-      'Password (must contain at least 1 uppercase, 1 lowercase, and 1 number)',
-    example: 'StrongPass123',
-    minLength: 8,
-    maxLength: 128,
+    example: 'StrongP@ss1',
+    description: 'Password (min 6 characters)',
+    minLength: 6,
   })
-  @IsString({ message: 'Password must be a string' })
-  @IsNotEmpty({ message: 'Password is required' })
-  @MinLength(8, { message: 'Password must be at least 8 characters long' })
-  @MaxLength(128, { message: 'Password cannot exceed 128 characters' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
-    message:
-      'Password must contain at least one uppercase letter, one lowercase letter, and one number.',
-  })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
   password: string;
 
   @ApiPropertyOptional({
-    description: 'Phone number',
     example: '+923001234567',
-    maxLength: 20,
+    description: 'Phone number',
+    maxLength: 30,
   })
   @IsOptional()
-  @IsString({ message: 'Phone must be a string' })
-  @MaxLength(20, { message: 'Phone cannot exceed 20 characters' })
+  @IsString()
+  @MaxLength(30)
   phone?: string;
 
   @ApiPropertyOptional({
-    description: 'User role',
-    enum: UserRole,
-    default: UserRole.CUSTOMER,
+    example: 'John',
+    description: 'First name',
+    maxLength: 100,
   })
   @IsOptional()
-  @IsEnum(UserRole, { message: 'Invalid user role' })
-  role?: UserRole;
+  @IsString()
+  @MaxLength(100)
+  firstName?: string;
 
   @ApiPropertyOptional({
-    description: 'Date of birth',
-    example: '1990-01-01',
+    example: 'Doe',
+    description: 'Last name',
+    maxLength: 100,
   })
   @IsOptional()
-  @IsDateString({}, { message: 'Invalid date format' })
-  dateOfBirth?: string;
+  @IsString()
+  @MaxLength(100)
+  lastName?: string;
 
   @ApiPropertyOptional({
-    description: 'Gender',
-    enum: Gender,
+    example: 'https://example.com/avatar.jpg',
+    description: 'Avatar image URL',
   })
   @IsOptional()
-  @IsEnum(Gender, { message: 'Invalid gender' })
-  gender?: Gender;
+  @IsString()
+  avatarUrl?: string;
 }

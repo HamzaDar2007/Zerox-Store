@@ -1,64 +1,62 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsString,
   IsOptional,
-  IsEnum,
-  IsInt,
-  IsNumber,
+  IsUUID,
   IsDateString,
-  Min,
-  Max,
+  MaxLength,
 } from 'class-validator';
-import { SubscriptionFrequency } from '@common/enums';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateSubscriptionDto {
-  @ApiProperty({ description: 'Product ID to subscribe to' })
-  @IsUuidString()
-  productId: string;
-
-  @ApiPropertyOptional({ description: 'Product variant ID' })
-  @IsOptional()
-  @IsUuidString()
-  variantId?: string;
-
-  @ApiPropertyOptional({ description: 'Quantity per delivery', default: 1 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  quantity?: number;
-
   @ApiProperty({
-    description: 'Delivery frequency',
-    enum: SubscriptionFrequency,
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Subscription plan UUID',
   })
-  @IsEnum(SubscriptionFrequency)
-  frequency: SubscriptionFrequency;
-
-  @ApiProperty({ description: 'Delivery address ID' })
-  @IsUuidString()
-  deliveryAddressId: string;
-
-  @ApiPropertyOptional({ description: 'Saved payment method ID' })
-  @IsOptional()
-  @IsUuidString()
-  paymentMethodId?: string;
-
-  @ApiProperty({ description: 'Unit price per item' })
-  @IsNumber()
-  @Min(0.01)
-  unitPrice: number;
+  @IsUUID()
+  planId: string;
 
   @ApiPropertyOptional({
-    description: 'Discount percentage (0-50)',
-    default: 0,
+    example: 'stripe',
+    description: 'Payment gateway',
+    maxLength: 50,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(50)
-  discountPercentage?: number;
+  @IsString()
+  @MaxLength(50)
+  gateway?: string;
 
-  @ApiProperty({ description: 'First delivery date (YYYY-MM-DD)' })
+  @ApiPropertyOptional({
+    example: 'sub_abc123',
+    description: 'Gateway subscription ID',
+  })
+  @IsOptional()
+  @IsString()
+  gatewaySubId?: string;
+
+  @ApiProperty({
+    example: '2024-07-01T00:00:00Z',
+    description: 'Current period start date',
+  })
   @IsDateString()
-  nextDeliveryDate: string;
+  currentPeriodStart: Date;
+
+  @ApiProperty({
+    example: '2024-08-01T00:00:00Z',
+    description: 'Current period end date',
+  })
+  @IsDateString()
+  currentPeriodEnd: Date;
+
+  @ApiPropertyOptional({
+    example: '2024-07-15T00:00:00Z',
+    description: 'Trial ends at',
+  })
+  @IsOptional()
+  @IsDateString()
+  trialEndsAt?: Date;
+
+  @ApiPropertyOptional({ example: null, description: 'Cancellation date' })
+  @IsOptional()
+  @IsDateString()
+  cancelledAt?: Date;
 }

@@ -13,9 +13,13 @@ WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
+COPY --from=build /app/package-lock.json ./
+RUN npm ci --omit=dev
 
 USER appuser
-EXPOSE 3001
+ENV PORT=3001
+EXPOSE ${PORT}
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- http://localhost:${PORT}/health || exit 1
 CMD ["node", "dist/main.js"]

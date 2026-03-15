@@ -1,564 +1,169 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Seller } from './entities/seller.entity';
 import { Store } from './entities/store.entity';
-import { SellerDocument } from './entities/seller-document.entity';
-import { SellerWallet } from './entities/seller-wallet.entity';
-import { WalletTransaction } from './entities/wallet-transaction.entity';
-import { SellerViolation } from './entities/seller-violation.entity';
-import { StoreFollower } from './entities/store-follower.entity';
-import { CreateSellerDto } from './dto/create-seller.dto';
-import { UpdateSellerDto } from './dto/update-seller.dto';
-import { CreateStoreDto } from './dto/create-store.dto';
-import { UpdateStoreDto } from './dto/update-store.dto';
-import { CreateSellerDocumentDto } from './dto/create-seller-document.dto';
-import { ServiceResponse } from '../../common/interfaces/service-response.interface';
-import { VerificationStatus } from '@common/enums';
+import { NotificationHelperService } from '../notifications/notification-helper.service';
+import { enforceOwnerOrAdmin } from '../../common/guards/ownership.helper';
 import { MailService } from '../../common/modules/mail/mail.service';
 
 @Injectable()
 export class SellersService {
   constructor(
-    @InjectRepository(Seller)
-    private sellerRepository: Repository<Seller>,
-    @InjectRepository(Store)
-    private storeRepository: Repository<Store>,
-    @InjectRepository(SellerDocument)
-    private documentRepository: Repository<SellerDocument>,
-    @InjectRepository(SellerWallet)
-    private walletRepository: Repository<SellerWallet>,
-    @InjectRepository(WalletTransaction)
-    private transactionRepository: Repository<WalletTransaction>,
-    @InjectRepository(SellerViolation)
-    private violationRepository: Repository<SellerViolation>,
-    @InjectRepository(StoreFollower)
-    private followerRepository: Repository<StoreFollower>,
-    private readonly mailService: MailService,
+    @InjectRepository(Seller) private sellerRepo: Repository<Seller>,
+    @InjectRepository(Store) private storeRepo: Repository<Store>,
+    private notificationHelper: NotificationHelperService,
+    private mailService: MailService,
   ) {}
 
-  // ==================== SELLER CRUD ====================
+  async createSeller(dto: Partial<Seller>): Promise<Seller> {
+    dto.status = dto.status || 'pending';
+    dto.commissionRate = dto.commissionRate ?? 10;
+    const seller = this.sellerRepo.create(dto);
+    return this.sellerRepo.save(seller);
+  }
 
-  async createSeller(
-    dto: CreateSellerDto,
-    userId: string,
-  ): Promise<ServiceResponse<Seller>> {
-    const existingSeller = await this.sellerRepository.findOne({
-      where: { userId },
+  private static readonly PUBLIC_SELLER_FIELDS: (keyof Seller)[] = [
+    'id',
+    'userId',
+    'displayName',
+    'status',
+    'user',
+  ];
+
+  async findAllSellers(page = 1, limit = 20): Promise<Partial<Seller>[]> {
+    const sellers = await this.sellerRepo.find({
+      relations: ['user'],
+      take: limit,
+      skip: (page - 1) * limit,
     });
+    return sellers.map((s) => this.stripSensitiveFields(s));
+  }
 
-    if (existingSeller) {
-      throw new ConflictException('User is already registered as a seller');
+  private stripSensitiveFields(seller: Seller): Partial<Seller> {
+    const safe: any = {};
+    for (const f of SellersService.PUBLIC_SELLER_FIELDS) {
+      if ((seller as any)[f] !== undefined) safe[f] = (seller as any)[f];
     }
-
-    const seller = new Seller();
-    Object.assign(seller, {
-      ...dto,
-      userId,
-      verificationStatus: VerificationStatus.PENDING,
-    });
-
-    const savedSeller = await this.sellerRepository.save(seller);
-
-    // Create default wallet for seller
-    const wallet = new SellerWallet();
-    Object.assign(wallet, {
-      sellerId: savedSeller.id,
-      balance: 0,
-      pendingBalance: 0,
-      totalEarned: 0,
-      totalWithdrawn: 0,
-    });
-    await this.walletRepository.save(wallet);
-
-    // Send seller application emails (fire-and-forget)
-    this.sendSellerRegistrationEmails(savedSeller).catch(() => {});
-
-    return {
-      success: true,
-      message: 'Seller registered successfully',
-      data: savedSeller,
-    };
+    if (safe.user) {
+      const { passwordHash, ...userSafe } = safe.user;
+      safe.user = userSafe;
+    }
+    return safe;
   }
 
-  async findAllSellers(): Promise<ServiceResponse<Seller[]>> {
-    const sellers = await this.sellerRepository.find({
-      relations: ['user', 'stores'],
-      order: { createdAt: 'DESC' },
-    });
-
-    return {
-      success: true,
-      message: 'Sellers retrieved successfully',
-      data: sellers,
-    };
-  }
-
-  async findOneSeller(id: string): Promise<ServiceResponse<Seller>> {
-    const seller = await this.sellerRepository.findOne({
+  private async findSellerEntity(id: string): Promise<Seller> {
+    const s = await this.sellerRepo.findOne({
       where: { id },
-      relations: ['user', 'stores', 'wallet', 'documents'],
+      relations: ['user'],
     });
-
-    if (!seller) {
-      throw new NotFoundException('Seller not found');
-    }
-
-    return {
-      success: true,
-      message: 'Seller retrieved successfully',
-      data: seller,
-    };
+    if (!s) throw new NotFoundException('Seller not found');
+    return s;
   }
 
-  async findSellerByUserId(userId: string): Promise<Seller | null> {
-    return this.sellerRepository.findOne({
-      where: { userId },
-      relations: ['stores', 'wallet'],
-    });
+  async findSeller(id: string): Promise<Partial<Seller>> {
+    const s = await this.findSellerEntity(id);
+    return this.stripSensitiveFields(s);
   }
 
   async updateSeller(
     id: string,
-    dto: UpdateSellerDto,
-  ): Promise<ServiceResponse<Seller>> {
-    const seller = await this.sellerRepository.findOne({ where: { id } });
+    dto: Partial<Seller>,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<Seller> {
+    const s = await this.findSellerEntity(id);
+    if (callerId) enforceOwnerOrAdmin(callerId, callerRole, s.userId);
+    Object.assign(s, dto);
+    const saved = await this.sellerRepo.save(s);
 
-    if (!seller) {
-      throw new NotFoundException('Seller not found');
+    if ((dto as any).status === 'approved' && s.userId) {
+      this.notificationHelper
+        .notify(s.userId, 'SELLER_APPROVED', {})
+        .catch(() => {});
+      // Send seller approved email
+      if (s.user?.email) {
+        this.mailService
+          .sendSellerVerificationEmail(
+            s.user.email,
+            s.user.firstName || s.displayName || 'Seller',
+            'approved',
+          )
+          .catch(() => {});
+      }
     }
 
-    Object.assign(seller, dto);
-    const updatedSeller = await this.sellerRepository.save(seller);
-
-    return {
-      success: true,
-      message: 'Seller updated successfully',
-      data: updatedSeller,
-    };
+    return saved;
   }
 
-  async removeSeller(id: string): Promise<ServiceResponse<void>> {
-    const seller = await this.sellerRepository.findOne({ where: { id } });
-
-    if (!seller) {
-      throw new NotFoundException('Seller not found');
-    }
-
-    await this.sellerRepository.remove(seller);
-
-    return {
-      success: true,
-      message: 'Seller deleted successfully',
-    };
+  async removeSeller(id: string): Promise<void> {
+    const s = await this.findSellerEntity(id);
+    await this.sellerRepo.remove(s);
   }
 
-  async verifySeller(
-    id: string,
-    status: VerificationStatus,
-    verifiedBy: string,
-    rejectionReason?: string,
-  ): Promise<ServiceResponse<Seller>> {
-    const seller = await this.sellerRepository.findOne({ where: { id } });
-
-    if (!seller) {
-      throw new NotFoundException('Seller not found');
-    }
-
-    seller.verificationStatus = status;
-    seller.verifiedBy = verifiedBy;
-
-    if (status === VerificationStatus.APPROVED) {
-      seller.verifiedAt = new Date();
-    } else if (status === VerificationStatus.REJECTED && rejectionReason) {
-      seller.rejectionReason = rejectionReason;
-    }
-
-    const updatedSeller = await this.sellerRepository.save(seller);
-
-    // Send seller verification email (fire-and-forget)
-    this.sendSellerVerificationNotification(updatedSeller).catch(() => {});
-
-    return {
-      success: true,
-      message: `Seller ${status.toLowerCase()} successfully`,
-      data: updatedSeller,
-    };
+  async createStore(dto: Partial<Store>): Promise<Store> {
+    const store = this.storeRepo.create(dto);
+    return this.storeRepo.save(store);
   }
 
-  // ==================== STORE CRUD ====================
-
-  async createStore(
-    sellerId: string,
-    dto: CreateStoreDto,
-  ): Promise<ServiceResponse<Store>> {
-    const seller = await this.sellerRepository.findOne({
-      where: { id: sellerId },
-    });
-
-    if (!seller) {
-      throw new NotFoundException('Seller not found');
-    }
-
-    const existingStore = await this.storeRepository.findOne({
-      where: { slug: dto.slug },
-    });
-
-    if (existingStore) {
-      throw new ConflictException('Store with this slug already exists');
-    }
-
-    const store = new Store();
-    Object.assign(store, {
-      ...dto,
-      sellerId,
-    });
-
-    const savedStore = await this.storeRepository.save(store);
-
-    return {
-      success: true,
-      message: 'Store created successfully',
-      data: savedStore,
-    };
+  async createStoreForUser(
+    userId: string,
+    dto: Partial<Store>,
+  ): Promise<Store> {
+    const seller = await this.sellerRepo.findOne({ where: { userId } });
+    if (!seller)
+      throw new NotFoundException('Seller profile not found for this user');
+    const store = this.storeRepo.create({ ...dto, sellerId: seller.id });
+    return this.storeRepo.save(store);
   }
 
-  async findAllStores(): Promise<ServiceResponse<Store[]>> {
-    const stores = await this.storeRepository.find({
+  async findAllStores(page = 1, limit = 20): Promise<Store[]> {
+    return this.storeRepo.find({
       relations: ['seller'],
-      order: { createdAt: 'DESC' },
+      take: limit,
+      skip: (page - 1) * limit,
     });
-
-    return {
-      success: true,
-      message: 'Stores retrieved successfully',
-      data: stores,
-    };
   }
 
-  async findOneStore(id: string): Promise<ServiceResponse<Store>> {
-    const store = await this.storeRepository.findOne({
+  async findStore(id: string): Promise<Store> {
+    const s = await this.storeRepo.findOne({
       where: { id },
       relations: ['seller'],
     });
-
-    if (!store) {
-      throw new NotFoundException('Store not found');
-    }
-
-    return {
-      success: true,
-      message: 'Store retrieved successfully',
-      data: store,
-    };
+    if (!s) throw new NotFoundException('Store not found');
+    return s;
   }
 
-  async findStoreBySlug(slug: string): Promise<ServiceResponse<Store>> {
-    const store = await this.storeRepository.findOne({
+  async findStoreBySlug(slug: string): Promise<Store> {
+    const s = await this.storeRepo.findOne({
       where: { slug },
       relations: ['seller'],
     });
-
-    if (!store) {
-      throw new NotFoundException('Store not found');
-    }
-
-    return {
-      success: true,
-      message: 'Store retrieved successfully',
-      data: store,
-    };
+    if (!s) throw new NotFoundException('Store not found');
+    return s;
   }
 
   async updateStore(
     id: string,
-    dto: UpdateStoreDto,
-  ): Promise<ServiceResponse<Store>> {
-    const store = await this.storeRepository.findOne({ where: { id } });
-
-    if (!store) {
-      throw new NotFoundException('Store not found');
-    }
-
-    Object.assign(store, dto);
-    const updatedStore = await this.storeRepository.save(store);
-
-    return {
-      success: true,
-      message: 'Store updated successfully',
-      data: updatedStore,
-    };
+    dto: Partial<Store>,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<Store> {
+    const s = await this.findStore(id);
+    if (callerId && s.seller)
+      enforceOwnerOrAdmin(callerId, callerRole, s.seller.userId);
+    Object.assign(s, dto);
+    return this.storeRepo.save(s);
   }
 
-  async removeStore(id: string): Promise<ServiceResponse<void>> {
-    const store = await this.storeRepository.findOne({ where: { id } });
-
-    if (!store) {
-      throw new NotFoundException('Store not found');
-    }
-
-    await this.storeRepository.remove(store);
-
-    return {
-      success: true,
-      message: 'Store deleted successfully',
-    };
-  }
-
-  // ==================== DOCUMENTS ====================
-
-  async addDocument(
-    sellerId: string,
-    dto: CreateSellerDocumentDto,
-  ): Promise<ServiceResponse<SellerDocument>> {
-    const seller = await this.sellerRepository.findOne({
-      where: { id: sellerId },
-    });
-
-    if (!seller) {
-      throw new NotFoundException('Seller not found');
-    }
-
-    const document = new SellerDocument();
-    Object.assign(document, {
-      ...dto,
-      sellerId,
-    });
-
-    const savedDocument = await this.documentRepository.save(document);
-
-    return {
-      success: true,
-      message: 'Document uploaded successfully',
-      data: savedDocument,
-    };
-  }
-
-  async getSellerDocuments(
-    sellerId: string,
-  ): Promise<ServiceResponse<SellerDocument[]>> {
-    const documents = await this.documentRepository.find({
-      where: { sellerId },
-      order: { createdAt: 'DESC' },
-    });
-
-    return {
-      success: true,
-      message: 'Documents retrieved successfully',
-      data: documents,
-    };
-  }
-
-  // ==================== WALLET ====================
-
-  async getSellerWallet(
-    sellerId: string,
-  ): Promise<ServiceResponse<SellerWallet>> {
-    let wallet = await this.walletRepository.findOne({
-      where: { sellerId },
-    });
-
-    if (!wallet) {
-      // Auto-create wallet for sellers that don't have one yet
-      const seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
-      if (!seller) {
-        throw new NotFoundException('Seller not found');
-      }
-      const newWallet = new SellerWallet();
-      Object.assign(newWallet, {
-        sellerId,
-        balance: 0,
-        pendingBalance: 0,
-        totalEarned: 0,
-        totalWithdrawn: 0,
-      });
-      wallet = await this.walletRepository.save(newWallet);
-    }
-
-    return {
-      success: true,
-      message: 'Wallet retrieved successfully',
-      data: wallet,
-    };
-  }
-
-  async getWalletTransactions(
-    sellerId: string,
-  ): Promise<ServiceResponse<WalletTransaction[]>> {
-    let wallet = await this.walletRepository.findOne({ where: { sellerId } });
-
-    if (!wallet) {
-      // Auto-create wallet for sellers that don't have one yet
-      const seller = await this.sellerRepository.findOne({ where: { id: sellerId } });
-      if (!seller) {
-        throw new NotFoundException('Seller not found');
-      }
-      const newWallet = new SellerWallet();
-      Object.assign(newWallet, {
-        sellerId,
-        balance: 0,
-        pendingBalance: 0,
-        totalEarned: 0,
-        totalWithdrawn: 0,
-      });
-      wallet = await this.walletRepository.save(newWallet);
-    }
-
-    const transactions = await this.transactionRepository.find({
-      where: { walletId: wallet.id },
-      order: { createdAt: 'DESC' },
-    });
-
-    return {
-      success: true,
-      message: 'Transactions retrieved successfully',
-      data: transactions,
-    };
-  }
-
-  // ==================== FOLLOWERS ====================
-
-  async followStore(
-    storeId: string,
-    userId: string,
-  ): Promise<ServiceResponse<StoreFollower>> {
-    const store = await this.storeRepository.findOne({
-      where: { id: storeId },
-    });
-
-    if (!store) {
-      throw new NotFoundException('Store not found');
-    }
-
-    const existingFollow = await this.followerRepository.findOne({
-      where: { storeId, userId },
-    });
-
-    if (existingFollow) {
-      throw new ConflictException('Already following this store');
-    }
-
-    const follower = new StoreFollower();
-    Object.assign(follower, {
-      storeId,
-      userId,
-    });
-
-    const savedFollower = await this.followerRepository.save(follower);
-
-    // Update follower count
-    await this.storeRepository.increment({ id: storeId }, 'totalFollowers', 1);
-
-    return {
-      success: true,
-      message: 'Store followed successfully',
-      data: savedFollower,
-    };
-  }
-
-  async unfollowStore(
-    storeId: string,
-    userId: string,
-  ): Promise<ServiceResponse<void>> {
-    const follower = await this.followerRepository.findOne({
-      where: { storeId, userId },
-    });
-
-    if (!follower) {
-      throw new NotFoundException('Not following this store');
-    }
-
-    await this.followerRepository.remove(follower);
-
-    // Update follower count
-    await this.storeRepository.decrement({ id: storeId }, 'totalFollowers', 1);
-
-    return {
-      success: true,
-      message: 'Store unfollowed successfully',
-    };
-  }
-
-  private async sendSellerRegistrationEmails(seller: Seller): Promise<void> {
-    try {
-      const full = await this.sellerRepository.findOne({
-        where: { id: seller.id },
-        relations: ['user'],
-      });
-      if (!full?.user?.email) return;
-      await this.mailService.sendSellerApplicationReceivedEmail(
-        full.user.email,
-        full.user.name || 'Seller',
-      );
-      this.mailService
-        .sendAdminNewSellerAlert(
-          full.businessName || full.user.name || 'Seller',
-          full.user.email,
-        )
-        .catch(() => {});
-    } catch (_) {
-      /* silently ignore */
-    }
-  }
-
-  private async sendSellerVerificationNotification(
-    seller: Seller,
+  async removeStore(
+    id: string,
+    callerId?: string,
+    callerRole?: string,
   ): Promise<void> {
-    try {
-      const full = await this.sellerRepository.findOne({
-        where: { id: seller.id },
-        relations: ['user'],
-      });
-      if (!full?.user?.email) return;
-      await this.mailService.sendSellerVerificationEmail(
-        full.user.email,
-        full.user.name || 'Seller',
-        full.verificationStatus,
-        full.rejectionReason,
-      );
-    } catch (_) {
-      /* silently ignore */
-    }
-  }
-
-  // ==================== ANALYTICS ====================
-
-  async getSellerStats(
-    sellerId: string,
-  ): Promise<ServiceResponse<Record<string, any>>> {
-    const seller = await this.sellerRepository.findOne({
-      where: { id: sellerId },
-    });
-    if (!seller) {
-      throw new NotFoundException('Seller not found');
-    }
-
-    const stores = await this.storeRepository.find({ where: { sellerId } });
-    const documents = await this.documentRepository.count({
-      where: { sellerId },
-    });
-    const wallet = await this.walletRepository.findOne({ where: { sellerId } });
-    const totalFollowers = stores.reduce(
-      (sum, s) => sum + (s.totalFollowers || 0),
-      0,
-    );
-
-    const stats = {
-      totalStores: stores.length,
-      totalDocuments: documents,
-      totalFollowers,
-      walletBalance: wallet ? Number(wallet.balance) : 0,
-      verificationStatus: seller.verificationStatus,
-    };
-
-    return {
-      success: true,
-      message: 'Seller stats retrieved successfully',
-      data: stats,
-    };
+    const s = await this.findStore(id);
+    if (callerId && s.seller)
+      enforceOwnerOrAdmin(callerId, callerRole, s.seller.userId);
+    await this.storeRepo.remove(s);
   }
 }

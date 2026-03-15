@@ -1,39 +1,37 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
+import { IsString, IsOptional, IsUUID, Length } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsOptional,
-  IsString,
-  MaxLength,
-  IsNumber,
-  Min,
-} from 'class-validator';
 
 export class CreateCartDto {
-  @ApiPropertyOptional({ description: 'User ID (for authenticated users)' })
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'User UUID',
+  })
   @IsOptional()
-  @IsUuidString()
+  @IsUUID()
   userId?: string;
 
-  @ApiPropertyOptional({ description: 'Session ID (for guest users)' })
+  @ApiPropertyOptional({
+    example: 'sess_abc123',
+    description: 'Session ID for guest carts',
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(255)
   sessionId?: string;
 
-  @ApiPropertyOptional({ description: 'Currency code', default: 'PKR' })
+  @ApiPropertyOptional({
+    example: 'PKR',
+    description: 'Currency code (ISO 3-letter)',
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(3)
-  currencyCode?: string;
+  @Length(3, 3)
+  currency?: string;
 
-  @ApiPropertyOptional({ description: 'Voucher ID for discount' })
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    description: 'Applied coupon UUID',
+  })
   @IsOptional()
-  @IsUuidString()
-  voucherId?: string;
-
-  @ApiPropertyOptional({ description: 'Discount amount', default: 0 })
-  @IsOptional()
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  discountAmount?: number;
+  @IsUUID()
+  couponId?: string;
 }

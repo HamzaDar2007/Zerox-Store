@@ -1,14 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsBoolean } from 'class-validator';
+import { PartialType } from '@nestjs/swagger';
+import { CreateWishlistDto } from './create-wishlist.dto';
 
-export class UpdateWishlistDto {
-  @ApiPropertyOptional({ description: 'Notify on sale' })
-  @IsOptional()
-  @IsBoolean()
-  notifyOnSale?: boolean;
-
-  @ApiPropertyOptional({ description: 'Notify on restock' })
-  @IsOptional()
-  @IsBoolean()
-  notifyOnRestock?: boolean;
-}
+export class UpdateWishlistDto extends PartialType(CreateWishlistDto) {}

@@ -2,95 +2,90 @@ import {
   Controller,
   Get,
   Post,
-  Body,
-  Patch,
-  Param,
+  Put,
   Delete,
-  UseGuards,
+  Body,
+  Param,
   Query,
+  UsePipes,
+  ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { PermissionsService } from './permissions.service';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Permissions } from '../../common/decorators/permissions.decorator';
 import { RoleEnum } from '../roles/role.enum';
-import { SecurityUtil } from '../../common/utils/security.util';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { BaseController } from '../../common/controllers/base.controller';
 
-@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
-@ApiTags('permissions')
+@ApiTags('Permissions')
 @Controller('permissions')
-export class PermissionsController extends BaseController {
-  constructor(private readonly permissionsService: PermissionsService) {
-    super();
-  }
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+@ApiBearerAuth('JWT-auth')
+@UsePipes(new ValidationPipe({ whitelist: true }))
+export class PermissionsController {
+  constructor(private readonly permissionsService: PermissionsService) {}
 
   @Post()
-  // @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create a new permission' })
-  @Roles(RoleEnum.ADMIN)
-  @Permissions('permissions.create')
+  @ApiOperation({ summary: 'Create a permission (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Permission created' })
   create(@Body() dto: CreatePermissionDto) {
-    return this.handleAsyncOperation(this.permissionsService.create(dto));
+    return this.permissionsService.create(dto);
   }
 
   @Get()
-  // @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @Permissions('permissions.read')
-  @ApiOperation({ summary: 'Retrieve all permissions' })
-  findAll() {
-    return this.handleAsyncOperation(this.permissionsService.findAll());
+  @ApiOperation({ summary: 'List all permissions (Admin only)' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 100)' })
+  @ApiResponse({ status: 200, description: 'Permissions list returned' })
+  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.permissionsService.findAll(+(page || 1), +(limit || 100));
   }
 
   @Get('by-module')
-  // @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @Permissions('permissions.read')
-  @ApiOperation({ summary: 'Retrieve all permissions by module' })
-  findByModule(@Query('module') module: string) {
-    return this.handleAsyncOperation(
-      this.permissionsService.findByModule(module),
-    );
+  @ApiOperation({ summary: 'Get permissions by module name (Admin only)' })
+  @ApiQuery({
+    name: 'module',
+    required: true,
+    type: String,
+    description: 'Module name',
+  })
+  @ApiResponse({ status: 200, description: 'Permissions for module returned' })
+  findByModule(@Query('module') mod: string) {
+    return this.permissionsService.findByModule(mod);
   }
 
   @Get(':id')
-  // @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @Permissions('permissions.read')
-  @ApiOperation({ summary: 'Retrieve a specific permission' })
+  @ApiOperation({ summary: 'Get permission by ID (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Permission UUID' })
+  @ApiResponse({ status: 200, description: 'Permission found' })
   findOne(@Param('id') id: string) {
-    const validId = SecurityUtil.validateId(id);
-    return this.handleAsyncOperation(this.permissionsService.findOne(validId));
+    return this.permissionsService.findOne(id);
   }
 
-  @Patch(':id')
-  // @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @Permissions('permissions.update')
-  @ApiOperation({ summary: 'Update a specific permission' })
-  @Roles(RoleEnum.ADMIN)
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a permission (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Permission UUID' })
+  @ApiResponse({ status: 200, description: 'Permission updated' })
   update(@Param('id') id: string, @Body() dto: UpdatePermissionDto) {
-    const validId = SecurityUtil.validateId(id);
-    return this.handleAsyncOperation(
-      this.permissionsService.update(validId, dto),
-    );
+    return this.permissionsService.update(id, dto);
   }
 
   @Delete(':id')
-  // @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @Permissions('permissions.delete')
-  @ApiOperation({ summary: 'Delete a specific permission' })
-  @Roles(RoleEnum.ADMIN)
+  @ApiOperation({ summary: 'Delete a permission (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Permission UUID' })
+  @ApiResponse({ status: 200, description: 'Permission deleted' })
   remove(@Param('id') id: string) {
-    const validId = SecurityUtil.validateId(id);
-    return this.handleAsyncOperation(this.permissionsService.remove(validId));
+    return this.permissionsService.remove(id);
   }
 }

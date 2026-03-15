@@ -2,155 +2,117 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
-  Patch,
-  Delete,
   Param,
-  UseGuards,
-  ParseUUIDPipe,
   Query,
+  UsePipes,
+  ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
   ApiQuery,
+  ApiBody,
 } from '@nestjs/swagger';
 import { ReturnsService } from './returns.service';
-import { CreateReturnRequestDto } from './dto/create-return-request.dto';
+import { CreateReturnWithItemsDto } from './dto/create-return-with-items.dto';
 import { UpdateReturnRequestDto } from './dto/update-return-request.dto';
-import { CreateReturnReasonDto } from './dto/create-return-reason.dto';
-import { UpdateReturnReasonDto } from './dto/update-return-reason.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { Permissions } from '../../common/decorators/permissions.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../roles/role.enum';
+import { Auditable } from '../../common/interceptor/audit.interceptor';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
-import { BaseController } from '../../common/controllers/base.controller';
-import { ReturnStatus } from '@common/enums';
 
 @ApiTags('Returns')
 @Controller('returns')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
-export class ReturnsController extends BaseController {
-  constructor(private readonly returnsService: ReturnsService) {
-    super();
-  }
+@UsePipes(new ValidationPipe({ whitelist: true }))
+export class ReturnsController {
+  constructor(private readonly svc: ReturnsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create return request' })
+  @ApiOperation({ summary: 'Create a return request with items' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        return: { $ref: '#/components/schemas/CreateReturnRequestDto' },
+        items: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/CreateReturnItemDto' },
+        },
+      },
+      required: ['return'],
+    },
+  })
   @ApiResponse({ status: 201, description: 'Return request created' })
-  create(@Body() dto: CreateReturnRequestDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.returnsService.createReturn(dto, user.id),
-    );
+  @Auditable({ action: 'CREATE', tableName: 'return_requests' })
+  create(@Body() dto: CreateReturnWithItemsDto, @CurrentUser() user: any) {
+    return this.svc.create({ ...dto.return, userId: user.id }, dto.items);
   }
 
   @Get()
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Get all returns' })
-  @ApiQuery({ name: 'userId', required: false })
-  @ApiQuery({ name: 'orderId', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: ReturnStatus })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @Permissions('returns.read')
+  @ApiOperation({
+    summary: 'List return requests (own for customers, all for admin)',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    type: String,
+    description: 'Filter by status',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiResponse({ status: 200, description: 'Returns list returned' })
   findAll(
-    @Query('userId') userId?: string,
-    @Query('orderId') orderId?: string,
-    @Query('status') status?: ReturnStatus,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @CurrentUser() user?: any,
   ) {
-    return this.handleAsyncOperation(
-      this.returnsService.findAll({ userId, orderId, status, page, limit }),
-    );
+    const isAdmin = user.role === 'admin' || user.role === 'super_admin';
+    return this.svc.findAll({
+      userId: isAdmin ? undefined : user.id,
+      status,
+      page: +(page || 1),
+      limit: +(limit || 50),
+    });
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get return by ID' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.returnsService.findOne(id));
+  @ApiOperation({ summary: 'Get return request by ID' })
+  @ApiParam({ name: 'id', description: 'Return request UUID' })
+  @ApiResponse({ status: 200, description: 'Return request found' })
+  findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.findOne(id, user.id, user.role);
   }
 
-  @Patch(':id')
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Update return request' })
-  @Permissions('returns.update')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateReturnRequestDto,
-  ) {
-    return this.handleAsyncOperation(this.returnsService.updateReturn(id, dto));
+  @Get(':id/items')
+  @ApiOperation({ summary: 'Get items in a return request' })
+  @ApiParam({ name: 'id', description: 'Return request UUID' })
+  @ApiResponse({ status: 200, description: 'Return items returned' })
+  findItems(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.findItems(id, user.id, user.role);
   }
 
-  @Patch(':id/status')
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Update return status' })
-  @Permissions('returns.update')
+  @Put(':id/status')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update return request status (Admin)' })
+  @ApiParam({ name: 'id', description: 'Return request UUID' })
+  @ApiResponse({ status: 200, description: 'Return status updated' })
   updateStatus(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { status: ReturnStatus; notes?: string },
+    @Param('id') id: string,
+    @Body() dto: UpdateReturnRequestDto,
+    @CurrentUser() user: any,
   ) {
-    return this.handleAsyncOperation(
-      this.returnsService.updateStatus(id, body.status, body.notes),
-    );
-  }
-
-  @Post(':id/images')
-  @ApiOperation({ summary: 'Add image to return' })
-  addImage(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body('imageUrl') imageUrl: string,
-  ) {
-    return this.handleAsyncOperation(
-      this.returnsService.addReturnImage(id, imageUrl),
-    );
-  }
-}
-
-@ApiTags('Return Reasons')
-@Controller('return-reasons')
-export class ReturnReasonsController extends BaseController {
-  constructor(private readonly returnsService: ReturnsService) {
-    super();
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get all return reasons' })
-  findAll() {
-    return this.handleAsyncOperation(this.returnsService.findAllReasons());
-  }
-
-  @Post()
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create return reason' })
-  @Permissions('returns.create')
-  create(@Body() dto: CreateReturnReasonDto) {
-    return this.handleAsyncOperation(this.returnsService.createReason(dto));
-  }
-
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update return reason' })
-  @Permissions('returns.update')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateReturnReasonDto,
-  ) {
-    return this.handleAsyncOperation(this.returnsService.updateReason(id, dto));
-  }
-
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Delete return reason' })
-  @Permissions('returns.delete')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.returnsService.deleteReason(id));
+    return this.svc.updateStatus(id, dto.status, user.id, dto.refundAmount);
   }
 }

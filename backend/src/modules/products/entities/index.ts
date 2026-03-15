@@ -1,7 +1,7 @@
-export * from './product.entity';
-export * from './product-variant.entity';
-export * from './product-image.entity';
-export * from './product-attribute.entity';
-export * from './price-history.entity';
-export * from './product-question.entity';
-export * from './product-answer.entity';
+export { Product } from './product.entity';
+export { ProductVariant } from './product-variant.entity';
+export { ProductImage } from './product-image.entity';
+export { ProductCategory } from './product-category.entity';
+export { AttributeKey } from './attribute-key.entity';
+export { AttributeValue } from './attribute-value.entity';
+export { VariantAttributeValue } from './variant-attribute-value.entity';

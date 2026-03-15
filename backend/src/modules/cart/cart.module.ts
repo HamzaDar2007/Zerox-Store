@@ -1,21 +1,22 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CartService } from './cart.service';
 import {
   CartController,
   WishlistController,
-  CheckoutController,
+  CouponsController,
+  FlashSalesController,
 } from './cart.controller';
 import { Cart } from './entities/cart.entity';
 import { CartItem } from './entities/cart-item.entity';
 import { Wishlist } from './entities/wishlist.entity';
-import { CheckoutSession } from './entities/checkout-session.entity';
-import { Product } from '../products/entities/product.entity';
+import { WishlistItem } from './entities/wishlist-item.entity';
+import { Coupon } from './entities/coupon.entity';
+import { CouponScope } from './entities/coupon-scope.entity';
+import { FlashSale } from './entities/flash-sale.entity';
+import { FlashSaleItem } from './entities/flash-sale-item.entity';
 import { SharedModule } from '../shared/shared.module';
 import { GuardsModule } from '../../common/modules/guards.module';
-import { OrdersModule } from '../orders/orders.module';
-import { InventoryModule } from '../inventory/inventory.module';
-import { MarketingModule } from '../marketing/marketing.module';
 
 @Module({
   imports: [
@@ -23,16 +24,16 @@ import { MarketingModule } from '../marketing/marketing.module';
       Cart,
       CartItem,
       Wishlist,
-      CheckoutSession,
-      Product,
+      WishlistItem,
+      Coupon,
+      CouponScope,
+      FlashSale,
+      FlashSaleItem,
     ]),
     SharedModule,
     GuardsModule,
-    forwardRef(() => OrdersModule),
-    InventoryModule,
-    MarketingModule,
   ],
-  controllers: [CartController, WishlistController, CheckoutController],
+  controllers: [CartController, WishlistController, CouponsController, FlashSalesController],
   providers: [CartService],
   exports: [CartService, TypeOrmModule],
 })

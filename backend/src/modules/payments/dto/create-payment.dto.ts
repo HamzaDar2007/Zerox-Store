@@ -1,85 +1,68 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsNotEmpty,
-  IsOptional,
   IsString,
-  MaxLength,
-  IsEnum,
+  IsOptional,
+  IsNotEmpty,
+  IsUUID,
   IsNumber,
-  Min,
   IsObject,
+  MaxLength,
+  Length,
+  Min,
 } from 'class-validator';
-import { PaymentStatus, PaymentMethod } from '@common/enums';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreatePaymentDto {
-  @ApiProperty({ description: 'Order ID' })
-  @IsNotEmpty()
-  @IsUuidString()
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Order UUID',
+  })
+  @IsUUID()
   orderId: string;
 
-  @ApiProperty({ description: 'User ID' })
+  @ApiProperty({
+    example: 'stripe',
+    description: 'Payment gateway',
+    maxLength: 50,
+  })
+  @IsString()
   @IsNotEmpty()
-  @IsUuidString()
-  userId: string;
+  @MaxLength(50)
+  gateway: string;
 
-  @ApiProperty({ description: 'Payment amount' })
+  @ApiProperty({
+    example: 'credit_card',
+    description: 'Payment method',
+    maxLength: 50,
+  })
+  @IsString()
   @IsNotEmpty()
-  @IsNumber({ maxDecimalPlaces: 2 })
+  @MaxLength(50)
+  method: string;
+
+  @ApiProperty({ example: 9849.98, description: 'Payment amount' })
+  @IsNumber()
   @Min(0)
   amount: number;
 
-  @ApiPropertyOptional({ description: 'Currency code', default: 'PKR' })
-  @IsOptional()
+  @ApiProperty({ example: 'PKR', description: 'Currency code (ISO 3-letter)' })
   @IsString()
-  @MaxLength(3)
-  currencyCode?: string;
-
-  @ApiProperty({ description: 'Payment method', enum: PaymentMethod })
   @IsNotEmpty()
-  @IsEnum(PaymentMethod)
-  paymentMethod: PaymentMethod;
+  @Length(3, 3)
+  currency: string;
 
-  @ApiPropertyOptional({ description: 'Payment status', enum: PaymentStatus })
-  @IsOptional()
-  @IsEnum(PaymentStatus)
-  status?: PaymentStatus;
-
-  @ApiPropertyOptional({ description: 'Payment gateway name' })
+  @ApiPropertyOptional({
+    example: 'txn_abc123',
+    description: 'Gateway transaction ID',
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(50)
-  gatewayName?: string;
+  gatewayTxId?: string;
 
-  @ApiPropertyOptional({ description: 'Gateway transaction ID' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  gatewayTransactionId?: string;
-
-  @ApiPropertyOptional({ description: 'Gateway response data' })
-  @IsOptional()
-  @IsObject()
-  gatewayResponse?: Record<string, any>;
-
-  @ApiPropertyOptional({ description: 'Additional metadata' })
+  @ApiPropertyOptional({
+    example: { cardLast4: '4242' },
+    description: 'Additional metadata',
+  })
   @IsOptional()
   @IsObject()
   metadata?: Record<string, any>;
-
-  @ApiPropertyOptional({
-    description: 'Stripe PaymentMethod ID (pm_xxx) for Stripe payments',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  stripePaymentMethodId?: string;
-
-  @ApiPropertyOptional({
-    description: 'Stripe Customer ID (cus_xxx) for returning customers',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  stripeCustomerId?: string;
 }

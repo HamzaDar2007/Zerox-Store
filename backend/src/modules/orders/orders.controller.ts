@@ -2,201 +2,123 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
-  Patch,
   Param,
-  UseGuards,
-  ParseUUIDPipe,
   Query,
+  UsePipes,
+  ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
   ApiQuery,
+  ApiBody,
 } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { CreateOrderWithItemsDto } from './dto/create-order-with-items.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { CreateShipmentDto } from './dto/create-shipment.dto';
-import { UpdateShipmentDto } from './dto/update-shipment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { Permissions } from '../../common/decorators/permissions.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../roles/role.enum';
+import { Auditable } from '../../common/interceptor/audit.interceptor';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
-import { BaseController } from '../../common/controllers/base.controller';
-import { OrderStatus, ShipmentStatus } from '@common/enums';
 
 @ApiTags('Orders')
 @Controller('orders')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
-export class OrdersController extends BaseController {
-  constructor(private readonly ordersService: OrdersService) {
-    super();
-  }
+@UsePipes(new ValidationPipe({ whitelist: true }))
+export class OrdersController {
+  constructor(private readonly svc: OrdersService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create order' })
-  @ApiResponse({ status: 201, description: 'Order created successfully' })
-  create(@Body() dto: CreateOrderDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.ordersService.create(dto, user.id));
+  @ApiOperation({ summary: 'Create a new order with items' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        order: { $ref: '#/components/schemas/CreateOrderDto' },
+        items: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/CreateOrderItemDto' },
+        },
+      },
+      required: ['order', 'items'],
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Order created' })
+  @Auditable({ action: 'CREATE', tableName: 'orders' })
+  create(@Body() dto: CreateOrderWithItemsDto, @CurrentUser() user: any) {
+    return this.svc.create({ ...dto.order, userId: user.id }, dto.items);
   }
 
   @Get()
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Get all orders' })
-  @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
-  @ApiQuery({ name: 'userId', required: false })
-  @ApiQuery({ name: 'sellerId', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: OrderStatus })
+  @ApiOperation({
+    summary: 'List orders (own orders for customers, all for admin)',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    type: String,
+    description: 'Filter by status',
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @Permissions('orders.read')
+  @ApiResponse({ status: 200, description: 'Orders list returned' })
   findAll(
-    @Query('userId') userId?: string,
-    @Query('sellerId') sellerId?: string,
-    @Query('status') status?: OrderStatus,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @CurrentUser() user?: any,
   ) {
-    return this.handleAsyncOperation(
-      this.ordersService.findAll({ userId, sellerId, status, page, limit }),
-    );
-  }
-
-  @Get('my-orders')
-  @ApiOperation({ summary: 'Get current user orders' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  getMyOrders(
-    @CurrentUser() user: User,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.handleAsyncOperation(
-      this.ordersService.getUserOrders(user.id, page, limit),
-    );
+    const isAdmin = user.role === 'admin' || user.role === 'super_admin';
+    return this.svc.findAll({
+      userId: isAdmin ? undefined : user.id,
+      status,
+      page: page ? Math.max(1, +page) : undefined,
+      limit: limit ? Math.min(Math.max(1, +limit), 100) : undefined,
+    });
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get order by ID' })
-  @ApiResponse({ status: 200, description: 'Order retrieved successfully' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.ordersService.findOne(id));
+  @ApiParam({ name: 'id', description: 'Order UUID' })
+  @ApiResponse({ status: 200, description: 'Order found' })
+  findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.findOne(id, user.id, user.role);
   }
 
-  @Get('number/:orderNumber')
-  @ApiOperation({ summary: 'Get order by order number' })
-  findByOrderNumber(@Param('orderNumber') orderNumber: string) {
-    return this.handleAsyncOperation(
-      this.ordersService.findByOrderNumber(orderNumber),
-    );
+  @Get(':id/items')
+  @ApiOperation({ summary: 'Get order items' })
+  @ApiParam({ name: 'id', description: 'Order UUID' })
+  @ApiResponse({ status: 200, description: 'Order items returned' })
+  findItems(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.findItems(id, user.id, user.role);
   }
 
-  @Patch(':id')
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Update order' })
-  @ApiResponse({ status: 200, description: 'Order updated successfully' })
-  @Permissions('orders.update')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateOrderDto) {
-    return this.handleAsyncOperation(this.ordersService.update(id, dto));
+  @Put(':id/status')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update order status (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Order UUID' })
+  @ApiResponse({ status: 200, description: 'Order status updated' })
+  @Auditable({ action: 'UPDATE_STATUS', tableName: 'orders' })
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateOrderDto) {
+    return this.svc.updateStatus(id, dto.status);
   }
 
-  @Patch(':id/status')
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Update order status' })
-  @Permissions('orders.update')
-  updateStatus(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { status: OrderStatus; comment: string },
-    @CurrentUser() user: User,
-  ) {
-    return this.handleAsyncOperation(
-      this.ordersService.updateStatus(id, body.status, body.comment, user.id),
-    );
-  }
-
-  @Post(':id/cancel')
-  @ApiOperation({ summary: 'Cancel order' })
-  cancel(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body('reason') reason: string,
-    @CurrentUser() user: User,
-  ) {
-    return this.handleAsyncOperation(
-      this.ordersService.cancel(id, reason, user.id),
-    );
-  }
-
-  @Get(':id/status-history')
-  @ApiOperation({ summary: 'Get order status history' })
-  getStatusHistory(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.ordersService.getStatusHistory(id));
-  }
-
-  // ==================== SHIPMENTS ====================
-
-  @Post(':orderId/shipments')
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Create shipment for order' })
-  @Permissions('orders.update')
-  createShipment(
-    @Param('orderId', ParseUUIDPipe) orderId: string,
-    @Body() dto: CreateShipmentDto,
-  ) {
-    return this.handleAsyncOperation(
-      this.ordersService.createShipment(orderId, dto),
-    );
-  }
-
-  @Get(':orderId/shipments')
-  @ApiOperation({ summary: 'Get order shipments' })
-  getShipments(@Param('orderId', ParseUUIDPipe) orderId: string) {
-    return this.handleAsyncOperation(this.ordersService.getShipments(orderId));
-  }
-}
-
-@ApiTags('Shipments')
-@Controller('shipments')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
-@ApiBearerAuth('JWT-auth')
-export class ShipmentsController extends BaseController {
-  constructor(private readonly ordersService: OrdersService) {
-    super();
-  }
-
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update shipment' })
-  @Permissions('orders.update')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateShipmentDto,
-  ) {
-    return this.handleAsyncOperation(
-      this.ordersService.updateShipment(id, dto),
-    );
-  }
-
-  @Patch(':id/status')
-  @ApiOperation({ summary: 'Update shipment status' })
-  @Permissions('orders.update')
-  updateStatus(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body('status') status: ShipmentStatus,
-  ) {
-    return this.handleAsyncOperation(
-      this.ordersService.updateShipmentStatus(id, status),
-    );
-  }
-
-  @Get('track/:trackingNumber')
-  @ApiOperation({ summary: 'Track shipment by tracking number' })
-  track(@Param('trackingNumber') trackingNumber: string) {
-    return this.handleAsyncOperation(
-      this.ordersService.trackShipment(trackingNumber),
-    );
+  @Put(':id/cancel')
+  @ApiOperation({ summary: 'Cancel an order (owner or admin)' })
+  @ApiParam({ name: 'id', description: 'Order UUID' })
+  @ApiResponse({ status: 200, description: 'Order cancelled' })
+  @Auditable({ action: 'CANCEL', tableName: 'orders' })
+  cancel(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.cancelOrder(id, user.id, user.role);
   }
 }

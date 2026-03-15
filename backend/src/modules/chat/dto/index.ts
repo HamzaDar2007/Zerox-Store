@@ -1,3 +1,3 @@
-export * from './create-conversation.dto';
-export * from './update-conversation.dto';
-export * from './create-message.dto';
+export * from './create-chat-thread.dto';
+export * from './update-chat-thread.dto';
+export * from './create-chat-message.dto';

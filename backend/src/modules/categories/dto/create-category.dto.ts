@@ -1,90 +1,71 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
 import {
   IsString,
-  IsNotEmpty,
   IsOptional,
-  MaxLength,
+  IsNotEmpty,
+  IsUUID,
+  IsInt,
   IsBoolean,
-  IsNumber,
-  Min,
-  Max,
-  Matches,
+  MaxLength,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCategoryDto {
-  @ApiProperty({ description: 'Category name', maxLength: 100 })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  @Transform(({ value }) => value?.trim())
-  name: string;
-
   @ApiPropertyOptional({
-    description: 'Category slug (auto-generated if not provided)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Parent category UUID',
   })
   @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  @Matches(/^[a-z0-9-]+$/, {
-    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
-  })
-  slug?: string;
-
-  @ApiPropertyOptional({ description: 'Parent category ID' })
-  @IsOptional()
-  @IsUuidString()
+  @IsUUID()
   parentId?: string;
 
-  @ApiPropertyOptional({ description: 'Image URL' })
+  @ApiPropertyOptional({
+    example: 'Electronics',
+    description: 'Category name',
+    maxLength: 200,
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(500)
-  imageUrl?: string;
+  @MaxLength(200)
+  name?: string;
 
-  @ApiPropertyOptional({ description: 'Icon URL' })
-  @IsOptional()
+  @ApiProperty({
+    example: 'electronics',
+    description: 'URL-friendly slug (unique)',
+    maxLength: 200,
+  })
   @IsString()
-  @MaxLength(500)
-  iconUrl?: string;
+  @IsNotEmpty()
+  @MaxLength(200)
+  slug: string;
 
-  @ApiPropertyOptional({ description: 'Category description' })
+  @ApiPropertyOptional({
+    example: 'All electronic products',
+    description: 'Category description',
+  })
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   description?: string;
 
-  @ApiPropertyOptional({ description: 'Meta title for SEO' })
+  @ApiPropertyOptional({
+    example: 'https://example.com/category.jpg',
+    description: 'Category image URL',
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(255)
-  metaTitle?: string;
+  @MaxLength(2048)
+  imageUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Meta description for SEO' })
+  @ApiPropertyOptional({ example: 1, description: 'Display sort order' })
   @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  metaDescription?: string;
+  @IsInt()
+  sortOrder?: number;
 
-  @ApiPropertyOptional({ description: 'Commission rate percentage' })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(100)
-  commissionRate?: number;
-
-  @ApiPropertyOptional({ description: 'Is category active', default: true })
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether the category is active',
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
-
-  @ApiPropertyOptional({ description: 'Is featured category', default: false })
-  @IsOptional()
-  @IsBoolean()
-  isFeatured?: boolean;
-
-  @ApiPropertyOptional({ description: 'Sort order', default: 0 })
-  @IsOptional()
-  @IsNumber()
-  sortOrder?: number;
 }

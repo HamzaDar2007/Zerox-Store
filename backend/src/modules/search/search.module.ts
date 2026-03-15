@@ -2,21 +2,14 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SearchService } from './search.service';
 import { SearchController } from './search.controller';
-import { SearchHistory } from './entities/search-history.entity';
-import { RecentlyViewed } from './entities/recently-viewed.entity';
-import { ProductComparison } from './entities/product-comparison.entity';
-import { ProductRecommendation } from './entities/product-recommendation.entity';
+import { SearchQuery } from './entities/search-query.entity';
+import { Product } from '../products/entities/product.entity';
 import { SharedModule } from '../shared/shared.module';
 import { GuardsModule } from '../../common/modules/guards.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      SearchHistory,
-      RecentlyViewed,
-      ProductComparison,
-      ProductRecommendation,
-    ]),
+    TypeOrmModule.forFeature([SearchQuery, Product]),
     SharedModule,
     GuardsModule,
   ],

@@ -2,17 +2,17 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
   ManyToOne,
   JoinColumn,
   Unique,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Cart } from './cart.entity';
-import { Product } from '../../products/entities/product.entity';
 import { ProductVariant } from '../../products/entities/product-variant.entity';
 
 @Entity('cart_items')
-@Unique(['cartId', 'productId', 'variantId'])
+@Unique(['cartId', 'variantId'])
 export class CartItem {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -20,35 +20,26 @@ export class CartItem {
   @Column({ name: 'cart_id', type: 'uuid' })
   cartId: string;
 
-  @ManyToOne(() => Cart, (cart) => cart.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Cart, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'cart_id' })
   cart: Cart;
 
-  @Column({ name: 'product_id', type: 'uuid' })
-  productId: string;
+  @Column({ name: 'variant_id', type: 'uuid' })
+  variantId: string;
 
-  @ManyToOne(() => Product)
-  @JoinColumn({ name: 'product_id' })
-  product: Product;
-
-  @Column({ name: 'variant_id', type: 'uuid', nullable: true })
-  variantId: string | null;
-
-  @ManyToOne(() => ProductVariant)
+  @ManyToOne(() => ProductVariant, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'variant_id' })
-  variant: ProductVariant | null;
+  variant: ProductVariant;
 
-  @Column({ type: 'integer', default: 1 })
+  @Column({ type: 'int' })
   quantity: number;
 
-  @Column({
-    name: 'price_at_addition',
-    type: 'decimal',
-    precision: 12,
-    scale: 2,
-  })
-  priceAtAddition: number;
+  @Column({ name: 'unit_price', type: 'numeric', precision: 14, scale: 4 })
+  unitPrice: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt: Date;
 }

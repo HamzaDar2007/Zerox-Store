@@ -132,31 +132,26 @@ const MODULE_PERMISSIONS: Record<string, readonly string[]> = {
 const SYSTEM_ROLES = [
   {
     name: 'super_admin',
-    display_name: 'Super Admin',
     description: 'Unrestricted access to the entire platform.',
     is_system: true,
   },
   {
     name: 'admin',
-    display_name: 'Admin',
     description: 'Broad management access excluding system-critical operations.',
     is_system: true,
   },
   {
     name: 'seller',
-    display_name: 'Seller',
     description: 'Manages own products, orders, and store.',
     is_system: true,
   },
   {
     name: 'customer',
-    display_name: 'Customer',
     description: 'Limited access scoped to own profile, orders, and interactions.',
     is_system: true,
   },
   {
     name: 'support_agent',
-    display_name: 'Support Agent',
     description: 'Handles customer tickets, disputes, and support queries.',
     is_system: true,
   },
@@ -176,13 +171,12 @@ async function seed() {
     console.log('Creating system roles...');
     for (const role of SYSTEM_ROLES) {
       await qr.query(
-        `INSERT INTO roles (name, display_name, description, is_system)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO roles (name, description, is_system)
+         VALUES ($1, $2, $3)
          ON CONFLICT (name) DO UPDATE SET
-           display_name = EXCLUDED.display_name,
            description  = EXCLUDED.description,
            is_system    = EXCLUDED.is_system`,
-        [role.name, role.display_name, role.description, role.is_system],
+        [role.name, role.description, role.is_system],
       );
       console.log(`  ✅ Role: ${role.name}`);
     }
@@ -203,13 +197,27 @@ async function seed() {
 
     for (const [module, actions] of Object.entries(MODULE_PERMISSIONS)) {
       for (const action of actions) {
-        // Upsert each permission for the super_admin role
+        const code = `${module}.${action}`;
+        // Upsert permission
         await qr.query(
-          `INSERT INTO permissions (role_id, module, action)
-           VALUES ($1, $2, $3)
-           ON CONFLICT (role_id, module, action) DO NOTHING`,
-          [superAdminRoleId, module, action],
+          `INSERT INTO permissions (id, code, module, description)
+           VALUES (gen_random_uuid(), $1, $2, $3)
+           ON CONFLICT (code) DO NOTHING`,
+          [code, module, `${action} ${module}`],
         );
+        // Get the permission id
+        const [perm] = await qr.query(
+          `SELECT id FROM permissions WHERE code = $1`,
+          [code],
+        );
+        if (perm) {
+          await qr.query(
+            `INSERT INTO role_permissions (role_id, permission_id)
+             VALUES ($1, $2)
+             ON CONFLICT DO NOTHING`,
+            [superAdminRoleId, perm.id],
+          );
+        }
         totalPermissions++;
       }
       console.log(
@@ -219,7 +227,7 @@ async function seed() {
 
     // 4. Summary ──────────────────────────────────────────────────────
     const [{ count: dbCount }] = await qr.query(
-      `SELECT COUNT(*)::int AS count FROM permissions WHERE role_id = $1`,
+      `SELECT COUNT(*)::int AS count FROM role_permissions WHERE role_id = $1`,
       [superAdminRoleId],
     );
 

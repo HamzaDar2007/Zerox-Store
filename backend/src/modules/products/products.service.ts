@@ -1,535 +1,363 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { ProductVariant } from './entities/product-variant.entity';
 import { ProductImage } from './entities/product-image.entity';
-import { ProductAttribute } from './entities/product-attribute.entity';
-import { ProductQuestion } from './entities/product-question.entity';
-import { ProductAnswer } from './entities/product-answer.entity';
-import { PriceHistory } from './entities/price-history.entity';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
-import { CreateProductVariantDto } from './dto/create-product-variant.dto';
-import { UpdateProductVariantDto } from './dto/update-product-variant.dto';
-import { CreateProductImageDto } from './dto/create-product-image.dto';
-import { Seller } from '../sellers/entities/seller.entity';
-import { ServiceResponse } from '../../common/interfaces/service-response.interface';
-import { ProductStatus } from '@common/enums';
+import { AttributeKey } from './entities/attribute-key.entity';
+import { AttributeValue } from './entities/attribute-value.entity';
+import { VariantAttributeValue } from './entities/variant-attribute-value.entity';
+import { ProductCategory } from './entities/product-category.entity';
+import { enforceOwnerOrAdmin } from '../../common/guards/ownership.helper';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
+    @InjectRepository(Product) private productRepo: Repository<Product>,
     @InjectRepository(ProductVariant)
-    private variantRepository: Repository<ProductVariant>,
-    @InjectRepository(ProductImage)
-    private imageRepository: Repository<ProductImage>,
-    @InjectRepository(ProductAttribute)
-    private attributeRepository: Repository<ProductAttribute>,
-    @InjectRepository(ProductQuestion)
-    private questionRepository: Repository<ProductQuestion>,
-    @InjectRepository(ProductAnswer)
-    private answerRepository: Repository<ProductAnswer>,
-    @InjectRepository(PriceHistory)
-    private priceHistoryRepository: Repository<PriceHistory>,
-    @InjectRepository(Seller)
-    private sellerRepository: Repository<Seller>,
+    private variantRepo: Repository<ProductVariant>,
+    @InjectRepository(ProductImage) private imageRepo: Repository<ProductImage>,
+    @InjectRepository(AttributeKey)
+    private attrKeyRepo: Repository<AttributeKey>,
+    @InjectRepository(AttributeValue)
+    private attrValueRepo: Repository<AttributeValue>,
+    @InjectRepository(VariantAttributeValue)
+    private variantAttrRepo: Repository<VariantAttributeValue>,
+    @InjectRepository(ProductCategory)
+    private prodCatRepo: Repository<ProductCategory>,
   ) {}
 
-  // ==================== PRODUCT CRUD ====================
-
   async create(
-    dto: CreateProductDto,
-    userId: string,
-  ): Promise<ServiceResponse<Product>> {
-    const existingProduct = await this.productRepository.findOne({
-      where: { slug: dto.slug },
-    });
-
-    if (existingProduct) {
-      throw new ConflictException('Product with this slug already exists');
+    dto: Partial<Product>,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<Product> {
+    if (callerId && dto.storeId) {
+      const store = (await this.productRepo.manager.findOne('Store', {
+        where: { id: dto.storeId },
+        relations: ['seller'],
+      })) as any;
+      if (!store) throw new NotFoundException('Store not found');
+      if (store.seller)
+        enforceOwnerOrAdmin(callerId, callerRole, store.seller.userId);
     }
-
-    const product = new Product();
-    Object.assign(product, {
-      ...dto,
-      status: ProductStatus.DRAFT,
-    });
-
-    // Use sellerId from DTO if provided (admin flow), otherwise lookup seller by auth userId
-    if (!product.sellerId) {
-      const seller = await this.sellerRepository.findOne({ where: { userId } });
-      if (!seller) {
-        throw new BadRequestException(
-          'No seller profile found for this user. Please create a seller profile first.',
-        );
-      }
-      product.sellerId = seller.id;
-    }
-
-    const savedProduct = await this.productRepository.save(product);
-
-    // Record initial price in history
-    if (dto.price) {
-      const priceHistory = new PriceHistory();
-      Object.assign(priceHistory, {
-        productId: savedProduct.id,
-        oldPrice: 0,
-        newPrice: dto.price,
-        changedBy: userId,
-      });
-      await this.priceHistoryRepository.save(priceHistory);
-    }
-
-    return {
-      success: true,
-      message: 'Product created successfully',
-      data: savedProduct,
-    };
+    const product = this.productRepo.create(dto);
+    return this.productRepo.save(product);
   }
 
   async findAll(options?: {
-    categoryId?: string;
-    brandId?: string;
-    sellerId?: string;
-    status?: ProductStatus;
-    search?: string;
-    sortBy?: string;
-    sortOrder?: 'ASC' | 'DESC';
     page?: number;
     limit?: number;
-  }): Promise<ServiceResponse<Product[]>> {
-    const query = this.productRepository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.category', 'category')
-      .leftJoinAndSelect('product.brand', 'brand')
-      .leftJoinAndSelect('product.images', 'images');
-
-    if (options?.search) {
-      query.andWhere(
-        '(product.name ILIKE :search OR product.description ILIKE :search OR product.shortDescription ILIKE :search)',
-        { search: `%${options.search}%` },
-      );
-    }
-
-    if (options?.categoryId) {
-      query.andWhere('product.categoryId = :categoryId', {
+    storeId?: string;
+    categoryId?: string;
+    search?: string;
+  }): Promise<{ data: Product[]; total: number }> {
+    const qb = this.productRepo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.store', 'store')
+      .leftJoinAndSelect('p.category', 'category')
+      .leftJoinAndSelect('p.brand', 'brand');
+    if (options?.storeId)
+      qb.andWhere('p.storeId = :storeId', { storeId: options.storeId });
+    if (options?.categoryId)
+      qb.andWhere('p.categoryId = :categoryId', {
         categoryId: options.categoryId,
       });
-    }
-
-    if (options?.brandId) {
-      query.andWhere('product.brandId = :brandId', {
-        brandId: options.brandId,
+    if (options?.search)
+      qb.andWhere('p.name ILIKE :s OR p.slug ILIKE :s', {
+        s: `%${options.search}%`,
       });
-    }
-
-    if (options?.sellerId) {
-      query.andWhere('product.sellerId = :sellerId', {
-        sellerId: options.sellerId,
-      });
-    }
-
-    if (options?.status) {
-      query.andWhere('product.status = :status', { status: options.status });
-    }
-
-    // Sorting
-    const allowedSortFields: Record<string, string> = {
-      name: 'product.name',
-      price: 'product.price',
-      createdAt: 'product.createdAt',
-      avgRating: 'product.avgRating',
-      totalSold: 'product.totalSold',
-    };
-    const sortField =
-      allowedSortFields[options?.sortBy || ''] || 'product.createdAt';
-    const sortOrder = options?.sortOrder === 'ASC' ? 'ASC' : 'DESC';
-    query.orderBy(sortField, sortOrder);
-
-    const page = options?.page || 1;
-    const limit = options?.limit || 20;
-    query.skip((page - 1) * limit).take(limit);
-
-    const [products, total] = await query.getManyAndCount();
-
-    return {
-      success: true,
-      message: 'Products retrieved successfully',
-      data: products,
-      meta: { total, page, limit },
-    };
+    const pg = options?.page || 1;
+    const lm = options?.limit || 20;
+    qb.skip((pg - 1) * lm)
+      .take(lm)
+      .orderBy('p.name', 'ASC');
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total };
   }
 
-  async findOne(id: string): Promise<ServiceResponse<Product>> {
-    const product = await this.productRepository.findOne({
+  async findOne(id: string): Promise<Product> {
+    const p = await this.productRepo.findOne({
       where: { id },
-      relations: [
-        'category',
-        'brand',
-        'seller',
-        'images',
-        'variants',
-        'attributes',
-      ],
+      relations: ['store', 'category', 'brand'],
     });
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-
-    return {
-      success: true,
-      message: 'Product retrieved successfully',
-      data: product,
-    };
+    if (!p) throw new NotFoundException('Product not found');
+    return p;
   }
 
-  async findBySlug(slug: string): Promise<ServiceResponse<Product>> {
-    const product = await this.productRepository.findOne({
+  async findBySlug(slug: string): Promise<Product> {
+    const p = await this.productRepo.findOne({
       where: { slug },
-      relations: ['category', 'brand', 'seller', 'images', 'variants'],
+      relations: ['store', 'category', 'brand'],
     });
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-
-    // Increment view count
-    await this.productRepository.increment({ id: product.id }, 'viewCount', 1);
-
-    return {
-      success: true,
-      message: 'Product retrieved successfully',
-      data: product,
-    };
+    if (!p) throw new NotFoundException('Product not found');
+    return p;
   }
 
   async update(
     id: string,
-    dto: UpdateProductDto,
-  ): Promise<ServiceResponse<Product>> {
-    const product = await this.productRepository.findOne({ where: { id } });
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-
-    // Check if price changed for history tracking
-    if (dto.price && dto.price !== product.price) {
-      const priceHistory = new PriceHistory();
-      Object.assign(priceHistory, {
-        productId: product.id,
-        oldPrice: product.price,
-        newPrice: dto.price,
-      });
-      await this.priceHistoryRepository.save(priceHistory);
-    }
-
-    Object.assign(product, dto);
-    const updatedProduct = await this.productRepository.save(product);
-
-    return {
-      success: true,
-      message: 'Product updated successfully',
-      data: updatedProduct,
-    };
+    dto: Partial<Product>,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<Product> {
+    const p = await this.productRepo.findOne({
+      where: { id },
+      relations: ['store', 'store.seller'],
+    });
+    if (!p) throw new NotFoundException('Product not found');
+    if (callerId && p.store?.seller)
+      enforceOwnerOrAdmin(callerId, callerRole, (p.store.seller as any).userId);
+    Object.assign(p, dto);
+    return this.productRepo.save(p);
   }
 
-  async remove(id: string): Promise<ServiceResponse<void>> {
-    const product = await this.productRepository.findOne({ where: { id } });
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-
-    await this.productRepository.softRemove(product);
-
-    return {
-      success: true,
-      message: 'Product deleted successfully',
-    };
-  }
-
-  async updateStatus(
+  async remove(
     id: string,
-    status: ProductStatus,
-  ): Promise<ServiceResponse<Product>> {
-    const product = await this.productRepository.findOne({ where: { id } });
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-
-    product.status = status;
-
-    const updatedProduct = await this.productRepository.save(product);
-
-    return {
-      success: true,
-      message: `Product ${status.toLowerCase()} successfully`,
-      data: updatedProduct,
-    };
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<void> {
+    const p = await this.productRepo.findOne({
+      where: { id },
+      relations: ['store', 'store.seller'],
+    });
+    if (!p) throw new NotFoundException('Product not found');
+    if (callerId && p.store?.seller)
+      enforceOwnerOrAdmin(callerId, callerRole, (p.store.seller as any).userId);
+    await this.productRepo.remove(p);
   }
-
-  // ==================== VARIANTS ====================
 
   async createVariant(
-    productId: string,
-    dto: CreateProductVariantDto,
-  ): Promise<ServiceResponse<ProductVariant>> {
-    const product = await this.productRepository.findOne({
-      where: { id: productId },
-    });
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
+    dto: Partial<ProductVariant>,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<ProductVariant> {
+    if (callerId && dto.productId) {
+      const p = await this.productRepo.findOne({
+        where: { id: dto.productId },
+        relations: ['store', 'store.seller'],
+      });
+      if (p?.store?.seller)
+        enforceOwnerOrAdmin(
+          callerId,
+          callerRole,
+          (p.store.seller as any).userId,
+        );
     }
-
-    const variant = new ProductVariant();
-    Object.assign(variant, {
-      ...dto,
-      productId,
-    });
-
-    const savedVariant = await this.variantRepository.save(variant);
-
-    return {
-      success: true,
-      message: 'Variant created successfully',
-      data: savedVariant,
-    };
+    const v = this.variantRepo.create(dto);
+    return this.variantRepo.save(v);
   }
 
-  async findAllVariants(
-    productId: string,
-  ): Promise<ServiceResponse<ProductVariant[]>> {
-    const variants = await this.variantRepository.find({
-      where: { productId },
-      order: { sortOrder: 'ASC' },
-    });
-
-    return {
-      success: true,
-      message: 'Variants retrieved successfully',
-      data: variants,
-    };
+  async findVariants(productId: string): Promise<ProductVariant[]> {
+    return this.variantRepo.find({ where: { productId } });
   }
 
   async updateVariant(
     id: string,
-    dto: UpdateProductVariantDto,
-  ): Promise<ServiceResponse<ProductVariant>> {
-    const variant = await this.variantRepository.findOne({ where: { id } });
-
-    if (!variant) {
-      throw new NotFoundException('Variant not found');
-    }
-
-    Object.assign(variant, dto);
-    const updatedVariant = await this.variantRepository.save(variant);
-
-    return {
-      success: true,
-      message: 'Variant updated successfully',
-      data: updatedVariant,
-    };
+    dto: Partial<ProductVariant>,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<ProductVariant> {
+    const v = await this.variantRepo.findOne({
+      where: { id },
+      relations: ['product', 'product.store', 'product.store.seller'],
+    });
+    if (!v) throw new NotFoundException('Variant not found');
+    if (callerId && v.product?.store?.seller)
+      enforceOwnerOrAdmin(
+        callerId,
+        callerRole,
+        (v.product.store.seller as any).userId,
+      );
+    Object.assign(v, dto);
+    return this.variantRepo.save(v);
   }
 
-  async removeVariant(id: string): Promise<ServiceResponse<void>> {
-    const variant = await this.variantRepository.findOne({ where: { id } });
-
-    if (!variant) {
-      throw new NotFoundException('Variant not found');
-    }
-
-    await this.variantRepository.remove(variant);
-
-    return {
-      success: true,
-      message: 'Variant deleted successfully',
-    };
+  async removeVariant(
+    id: string,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<void> {
+    const v = await this.variantRepo.findOne({
+      where: { id },
+      relations: ['product', 'product.store', 'product.store.seller'],
+    });
+    if (!v) throw new NotFoundException('Variant not found');
+    if (callerId && v.product?.store?.seller)
+      enforceOwnerOrAdmin(
+        callerId,
+        callerRole,
+        (v.product.store.seller as any).userId,
+      );
+    await this.variantRepo.remove(v);
   }
 
-  // ==================== IMAGES ====================
-
-  async addImage(
-    productId: string,
-    dto: CreateProductImageDto,
-  ): Promise<ServiceResponse<ProductImage>> {
-    const product = await this.productRepository.findOne({
-      where: { id: productId },
-    });
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-
-    const image = new ProductImage();
-    Object.assign(image, {
-      ...dto,
-      productId,
-    });
-
-    const savedImage = await this.imageRepository.save(image);
-
-    return {
-      success: true,
-      message: 'Image added successfully',
-      data: savedImage,
-    };
-  }
-
-  async removeImage(id: string): Promise<ServiceResponse<void>> {
-    const image = await this.imageRepository.findOne({ where: { id } });
-
-    if (!image) {
-      throw new NotFoundException('Image not found');
-    }
-
-    await this.imageRepository.remove(image);
-
-    return {
-      success: true,
-      message: 'Image removed successfully',
-    };
-  }
-
-  // ==================== Q&A ====================
-
-  async getProductQuestions(
-    productId: string,
-  ): Promise<ServiceResponse<ProductQuestion[]>> {
-    const questions = await this.questionRepository.find({
-      where: { productId },
-      relations: ['answers', 'user'],
-      order: { createdAt: 'DESC' },
-    });
-
-    return {
-      success: true,
-      message: 'Questions retrieved successfully',
-      data: questions,
-    };
-  }
-
-  async askQuestion(
-    productId: string,
-    userId: string,
-    question: string,
-  ): Promise<ServiceResponse<ProductQuestion>> {
-    const product = await this.productRepository.findOne({
-      where: { id: productId },
-    });
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-
-    const productQuestion = new ProductQuestion();
-    Object.assign(productQuestion, {
-      productId,
-      userId,
-      questionText: question,
-    });
-
-    const savedQuestion = await this.questionRepository.save(productQuestion);
-
-    return {
-      success: true,
-      message: 'Question submitted successfully',
-      data: savedQuestion,
-    };
-  }
-
-  async answerQuestion(
-    questionId: string,
-    userId: string,
-    answer: string,
-    isSellerAnswer: boolean = false,
-  ): Promise<ServiceResponse<ProductAnswer>> {
-    const question = await this.questionRepository.findOne({
-      where: { id: questionId },
-    });
-
-    if (!question) {
-      throw new NotFoundException('Question not found');
-    }
-
-    const productAnswer = new ProductAnswer();
-    Object.assign(productAnswer, {
-      questionId,
-      userId,
-      answerText: answer,
-      isSellerAnswer,
-    });
-
-    const savedAnswer = await this.answerRepository.save(productAnswer);
-
-    return {
-      success: true,
-      message: 'Answer submitted successfully',
-      data: savedAnswer,
-    };
-  }
-
-  // ==================== PRICE HISTORY ====================
-
-  async getPriceHistory(
-    productId: string,
-  ): Promise<ServiceResponse<PriceHistory[]>> {
-    const history = await this.priceHistoryRepository.find({
-      where: { productId },
-      order: { createdAt: 'DESC' },
-    });
-
-    return {
-      success: true,
-      message: 'Price history retrieved successfully',
-      data: history,
-    };
-  }
-
-  async getRelatedProducts(
-    productId: string,
-    limit: number = 8,
-  ): Promise<ServiceResponse<Product[]>> {
-    const product = await this.productRepository.findOne({
-      where: { id: productId },
-    });
-    if (!product) {
-      throw new NotFoundException('Product not found');
-    }
-
-    const query = this.productRepository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.images', 'images')
-      .where('product.id != :productId', { productId })
-      .andWhere('product.status = :status', { status: ProductStatus.ACTIVE });
-
-    if (product.categoryId) {
-      query.andWhere('product.categoryId = :categoryId', {
-        categoryId: product.categoryId,
+  async createImage(
+    dto: Partial<ProductImage>,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<ProductImage> {
+    if (callerId && dto.productId) {
+      const p = await this.productRepo.findOne({
+        where: { id: dto.productId },
+        relations: ['store', 'store.seller'],
       });
+      if (p?.store?.seller)
+        enforceOwnerOrAdmin(
+          callerId,
+          callerRole,
+          (p.store.seller as any).userId,
+        );
     }
+    const img = this.imageRepo.create(dto);
+    return this.imageRepo.save(img);
+  }
 
-    const related = await query
-      .addSelect('RANDOM()', 'rand')
-      .orderBy('rand')
-      .limit(limit)
-      .getMany();
+  async findImages(productId: string): Promise<ProductImage[]> {
+    return this.imageRepo.find({
+      where: { productId },
+      order: { sortOrder: 'ASC' },
+    });
+  }
 
-    return {
-      success: true,
-      message: 'Related products retrieved successfully',
-      data: related,
-    };
+  async removeImage(
+    id: string,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<void> {
+    const img = await this.imageRepo.findOne({
+      where: { id },
+      relations: ['product', 'product.store', 'product.store.seller'],
+    });
+    if (!img) throw new NotFoundException('Image not found');
+    if (callerId && img.product?.store?.seller)
+      enforceOwnerOrAdmin(
+        callerId,
+        callerRole,
+        (img.product.store.seller as any).userId,
+      );
+    await this.imageRepo.remove(img);
+  }
+
+  async updateImage(
+    id: string,
+    dto: Partial<ProductImage>,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<ProductImage> {
+    const img = await this.imageRepo.findOne({
+      where: { id },
+      relations: ['product', 'product.store', 'product.store.seller'],
+    });
+    if (!img) throw new NotFoundException('Image not found');
+    if (callerId && img.product?.store?.seller)
+      enforceOwnerOrAdmin(
+        callerId,
+        callerRole,
+        (img.product.store.seller as any).userId,
+      );
+    Object.assign(img, dto);
+    return this.imageRepo.save(img);
+  }
+
+  // ─── Attribute Keys ────────────────────────────────────────────────────
+
+  async createAttributeKey(dto: Partial<AttributeKey>): Promise<AttributeKey> {
+    const key = this.attrKeyRepo.create(dto);
+    return this.attrKeyRepo.save(key);
+  }
+
+  async findAllAttributeKeys(): Promise<AttributeKey[]> {
+    return this.attrKeyRepo.find({ order: { name: 'ASC' } });
+  }
+
+  async findAttributeKey(id: string): Promise<AttributeKey> {
+    const k = await this.attrKeyRepo.findOne({ where: { id } });
+    if (!k) throw new NotFoundException('Attribute key not found');
+    return k;
+  }
+
+  async updateAttributeKey(
+    id: string,
+    dto: Partial<AttributeKey>,
+  ): Promise<AttributeKey> {
+    const k = await this.findAttributeKey(id);
+    Object.assign(k, dto);
+    return this.attrKeyRepo.save(k);
+  }
+
+  async removeAttributeKey(id: string): Promise<void> {
+    const k = await this.findAttributeKey(id);
+    await this.attrKeyRepo.remove(k);
+  }
+
+  // ─── Attribute Values ──────────────────────────────────────────────────
+
+  async createAttributeValue(
+    dto: Partial<AttributeValue>,
+  ): Promise<AttributeValue> {
+    const v = this.attrValueRepo.create(dto);
+    return this.attrValueRepo.save(v);
+  }
+
+  async findAttributeValues(attributeKeyId: string): Promise<AttributeValue[]> {
+    return this.attrValueRepo.find({
+      where: { attributeKeyId },
+      order: { sortOrder: 'ASC' },
+    });
+  }
+
+  async removeAttributeValue(id: string): Promise<void> {
+    const v = await this.attrValueRepo.findOne({ where: { id } });
+    if (!v) throw new NotFoundException('Attribute value not found');
+    await this.attrValueRepo.remove(v);
+  }
+
+  // ─── Variant Attribute Values ──────────────────────────────────────────
+
+  async assignVariantAttribute(
+    dto: Partial<VariantAttributeValue>,
+  ): Promise<VariantAttributeValue> {
+    const va = this.variantAttrRepo.create(dto);
+    return this.variantAttrRepo.save(va);
+  }
+
+  async findVariantAttributes(
+    variantId: string,
+  ): Promise<VariantAttributeValue[]> {
+    return this.variantAttrRepo.find({
+      where: { variantId },
+      relations: ['attributeKey', 'attributeValue'],
+    });
+  }
+
+  async removeVariantAttribute(
+    variantId: string,
+    attributeKeyId: string,
+  ): Promise<void> {
+    await this.variantAttrRepo.delete({ variantId, attributeKeyId });
+  }
+
+  // ─── Product Categories ────────────────────────────────────────────────
+
+  async addProductCategory(
+    productId: string,
+    categoryId: string,
+  ): Promise<ProductCategory> {
+    const pc = this.prodCatRepo.create({ productId, categoryId });
+    return this.prodCatRepo.save(pc);
+  }
+
+  async findProductCategories(productId: string): Promise<ProductCategory[]> {
+    return this.prodCatRepo.find({
+      where: { productId },
+      relations: ['category'],
+    });
+  }
+
+  async removeProductCategory(
+    productId: string,
+    categoryId: string,
+  ): Promise<void> {
+    await this.prodCatRepo.delete({ productId, categoryId });
   }
 }

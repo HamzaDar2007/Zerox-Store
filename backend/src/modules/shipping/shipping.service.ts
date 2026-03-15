@@ -2,304 +2,173 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ShippingZone } from './entities/shipping-zone.entity';
+import { ShippingZoneCountry } from './entities/shipping-zone-country.entity';
 import { ShippingMethod } from './entities/shipping-method.entity';
-import { ShippingCarrier } from './entities/shipping-carrier.entity';
-import { ShippingRate } from './entities/shipping-rate.entity';
-import { DeliverySlot } from './entities/delivery-slot.entity';
-import { ServiceResponse } from '../../common/interfaces/service-response.interface';
-import {
-  CreateShippingZoneDto,
-  UpdateShippingZoneDto,
-  CreateShippingMethodDto,
-  UpdateShippingMethodDto,
-  CreateShippingCarrierDto,
-  UpdateShippingCarrierDto,
-  CreateShippingRateDto,
-  UpdateShippingRateDto,
-  CreateDeliverySlotDto,
-  UpdateDeliverySlotDto,
-} from './dto';
+import { Shipment } from './entities/shipment.entity';
+import { ShipmentEvent } from './entities/shipment-event.entity';
+import { MailService } from '../../common/modules/mail/mail.service';
 
 @Injectable()
 export class ShippingService {
   constructor(
-    @InjectRepository(ShippingZone)
-    private zoneRepository: Repository<ShippingZone>,
+    @InjectRepository(ShippingZone) private zoneRepo: Repository<ShippingZone>,
+    @InjectRepository(ShippingZoneCountry)
+    private zoneCountryRepo: Repository<ShippingZoneCountry>,
     @InjectRepository(ShippingMethod)
-    private methodRepository: Repository<ShippingMethod>,
-    @InjectRepository(ShippingCarrier)
-    private carrierRepository: Repository<ShippingCarrier>,
-    @InjectRepository(ShippingRate)
-    private rateRepository: Repository<ShippingRate>,
-    @InjectRepository(DeliverySlot)
-    private slotRepository: Repository<DeliverySlot>,
+    private methodRepo: Repository<ShippingMethod>,
+    @InjectRepository(Shipment) private shipmentRepo: Repository<Shipment>,
+    @InjectRepository(ShipmentEvent)
+    private eventRepo: Repository<ShipmentEvent>,
+    private mailService: MailService,
   ) {}
 
-  // ==================== SHIPPING ZONES ====================
-
-  async createZone(
-    dto: CreateShippingZoneDto,
-  ): Promise<ServiceResponse<ShippingZone>> {
-    const zone = new ShippingZone();
-    Object.assign(zone, dto);
-    const saved = await this.zoneRepository.save(zone);
-    return { success: true, message: 'Shipping zone created', data: saved };
+  async createZone(dto: Partial<ShippingZone>): Promise<ShippingZone> {
+    const zone = this.zoneRepo.create(dto);
+    return this.zoneRepo.save(zone);
   }
 
-  async findAllZones(): Promise<ServiceResponse<ShippingZone[]>> {
-    const zones = await this.zoneRepository.find({ relations: ['rates'] });
-    return { success: true, message: 'Shipping zones retrieved', data: zones };
-  }
-
-  async findOneZone(id: string): Promise<ServiceResponse<ShippingZone>> {
-    const zone = await this.zoneRepository.findOne({
-      where: { id },
-      relations: ['rates'],
+  async findAllZones(page = 1, limit = 50): Promise<ShippingZone[]> {
+    return this.zoneRepo.find({
+      order: { name: 'ASC' },
+      take: limit,
+      skip: (page - 1) * limit,
     });
-    if (!zone) throw new NotFoundException('Shipping zone not found');
-    return { success: true, message: 'Shipping zone retrieved', data: zone };
+  }
+
+  async findZone(id: string): Promise<ShippingZone> {
+    const z = await this.zoneRepo.findOne({ where: { id } });
+    if (!z) throw new NotFoundException('Shipping zone not found');
+    return z;
   }
 
   async updateZone(
     id: string,
-    dto: UpdateShippingZoneDto,
-  ): Promise<ServiceResponse<ShippingZone>> {
-    const zone = await this.zoneRepository.findOne({ where: { id } });
-    if (!zone) throw new NotFoundException('Shipping zone not found');
-    Object.assign(zone, dto);
-    const updated = await this.zoneRepository.save(zone);
-    return { success: true, message: 'Shipping zone updated', data: updated };
+    dto: Partial<ShippingZone>,
+  ): Promise<ShippingZone> {
+    const z = await this.findZone(id);
+    Object.assign(z, dto);
+    return this.zoneRepo.save(z);
   }
 
-  async removeZone(id: string): Promise<ServiceResponse<void>> {
-    const zone = await this.zoneRepository.findOne({ where: { id } });
-    if (!zone) throw new NotFoundException('Shipping zone not found');
-    await this.zoneRepository.remove(zone);
-    return { success: true, message: 'Shipping zone deleted' };
+  async addCountryToZone(
+    zoneId: string,
+    country: string,
+  ): Promise<ShippingZoneCountry> {
+    const zc = this.zoneCountryRepo.create({ zoneId, country });
+    return this.zoneCountryRepo.save(zc);
   }
 
-  // ==================== SHIPPING METHODS ====================
-
-  async createMethod(
-    dto: CreateShippingMethodDto,
-  ): Promise<ServiceResponse<ShippingMethod>> {
-    const method = new ShippingMethod();
-    Object.assign(method, dto);
-    // Auto-generate code from name if not provided
-    if (!method.code) {
-      method.code = dto.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/^_|_$/g, '')
-        .substring(0, 50);
-    }
-    const saved = await this.methodRepository.save(method);
-    return { success: true, message: 'Shipping method created', data: saved };
+  async getZoneCountries(zoneId: string): Promise<ShippingZoneCountry[]> {
+    return this.zoneCountryRepo.find({ where: { zoneId } });
   }
 
-  async findAllMethods(
-    isActive?: boolean,
-  ): Promise<ServiceResponse<ShippingMethod[]>> {
-    const where = isActive !== undefined ? { isActive } : {};
-    const methods = await this.methodRepository.find({
+  async createMethod(dto: Partial<ShippingMethod>): Promise<ShippingMethod> {
+    const m = this.methodRepo.create(dto);
+    return this.methodRepo.save(m);
+  }
+
+  async findAllMethods(zoneId?: string, page = 1, limit = 50): Promise<ShippingMethod[]> {
+    const where: any = {};
+    if (zoneId) where.zoneId = zoneId;
+    return this.methodRepo.find({
       where,
-      relations: ['rates'],
+      relations: ['zone'],
+      order: { name: 'ASC' },
+      take: limit,
+      skip: (page - 1) * limit,
     });
-    return {
-      success: true,
-      message: 'Shipping methods retrieved',
-      data: methods,
-    };
+  }
+
+  async findMethod(id: string): Promise<ShippingMethod> {
+    const m = await this.methodRepo.findOne({
+      where: { id },
+      relations: ['zone'],
+    });
+    if (!m) throw new NotFoundException('Shipping method not found');
+    return m;
   }
 
   async updateMethod(
     id: string,
-    dto: UpdateShippingMethodDto,
-  ): Promise<ServiceResponse<ShippingMethod>> {
-    const method = await this.methodRepository.findOne({ where: { id } });
-    if (!method) throw new NotFoundException('Shipping method not found');
-    Object.assign(method, dto);
-    const updated = await this.methodRepository.save(method);
-    return { success: true, message: 'Shipping method updated', data: updated };
+    dto: Partial<ShippingMethod>,
+  ): Promise<ShippingMethod> {
+    const m = await this.findMethod(id);
+    Object.assign(m, dto);
+    return this.methodRepo.save(m);
   }
 
-  async removeMethod(id: string): Promise<ServiceResponse<void>> {
-    const method = await this.methodRepository.findOne({ where: { id } });
-    if (!method) throw new NotFoundException('Shipping method not found');
-    await this.methodRepository.remove(method);
-    return { success: true, message: 'Shipping method deleted' };
-  }
-
-  // ==================== SHIPPING CARRIERS ====================
-
-  async createCarrier(
-    dto: CreateShippingCarrierDto,
-  ): Promise<ServiceResponse<ShippingCarrier>> {
-    const carrier = new ShippingCarrier();
-    Object.assign(carrier, dto);
-    const saved = await this.carrierRepository.save(carrier);
-    return { success: true, message: 'Shipping carrier created', data: saved };
-  }
-
-  async findAllCarriers(
-    isActive?: boolean,
-  ): Promise<ServiceResponse<ShippingCarrier[]>> {
-    const where = isActive !== undefined ? { isActive } : {};
-    const carriers = await this.carrierRepository.find({ where });
-    return {
-      success: true,
-      message: 'Shipping carriers retrieved',
-      data: carriers,
-    };
-  }
-
-  async updateCarrier(
-    id: string,
-    dto: UpdateShippingCarrierDto,
-  ): Promise<ServiceResponse<ShippingCarrier>> {
-    const carrier = await this.carrierRepository.findOne({ where: { id } });
-    if (!carrier) throw new NotFoundException('Shipping carrier not found');
-    Object.assign(carrier, dto);
-    const updated = await this.carrierRepository.save(carrier);
-    return {
-      success: true,
-      message: 'Shipping carrier updated',
-      data: updated,
-    };
-  }
-
-  async removeCarrier(id: string): Promise<ServiceResponse<void>> {
-    const carrier = await this.carrierRepository.findOne({ where: { id } });
-    if (!carrier) throw new NotFoundException('Shipping carrier not found');
-    await this.carrierRepository.remove(carrier);
-    return { success: true, message: 'Shipping carrier deleted' };
-  }
-
-  // ==================== SHIPPING RATES ====================
-
-  async createRate(
-    dto: CreateShippingRateDto,
-  ): Promise<ServiceResponse<ShippingRate>> {
-    const rate = new ShippingRate();
-    Object.assign(rate, dto);
-    const saved = await this.rateRepository.save(rate);
-    return { success: true, message: 'Shipping rate created', data: saved };
-  }
-
-  async findRates(
-    shippingZoneId?: string,
-    shippingMethodId?: string,
-  ): Promise<ServiceResponse<ShippingRate[]>> {
-    const query = this.rateRepository
-      .createQueryBuilder('rate')
-      .leftJoinAndSelect('rate.shippingZone', 'zone')
-      .leftJoinAndSelect('rate.shippingMethod', 'method');
-    if (shippingZoneId)
-      query.andWhere('rate.shippingZoneId = :shippingZoneId', {
-        shippingZoneId,
-      });
-    if (shippingMethodId)
-      query.andWhere('rate.shippingMethodId = :shippingMethodId', {
-        shippingMethodId,
-      });
-    const rates = await query.getMany();
-    return { success: true, message: 'Shipping rates retrieved', data: rates };
-  }
-
-  async updateRate(
-    id: string,
-    dto: UpdateShippingRateDto,
-  ): Promise<ServiceResponse<ShippingRate>> {
-    const rate = await this.rateRepository.findOne({ where: { id } });
-    if (!rate) throw new NotFoundException('Shipping rate not found');
-    Object.assign(rate, dto);
-    const updated = await this.rateRepository.save(rate);
-    return { success: true, message: 'Shipping rate updated', data: updated };
-  }
-
-  async removeRate(id: string): Promise<ServiceResponse<void>> {
-    const rate = await this.rateRepository.findOne({ where: { id } });
-    if (!rate) throw new NotFoundException('Shipping rate not found');
-    await this.rateRepository.remove(rate);
-    return { success: true, message: 'Shipping rate deleted' };
-  }
-
-  // ==================== DELIVERY SLOTS ====================
-
-  async createSlot(
-    dto: CreateDeliverySlotDto,
-  ): Promise<ServiceResponse<DeliverySlot>> {
-    const slot = new DeliverySlot();
-    Object.assign(slot, dto);
-    const saved = await this.slotRepository.save(slot);
-    return { success: true, message: 'Delivery slot created', data: saved };
-  }
-
-  async getAvailableSlots(): Promise<ServiceResponse<DeliverySlot[]>> {
-    const slots = await this.slotRepository.find({ where: { isActive: true } });
-    return { success: true, message: 'Available slots retrieved', data: slots };
-  }
-
-  async findOneSlot(id: string): Promise<ServiceResponse<DeliverySlot>> {
-    const slot = await this.slotRepository.findOne({ where: { id } });
-    if (!slot) throw new NotFoundException('Delivery slot not found');
-    return { success: true, message: 'Delivery slot retrieved', data: slot };
-  }
-
-  async updateSlot(
-    id: string,
-    dto: UpdateDeliverySlotDto,
-  ): Promise<ServiceResponse<DeliverySlot>> {
-    const slot = await this.slotRepository.findOne({ where: { id } });
-    if (!slot) throw new NotFoundException('Delivery slot not found');
-    Object.assign(slot, dto);
-    const updated = await this.slotRepository.save(slot);
-    return { success: true, message: 'Delivery slot updated', data: updated };
-  }
-
-  async removeSlot(id: string): Promise<ServiceResponse<void>> {
-    const slot = await this.slotRepository.findOne({ where: { id } });
-    if (!slot) throw new NotFoundException('Delivery slot not found');
-    await this.slotRepository.remove(slot);
-    return { success: true, message: 'Delivery slot deleted' };
-  }
-
-  // ==================== SHIPPING CALCULATION ====================
-
-  async calculateShipping(
-    shippingZoneId: string,
-    weight: number,
-    totalAmount: number,
-  ): Promise<ServiceResponse<{ options: any[] }>> {
-    const rates = await this.rateRepository.find({
-      where: { shippingZoneId },
-      relations: ['shippingMethod'],
+  async createShipment(dto: Partial<Shipment>): Promise<Shipment> {
+    dto.status = dto.status || 'pending';
+    const s = this.shipmentRepo.create(dto);
+    const saved = await this.shipmentRepo.save(s);
+    // Load order + user relation to send email
+    const full = await this.shipmentRepo.findOne({
+      where: { id: saved.id },
+      relations: ['order', 'order.user'],
     });
+    if (full?.order?.user) {
+      this.mailService
+        .sendShipmentCreatedEmail(
+          full.order.user.email,
+          full.order.user.firstName || 'Customer',
+          full.orderId,
+          saved.trackingNumber || '',
+          saved.carrier || '',
+        )
+        .catch(() => {});
+    }
+    return saved;
+  }
 
-    const options = rates
-      .filter((rate) => {
-        if (rate.minOrderAmount && totalAmount < Number(rate.minOrderAmount))
-          return false;
-        if (rate.maxOrderAmount && totalAmount > Number(rate.maxOrderAmount))
-          return false;
-        return true;
-      })
-      .map((rate) => {
-        let cost = Number(rate.baseRate);
-        if (rate.perKgRate) cost += weight * Number(rate.perKgRate);
-        return {
-          methodId: rate.shippingMethodId,
-          methodName: rate.shippingMethod?.name,
-          cost,
-          estimatedDaysMin: rate.shippingMethod?.estimatedDaysMin,
-          estimatedDaysMax: rate.shippingMethod?.estimatedDaysMax,
-        };
+  async findShipment(id: string): Promise<Shipment> {
+    const s = await this.shipmentRepo.findOne({
+      where: { id },
+      relations: ['order', 'warehouse', 'shippingMethod'],
+    });
+    if (!s) throw new NotFoundException('Shipment not found');
+    return s;
+  }
+
+  async findShipmentsByOrder(orderId: string): Promise<Shipment[]> {
+    return this.shipmentRepo.find({
+      where: { orderId },
+      relations: ['warehouse', 'shippingMethod'],
+    });
+  }
+
+  async updateShipment(id: string, dto: Partial<Shipment>): Promise<Shipment> {
+    const s = await this.findShipment(id);
+    Object.assign(s, dto);
+    const saved = await this.shipmentRepo.save(s);
+    if (dto.status) {
+      const full = await this.shipmentRepo.findOne({
+        where: { id },
+        relations: ['order', 'order.user'],
       });
+      if (full?.order?.user) {
+        this.mailService
+          .sendShipmentStatusUpdateEmail(
+            full.order.user.email,
+            full.order.user.firstName || 'Customer',
+            full.orderId,
+            saved.trackingNumber || '',
+            dto.status,
+          )
+          .catch(() => {});
+      }
+    }
+    return saved;
+  }
 
-    return {
-      success: true,
-      message: 'Shipping options calculated',
-      data: { options },
-    };
+  async addShipmentEvent(dto: Partial<ShipmentEvent>): Promise<ShipmentEvent> {
+    const e = this.eventRepo.create(dto);
+    return this.eventRepo.save(e);
+  }
+
+  async getShipmentEvents(shipmentId: string): Promise<ShipmentEvent[]> {
+    return this.eventRepo.find({
+      where: { shipmentId },
+      order: { occurredAt: 'ASC' },
+    });
   }
 }

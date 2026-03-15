@@ -318,13 +318,20 @@ async function seed() {
 
       for (const [module, actions] of Object.entries(permMap)) {
         for (const action of actions) {
-          await qr.query(
-            `INSERT INTO permissions (role_id, module, action)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (role_id, module, action) DO NOTHING`,
-            [roleId, module, action],
+          const code = `${module}.${action}`;
+          const [perm] = await qr.query(
+            `SELECT id FROM permissions WHERE code = $1`,
+            [code],
           );
-          count++;
+          if (perm) {
+            await qr.query(
+              `INSERT INTO role_permissions (role_id, permission_id)
+               VALUES ($1, $2)
+               ON CONFLICT (role_id, permission_id) DO NOTHING`,
+              [roleId, perm.id],
+            );
+            count++;
+          }
         }
       }
 
@@ -357,8 +364,8 @@ async function seed() {
 
     for (const roleName of roles) {
       const [{ count }] = await qr.query(
-        `SELECT COUNT(*)::int AS count FROM permissions p
-         JOIN roles r ON p.role_id = r.id
+        `SELECT COUNT(*)::int AS count FROM role_permissions rp
+         JOIN roles r ON rp.role_id = r.id
          WHERE r.name = $1`,
         [roleName],
       );

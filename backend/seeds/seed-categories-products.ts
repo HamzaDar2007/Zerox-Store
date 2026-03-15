@@ -469,7 +469,7 @@ async function seed() {
     // 0. Clean existing data using TRUNCATE CASCADE
     // ──────────────────────────────────────────────────────────────────
     console.log('🗑️  Cleaning existing product_images, products, categories…');
-    await qr.query(`TRUNCATE product_images, product_attributes, variant_attribute_values, product_variants, products, categories CASCADE`);
+    await qr.query(`TRUNCATE product_images, variant_attribute_values, product_variants, products, categories CASCADE`);
     console.log('  ✅ Cleaned\n');
 
     // ──────────────────────────────────────────────────────────────────
@@ -482,20 +482,20 @@ async function seed() {
     // Upsert seller user (email unique index is partial, so use SELECT + INSERT/UPDATE)
     let userId: string;
     const [existingUser] = await qr.query(
-      `SELECT id FROM users WHERE email = $1 AND deleted_at IS NULL`,
+      `SELECT id FROM users WHERE email = $1`,
       [sellerEmail],
     );
     if (existingUser) {
       userId = existingUser.id;
       await qr.query(
-        `UPDATE users SET role = 'seller', is_active = true, is_email_verified = true, updated_at = NOW() WHERE id = $1`,
+        `UPDATE users SET is_active = true, is_email_verified = true, updated_at = NOW() WHERE id = $1`,
         [userId],
       );
       console.log(`  ✅ Updated existing seller user (${userId})`);
     } else {
       const [newUser] = await qr.query(
-        `INSERT INTO users (name, email, password, phone, role, is_active, is_email_verified, email_verified_at)
-         VALUES ('LabVerse Seller', $1, $2, '+923001234567', 'seller', true, true, NOW())
+        `INSERT INTO users (first_name, last_name, email, password_hash, phone, is_active, is_email_verified)
+         VALUES ('LabVerse', 'Seller', $1, $2, '+923001234567', true, true)
          RETURNING id`,
         [sellerEmail, sellerPassword],
       );
@@ -503,12 +503,22 @@ async function seed() {
       console.log(`  ✅ Created seller user: ${sellerEmail} (${userId})`);
     }
 
+    // Assign seller role via user_roles
+    const [sellerRole] = await qr.query(`SELECT id FROM roles WHERE name = 'seller'`);
+    if (sellerRole) {
+      await qr.query(
+        `INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2) ON CONFLICT (user_id, role_id) DO NOTHING`,
+        [userId, sellerRole.id],
+      );
+      console.log(`  ✅ Assigned seller role via user_roles`);
+    }
+
     // Upsert seller
     const [seller] = await qr.query(
-      `INSERT INTO sellers (user_id, business_name, verification_status, commission_rate)
-       VALUES ($1, 'LabVerse Official Store', 'approved', 5.00)
+      `INSERT INTO sellers (user_id, display_name, status, commission_rate)
+       VALUES ($1, 'LabVerse Official Store', 'active', 5.00)
        ON CONFLICT (user_id) DO UPDATE SET
-         business_name = 'LabVerse Official Store', verification_status = 'approved', updated_at = NOW()
+         display_name = 'LabVerse Official Store', status = 'active', updated_at = NOW()
        RETURNING id`,
       [userId],
     );
@@ -520,7 +530,7 @@ async function seed() {
       `INSERT INTO stores (seller_id, name, slug, description, is_active)
        VALUES ($1, 'LabVerse Official Store', 'labverse-official-store',
                'Your one-stop marketplace for quality products across all categories.', true)
-       ON CONFLICT (seller_id) DO UPDATE SET
+       ON CONFLICT (slug) DO UPDATE SET
          name = 'LabVerse Official Store', is_active = true, updated_at = NOW()
        RETURNING id`,
       [sellerId],
@@ -539,12 +549,12 @@ async function seed() {
 
       // Insert category
       const [catRow] = await qr.query(
-        `INSERT INTO categories (name, slug, image_url, description, is_active, is_featured, sort_order, depth)
-         VALUES ($1, $2, $3, $4, true, $5, $6, 0)
+        `INSERT INTO categories (name, slug, image_url, description, is_active, sort_order)
+         VALUES ($1, $2, $3, $4, true, $5)
          ON CONFLICT (slug) DO UPDATE SET
-           name = $1, image_url = $3, description = $4, is_featured = $5, sort_order = $6, updated_at = NOW()
+           name = $1, image_url = $3, description = $4, sort_order = $5, updated_at = NOW()
          RETURNING id`,
-        [cat.name, catSlug, cat.image, cat.description, ci < 8, ci],
+        [cat.name, catSlug, cat.image, cat.description, ci],
       );
       const categoryId = catRow.id;
       console.log(`📁 [${ci + 1}/30] ${cat.name}`);
@@ -557,29 +567,32 @@ async function seed() {
 
         const [prodRow] = await qr.query(
           `INSERT INTO products (
-             seller_id, category_id, name, slug, description, short_description,
-             price, compare_at_price, stock, sku, status, is_featured, published_at, tags
-           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', $11, NOW(), $12)
+             store_id, category_id, name, slug, full_desc, short_desc,
+             base_price, currency, is_active
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'USD', true)
            ON CONFLICT (slug) DO UPDATE SET
-             price = $7, stock = $9, status = 'active', updated_at = NOW()
+             base_price = $7, is_active = true, updated_at = NOW()
            RETURNING id`,
           [
-            sellerId,
+            store.id,
             categoryId,
             prod.name,
             prodSlug,
             prod.description,
             prod.shortDescription,
             prod.price,
-            prod.compareAt,
-            prod.stock,
-            sku,
-            pi === 0, // first product per category is featured
-            prod.tags,
           ],
         );
         const productId = prodRow.id;
         totalProducts++;
+
+        // Create default product variant with sku
+        await qr.query(
+          `INSERT INTO product_variants (product_id, sku, price, is_active)
+           VALUES ($1, $2, $3, true)
+           ON CONFLICT (sku) DO UPDATE SET price = $3, is_active = true`,
+          [productId, sku, prod.price],
+        );
 
         // Insert images
         for (let ii = 0; ii < prod.images.length; ii++) {
@@ -611,7 +624,7 @@ async function seed() {
     console.log(`  Products:      ${totalProducts}`);
     console.log(`  Images:        ${totalImages}`);
     console.log(`  Seller email:  ${sellerEmail}`);
-    console.log(`  Seller pass:   Seller@123!`);
+    console.log(`  Seller pass:   ******** (hardcoded in seed — change in production)`);
     console.log('═'.repeat(60) + '\n');
   } catch (err) {
     await qr.rollbackTransaction();

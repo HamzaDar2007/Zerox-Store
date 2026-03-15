@@ -36,10 +36,13 @@ const dataSource = new DataSource({
 });
 
 // ─── Configurable credentials ────────────────────────────────────────
+if (!process.env.SUPER_ADMIN_EMAIL || !process.env.SUPER_ADMIN_PASSWORD) {
+  throw new Error('SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD env vars are required');
+}
 const SUPER_ADMIN = {
   name: process.env.SUPER_ADMIN_NAME || 'Super Admin',
-  email: process.env.SUPER_ADMIN_EMAIL || 'husnainramzan7194@gmail.com',
-  password: process.env.SUPER_ADMIN_PASSWORD || 'SuperAdmin@123!',
+  email: process.env.SUPER_ADMIN_EMAIL,
+  password: process.env.SUPER_ADMIN_PASSWORD,
   phone: process.env.SUPER_ADMIN_PHONE || '+923000000000',
 };
 
@@ -73,31 +76,29 @@ async function seed() {
     let userId: string;
 
     if (existingUser) {
-      // Update existing user to ensure they have super_admin role & active status
+      // Update existing user to ensure they have active status
       userId = existingUser.id;
       await qr.query(
         `UPDATE users SET
-           name              = $1,
-           password          = $2,
-           phone             = $3,
-           role              = 'super_admin',
+           first_name        = $1,
+           last_name         = $2,
+           password_hash     = $3,
+           phone             = $4,
            is_active         = true,
-           is_email_verified = true,
-           email_verified_at = NOW(),
-           updated_at        = NOW()
-         WHERE id = $4`,
-        [SUPER_ADMIN.name, hashedPassword, SUPER_ADMIN.phone, userId],
+           is_email_verified = true
+         WHERE id = $5`,
+        ['Super', 'Admin', hashedPassword, SUPER_ADMIN.phone, userId],
       );
       console.log(`  ✅ Updated existing user (${userId})`);
     } else {
       // Create new user
       const [newUser] = await qr.query(
         `INSERT INTO users (
-           name, email, password, phone, role,
-           is_active, is_email_verified, email_verified_at
-         ) VALUES ($1, $2, $3, $4, 'super_admin', true, true, NOW())
+           first_name, last_name, email, password_hash, phone,
+           is_active, is_email_verified
+         ) VALUES ($1, $2, $3, $4, $5, true, true)
          RETURNING id`,
-        [SUPER_ADMIN.name, SUPER_ADMIN.email, hashedPassword, SUPER_ADMIN.phone],
+        ['Super', 'Admin', SUPER_ADMIN.email, hashedPassword, SUPER_ADMIN.phone],
       );
       userId = newUser.id;
       console.log(`  ✅ Created new user (${userId})`);
@@ -115,7 +116,7 @@ async function seed() {
 
     // 4. Assign super_admin role via user_roles join table ────────────
     await qr.query(
-      `INSERT INTO user_roles (user_id, role_id, assigned_by)
+      `INSERT INTO user_roles (user_id, role_id, granted_by)
        VALUES ($1, $2, $1)
        ON CONFLICT (user_id, role_id) DO NOTHING`,
       [userId, superAdminRole.id],
@@ -124,13 +125,13 @@ async function seed() {
 
     // 5. Verify ───────────────────────────────────────────────────────
     const [verifyUser] = await qr.query(
-      `SELECT u.id, u.name, u.email, u.role, u.is_active, u.is_email_verified
+      `SELECT u.id, u.first_name, u.last_name, u.email, u.is_active, u.is_email_verified
        FROM users u WHERE u.id = $1`,
       [userId],
     );
 
     const [roleAssignment] = await qr.query(
-      `SELECT ur.id, r.name AS role_name
+      `SELECT r.name AS role_name
        FROM user_roles ur
        JOIN roles r ON ur.role_id = r.id
        WHERE ur.user_id = $1`,
@@ -139,8 +140,8 @@ async function seed() {
 
     const [permCount] = await qr.query(
       `SELECT COUNT(*)::int AS count
-       FROM permissions p
-       JOIN roles r ON p.role_id = r.id
+       FROM role_permissions rp
+       JOIN roles r ON rp.role_id = r.id
        WHERE r.name = 'super_admin'`,
     );
 
@@ -151,9 +152,8 @@ async function seed() {
     console.log('  SUPER ADMIN USER CREATED');
     console.log('═'.repeat(60));
     console.log(`  ID:               ${verifyUser.id}`);
-    console.log(`  Name:             ${verifyUser.name}`);
+    console.log(`  Name:             ${verifyUser.first_name} ${verifyUser.last_name}`);
     console.log(`  Email:            ${verifyUser.email}`);
-    console.log(`  Role (enum):      ${verifyUser.role}`);
     console.log(`  Role (table):     ${roleAssignment?.role_name || 'N/A'}`);
     console.log(`  Active:           ${verifyUser.is_active}`);
     console.log(`  Email Verified:   ${verifyUser.is_email_verified}`);
@@ -161,7 +161,7 @@ async function seed() {
     console.log('═'.repeat(60));
     console.log('\n  🔑 Login credentials:');
     console.log(`     Email:    ${SUPER_ADMIN.email}`);
-    console.log(`     Password: ${SUPER_ADMIN.password}`);
+    console.log('     Password: ******** (set via SUPER_ADMIN_PASSWORD env var)');
     console.log('\n  ⚠️  Change the password immediately in production!');
     console.log('  💡 Configure via env vars: SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD\n');
     console.log('✅  Seed 3 complete — Super Admin user is ready.\n');

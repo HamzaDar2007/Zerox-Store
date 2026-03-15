@@ -65,18 +65,14 @@ export class RolesGuard implements CanActivate {
 
     // Convert role name to enum value for comparison
     const hasRequiredRole = requiredRoles.some((requiredRole) => {
-      // Handle both enum values and string values
       return (
         requiredRole === userRoleName ||
-        requiredRole.toString() === userRoleName ||
-        Object.values(RoleEnum).includes(userRoleName as RoleEnum)
+        requiredRole.toString() === userRoleName
       );
     });
 
     if (!hasRequiredRole) {
-      throw new ForbiddenException(
-        `Access denied. Required roles: ${requiredRoles.join(', ')}. User role: ${userRoleName}`,
-      );
+      throw new ForbiddenException('Access denied. Insufficient permissions.');
     }
 
     return true;

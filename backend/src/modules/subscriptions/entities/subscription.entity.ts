@@ -2,19 +2,13 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
-  OneToMany,
-  JoinColumn,
 } from 'typeorm';
-import { SubscriptionStatus, SubscriptionFrequency } from '@common/enums';
 import { User } from '../../users/entities/user.entity';
-import { Product } from '../../products/entities/product.entity';
-import { ProductVariant } from '../../products/entities/product-variant.entity';
-import { Address } from '../../users/entities/address.entity';
-import { SavedPaymentMethod } from '../../payments/entities/saved-payment-method.entity';
-import { SubscriptionOrder } from './subscription-order.entity';
+import { SubscriptionPlan } from './subscription-plan.entity';
 
 @Entity('subscriptions')
 export class Subscription {
@@ -24,124 +18,37 @@ export class Subscription {
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ name: 'product_id', type: 'uuid' })
-  productId: string;
+  @Column({ name: 'plan_id', type: 'uuid' })
+  planId: string;
 
-  @ManyToOne(() => Product)
-  @JoinColumn({ name: 'product_id' })
-  product: Product;
+  @ManyToOne(() => SubscriptionPlan, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'plan_id' })
+  plan: SubscriptionPlan;
 
-  @Column({ name: 'variant_id', type: 'uuid', nullable: true })
-  variantId: string | null;
+  @Column({ type: 'varchar', length: 20 })
+  status: string;
 
-  @ManyToOne(() => ProductVariant)
-  @JoinColumn({ name: 'variant_id' })
-  variant: ProductVariant | null;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  gateway: string | null;
 
-  @Column({ type: 'integer', default: 1 })
-  quantity: number;
+  @Column({ name: 'gateway_sub_id', type: 'text', nullable: true })
+  gatewaySubId: string | null;
 
-  @Column({
-    type: 'enum',
-    enum: SubscriptionFrequency,
-  })
-  frequency: SubscriptionFrequency;
+  @Column({ name: 'current_period_start', type: 'timestamptz' })
+  currentPeriodStart: Date;
 
-  @Column({ name: 'delivery_address_id', type: 'uuid' })
-  deliveryAddressId: string;
+  @Column({ name: 'current_period_end', type: 'timestamptz' })
+  currentPeriodEnd: Date;
 
-  @ManyToOne(() => Address)
-  @JoinColumn({ name: 'delivery_address_id' })
-  deliveryAddress: Address;
-
-  @Column({ name: 'payment_method_id', type: 'uuid', nullable: true })
-  paymentMethodId: string | null;
-
-  @ManyToOne(() => SavedPaymentMethod)
-  @JoinColumn({ name: 'payment_method_id' })
-  paymentMethod: SavedPaymentMethod | null;
-
-  @Column({
-    name: 'unit_price',
-    type: 'decimal',
-    precision: 12,
-    scale: 2,
-  })
-  unitPrice: number;
-
-  @Column({
-    name: 'discount_percentage',
-    type: 'decimal',
-    precision: 5,
-    scale: 2,
-    default: 0,
-  })
-  discountPercentage: number;
-
-  @Column({ name: 'next_delivery_date', type: 'date' })
-  nextDeliveryDate: Date;
-
-  @Column({ name: 'last_order_date', type: 'date', nullable: true })
-  lastOrderDate: Date | null;
-
-  @Column({
-    type: 'enum',
-    enum: SubscriptionStatus,
-    default: SubscriptionStatus.ACTIVE,
-  })
-  status: SubscriptionStatus;
-
-  @Column({ name: 'paused_at', type: 'timestamptz', nullable: true })
-  pausedAt: Date | null;
+  @Column({ name: 'trial_ends_at', type: 'timestamptz', nullable: true })
+  trialEndsAt: Date | null;
 
   @Column({ name: 'cancelled_at', type: 'timestamptz', nullable: true })
   cancelledAt: Date | null;
-
-  @Column({ name: 'cancellation_reason', type: 'text', nullable: true })
-  cancellationReason: string | null;
-
-  @Column({ name: 'total_orders', type: 'integer', default: 0 })
-  totalOrders: number;
-
-  @Column({
-    name: 'total_spent',
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-  })
-  totalSpent: number;
-
-  @Column({
-    name: 'stripe_subscription_id',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
-  stripeSubscriptionId: string | null;
-
-  @Column({
-    name: 'stripe_customer_id',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
-  stripeCustomerId: string | null;
-
-  @Column({
-    name: 'stripe_price_id',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
-  stripePriceId: string | null;
-
-  @OneToMany(() => SubscriptionOrder, (order) => order.subscription)
-  subscriptionOrders: SubscriptionOrder[];
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

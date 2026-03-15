@@ -1,125 +1,193 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual } from 'typeorm';
-import { StockReservation } from '../inventory/entities/stock-reservation.entity';
-import { Inventory } from '../inventory/entities/inventory.entity';
-import { LoyaltyTransaction } from '../loyalty/entities/loyalty-transaction.entity';
-import { LoyaltyPoints } from '../loyalty/entities/loyalty-points.entity';
+import { DataSource } from 'typeorm';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
-import { ReservationStatus } from '@common/enums';
-import { LoyaltyTransactionType } from '@common/enums';
+import { NotificationHelperService } from '../notifications/notification-helper.service';
+import { MailService } from '../../common/modules/mail/mail.service';
 
 @Injectable()
 export class SchedulerService {
   private readonly logger = new Logger(SchedulerService.name);
 
   constructor(
-    @InjectRepository(StockReservation)
-    private reservationRepository: Repository<StockReservation>,
-    @InjectRepository(Inventory)
-    private inventoryRepository: Repository<Inventory>,
-    @InjectRepository(LoyaltyTransaction)
-    private loyaltyTxRepository: Repository<LoyaltyTransaction>,
-    @InjectRepository(LoyaltyPoints)
-    private loyaltyPointsRepository: Repository<LoyaltyPoints>,
     private subscriptionsService: SubscriptionsService,
+    private notificationHelper: NotificationHelperService,
+    private mailService: MailService,
+    private dataSource: DataSource,
   ) {}
 
-  /**
-   * Release expired stock reservations every 5 minutes.
-   */
-  @Cron(CronExpression.EVERY_5_MINUTES)
-  async handleExpiredReservations() {
-    const now = new Date();
-    const expired = await this.reservationRepository.find({
-      where: {
-        status: ReservationStatus.HELD,
-        expiresAt: LessThanOrEqual(now),
-      },
-    });
-
-    if (expired.length === 0) return;
-
-    this.logger.log(`Releasing ${expired.length} expired reservation(s)`);
-
-    for (const reservation of expired) {
-      const inventory = await this.inventoryRepository.findOne({
-        where: { id: reservation.inventoryId },
-      });
-      if (inventory) {
-        inventory.quantityReserved -= reservation.quantity;
-        inventory.quantityAvailable += reservation.quantity;
-        await this.inventoryRepository.save(inventory);
-      }
-      reservation.status = ReservationStatus.EXPIRED;
-      await this.reservationRepository.save(reservation);
-    }
-
-    this.logger.log(`Released ${expired.length} expired reservation(s)`);
-  }
-
-  /**
-   * Process due subscription renewals daily at midnight.
-   */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async handleSubscriptionRenewals() {
-    this.logger.log('Checking for due subscription renewals…');
-    const { data: due } = await this.subscriptionsService.getDueSubscriptions();
-    if (!due || due.length === 0) {
-      this.logger.log('No subscriptions due for renewal');
+  async processSubscriptionRenewals() {
+    // Advisory lock to prevent duplicate processing in multi-instance deployments
+    const lockId = 100001;
+    const [{ pg_try_advisory_lock: acquired }] = await this.dataSource.query(
+      `SELECT pg_try_advisory_lock($1)`,
+      [lockId],
+    );
+    if (!acquired) {
+      this.logger.log(
+        'Subscription renewal already running on another instance, skipping.',
+      );
       return;
     }
-
-    this.logger.log(`Processing ${due.length} subscription renewal(s)`);
-    for (const sub of due) {
-      await this.subscriptionsService.processRenewal(sub.id);
+    try {
+      await this.processRenewals();
+    } finally {
+      await this.dataSource.query(`SELECT pg_advisory_unlock($1)`, [lockId]);
     }
-    this.logger.log(`Processed ${due.length} subscription renewal(s)`);
   }
 
-  /**
-   * Expire loyalty points daily at 1 AM.
-   */
-  @Cron(CronExpression.EVERY_DAY_AT_1AM)
-  async handleLoyaltyPointsExpiry() {
-    const now = new Date();
-    const expiredTxs = await this.loyaltyTxRepository.find({
-      where: {
-        type: LoyaltyTransactionType.EARNED,
-        expiresAt: LessThanOrEqual(now),
-      },
-    });
+  private async processRenewals() {
+    this.logger.log('Processing subscription renewals...');
+    const due = await this.subscriptionsService.findDueForRenewal();
+    this.logger.log(`Found ${due.length} subscriptions due for renewal`);
+    if (!due.length) return;
 
-    if (expiredTxs.length === 0) return;
-
-    this.logger.log(`Expiring points from ${expiredTxs.length} transaction(s)`);
-
-    // Group by userId
-    const byUser = new Map<string, number>();
-    for (const tx of expiredTxs) {
-      byUser.set(tx.userId, (byUser.get(tx.userId) ?? 0) + tx.points);
-      // Mark transaction as expired by nullifying expiresAt
-      tx.expiresAt = null;
-      tx.type = LoyaltyTransactionType.EXPIRED;
-      await this.loyaltyTxRepository.save(tx);
-    }
-
-    // Update aggregate points records
-    for (const [userId, expiredPoints] of byUser) {
-      const points = await this.loyaltyPointsRepository.findOne({
-        where: { userId },
-      });
-      if (points) {
-        points.totalExpired += expiredPoints;
-        points.availableBalance = Math.max(
-          0,
-          points.availableBalance - expiredPoints,
-        );
-        await this.loyaltyPointsRepository.save(points);
+    // Preload plans to avoid N+1
+    const planIds = [...new Set(due.map((s) => s.planId))];
+    const plans = new Map<string, any>();
+    for (const pid of planIds) {
+      try {
+        plans.set(pid, await this.subscriptionsService.findPlan(pid));
+      } catch {
+        /* skip */
       }
     }
 
-    this.logger.log(`Expired points for ${byUser.size} user(s)`);
+    for (const sub of due) {
+      try {
+        const plan = plans.get(sub.planId);
+        if (!plan) {
+          this.logger.warn(
+            `Plan ${sub.planId} not found, skipping sub ${sub.id}`,
+          );
+          continue;
+        }
+        const fullSub = await this.subscriptionsService.findSubscription(
+          sub.id,
+        );
+        const newStart = new Date(sub.currentPeriodEnd);
+        const newEnd = new Date(newStart);
+
+        const count = plan.intervalCount || 1;
+        switch (plan.interval) {
+          case 'daily':
+            newEnd.setDate(newEnd.getDate() + count);
+            break;
+          case 'weekly':
+            newEnd.setDate(newEnd.getDate() + 7 * count);
+            break;
+          case 'monthly':
+            newEnd.setMonth(newEnd.getMonth() + count);
+            break;
+          case 'yearly':
+            newEnd.setFullYear(newEnd.getFullYear() + count);
+            break;
+          default:
+            newEnd.setMonth(newEnd.getMonth() + count);
+        }
+
+        await this.subscriptionsService.updateSubscription(sub.id, {
+          currentPeriodStart: newStart,
+          currentPeriodEnd: newEnd,
+        });
+
+        // Send renewal notification
+        this.notificationHelper
+          .notify(sub.userId, 'SUBSCRIPTION_RENEWAL', {
+            planName: plan.name,
+            interval: plan.interval,
+          })
+          .catch(() => {});
+
+        // Send renewal email
+        if (fullSub.user?.email) {
+          this.mailService
+            .sendSubscriptionRenewalEmail(
+              fullSub.user.email,
+              fullSub.user.firstName || 'Customer',
+              plan.name,
+              newEnd.toLocaleDateString(),
+            )
+            .catch(() => {});
+        }
+
+        this.logger.log(
+          `Renewed subscription ${sub.id} until ${newEnd.toISOString()}`,
+        );
+      } catch (err) {
+        this.logger.error(
+          `Failed to renew subscription ${sub.id}: ${err.message}`,
+        );
+      }
+    }
+
+    this.logger.log('Subscription renewal processing complete');
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async deactivateExpiredFlashSales() {
+    const lockId = 100002;
+    const [{ pg_try_advisory_lock: acquired }] = await this.dataSource.query(
+      `SELECT pg_try_advisory_lock($1)`,
+      [lockId],
+    );
+    if (!acquired) return;
+    try {
+      const result = await this.dataSource.query(
+        `UPDATE flash_sales SET is_active = false WHERE is_active = true AND end_date < NOW()`,
+      );
+      if (result[1] > 0) {
+        this.logger.log(`Deactivated ${result[1]} expired flash sales`);
+      }
+    } catch (err) {
+      this.logger.error(`Failed to deactivate flash sales: ${err.message}`);
+    } finally {
+      await this.dataSource.query(`SELECT pg_advisory_unlock($1)`, [lockId]);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_2AM)
+  async cancelStalePendingOrders() {
+    const lockId = 100003;
+    const [{ pg_try_advisory_lock: acquired }] = await this.dataSource.query(
+      `SELECT pg_try_advisory_lock($1)`,
+      [lockId],
+    );
+    if (!acquired) return;
+    try {
+      const result = await this.dataSource.query(
+        `UPDATE orders SET status = 'cancelled' WHERE status = 'pending' AND created_at < NOW() - INTERVAL '48 hours'`,
+      );
+      if (result[1] > 0) {
+        this.logger.log(`Cancelled ${result[1]} stale pending orders`);
+      }
+    } catch (err) {
+      this.logger.error(`Failed to cancel stale orders: ${err.message}`);
+    } finally {
+      await this.dataSource.query(`SELECT pg_advisory_unlock($1)`, [lockId]);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async cleanupGuestCarts() {
+    const lockId = 100004;
+    const [{ pg_try_advisory_lock: acquired }] = await this.dataSource.query(
+      `SELECT pg_try_advisory_lock($1)`,
+      [lockId],
+    );
+    if (!acquired) return;
+    try {
+      const result = await this.dataSource.query(
+        `DELETE FROM carts WHERE user_id IS NULL AND updated_at < NOW() - INTERVAL '30 days'`,
+      );
+      if (result[1] > 0) {
+        this.logger.log(`Cleaned up ${result[1]} stale guest carts`);
+      }
+    } catch (err) {
+      this.logger.error(`Failed to cleanup guest carts: ${err.message}`);
+    } finally {
+      await this.dataSource.query(`SELECT pg_advisory_unlock($1)`, [lockId]);
+    }
   }
 }

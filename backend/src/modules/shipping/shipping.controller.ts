@@ -2,294 +2,205 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
-  Patch,
   Param,
-  Delete,
-  UseGuards,
-  ParseUUIDPipe,
   Query,
+  UsePipes,
+  ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
+  ApiResponse,
   ApiBearerAuth,
+  ApiParam,
   ApiQuery,
+  ApiBody,
 } from '@nestjs/swagger';
 import { ShippingService } from './shipping.service';
+import { CreateShippingZoneDto } from './dto/create-shipping-zone.dto';
+import { UpdateShippingZoneDto } from './dto/update-shipping-zone.dto';
+import { CreateShippingMethodDto } from './dto/create-shipping-method.dto';
+import { UpdateShippingMethodDto } from './dto/update-shipping-method.dto';
+import { CreateShipmentDto } from './dto/create-shipment.dto';
+import { UpdateShipmentDto } from './dto/update-shipment.dto';
+import { CreateShipmentEventDto } from './dto/create-shipment-event.dto';
+import { AddCountryDto } from './dto/add-country.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { Permissions } from '../../common/decorators/permissions.decorator';
-import { BaseController } from '../../common/controllers/base.controller';
-import {
-  CreateShippingZoneDto,
-  UpdateShippingZoneDto,
-  CreateShippingMethodDto,
-  UpdateShippingMethodDto,
-  CreateShippingCarrierDto,
-  UpdateShippingCarrierDto,
-  CreateShippingRateDto,
-  UpdateShippingRateDto,
-  CreateDeliverySlotDto,
-  UpdateDeliverySlotDto,
-} from './dto';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../roles/role.enum';
+import { Public } from '../../common/decorators/public.decorator';
 
-@ApiTags('Shipping Zones')
-@Controller('shipping/zones')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@ApiTags('Shipping')
+@Controller('shipping')
+@UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
-export class ShippingZonesController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) {
-    super();
+@UsePipes(new ValidationPipe({ whitelist: true }))
+export class ShippingController {
+  constructor(private readonly svc: ShippingService) {}
+
+  @Post('zones')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Create a shipping zone (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Zone created' })
+  createZone(@Body() dto: CreateShippingZoneDto) {
+    return this.svc.createZone(dto);
   }
 
-  @Post()
-  @ApiOperation({ summary: 'Create shipping zone' })
-  @Permissions('shipping.create')
-  create(@Body() dto: CreateShippingZoneDto) {
-    return this.handleAsyncOperation(this.shippingService.createZone(dto));
+  @Get('zones')
+  @Public()
+  @ApiOperation({ summary: 'List all shipping zones' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiResponse({ status: 200, description: 'Zones list returned' })
+  findAllZones(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.svc.findAllZones(+(page || 1), +(limit || 50));
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Get all shipping zones' })
-  @Permissions('shipping.read')
-  findAll() {
-    return this.handleAsyncOperation(this.shippingService.findAllZones());
-  }
-
-  @Get(':id')
+  @Get('zones/:id')
+  @Public()
   @ApiOperation({ summary: 'Get shipping zone by ID' })
-  @Permissions('shipping.read')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.shippingService.findOneZone(id));
+  @ApiParam({ name: 'id', description: 'Zone UUID' })
+  @ApiResponse({ status: 200, description: 'Zone found' })
+  findZone(@Param('id') id: string) {
+    return this.svc.findZone(id);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update shipping zone' })
-  @Permissions('shipping.update')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateShippingZoneDto,
-  ) {
-    return this.handleAsyncOperation(this.shippingService.updateZone(id, dto));
+  @Put('zones/:id')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update a shipping zone (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Zone UUID' })
+  @ApiResponse({ status: 200, description: 'Zone updated' })
+  updateZone(@Param('id') id: string, @Body() dto: UpdateShippingZoneDto) {
+    return this.svc.updateZone(id, dto);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete shipping zone' })
-  @Permissions('shipping.delete')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.shippingService.removeZone(id));
-  }
-}
-
-@ApiTags('Shipping Methods')
-@Controller('shipping/methods')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
-@ApiBearerAuth('JWT-auth')
-export class ShippingMethodsController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) {
-    super();
-  }
-
-  @Post()
-  @ApiOperation({ summary: 'Create shipping method' })
-  @Permissions('shipping.create')
-  create(@Body() dto: CreateShippingMethodDto) {
-    return this.handleAsyncOperation(this.shippingService.createMethod(dto));
+  @Post('zones/:zoneId/countries')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Add country to shipping zone (Admin only)' })
+  @ApiParam({ name: 'zoneId', description: 'Zone UUID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { country: { type: 'string', example: 'PK' } },
+      required: ['country'],
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Country added to zone' })
+  addCountry(@Param('zoneId') zoneId: string, @Body() dto: AddCountryDto) {
+    return this.svc.addCountryToZone(zoneId, dto.country);
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Get all shipping methods' })
-  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
-  @Permissions('shipping.read')
-  findAll(@Query('isActive') isActive?: boolean) {
-    return this.handleAsyncOperation(
-      this.shippingService.findAllMethods(isActive),
-    );
+  @Get('zones/:zoneId/countries')
+  @ApiOperation({ summary: 'Get countries in a shipping zone' })
+  @ApiParam({ name: 'zoneId', description: 'Zone UUID' })
+  @ApiResponse({ status: 200, description: 'Zone countries returned' })
+  getCountries(@Param('zoneId') zoneId: string) {
+    return this.svc.getZoneCountries(zoneId);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update shipping method' })
-  @Permissions('shipping.update')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateShippingMethodDto,
-  ) {
-    return this.handleAsyncOperation(
-      this.shippingService.updateMethod(id, dto),
-    );
+  @Post('methods')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Create a shipping method (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Method created' })
+  createMethod(@Body() dto: CreateShippingMethodDto) {
+    return this.svc.createMethod(dto);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete shipping method' })
-  @Permissions('shipping.delete')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.shippingService.removeMethod(id));
-  }
-}
-
-@ApiTags('Shipping Carriers')
-@Controller('shipping/carriers')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
-@ApiBearerAuth('JWT-auth')
-export class ShippingCarriersController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) {
-    super();
-  }
-
-  @Post()
-  @ApiOperation({ summary: 'Create shipping carrier' })
-  @Permissions('shipping.create')
-  create(@Body() dto: CreateShippingCarrierDto) {
-    return this.handleAsyncOperation(this.shippingService.createCarrier(dto));
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get all shipping carriers' })
-  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
-  @Permissions('shipping.read')
-  findAll(@Query('isActive') isActive?: boolean) {
-    return this.handleAsyncOperation(
-      this.shippingService.findAllCarriers(isActive),
-    );
-  }
-
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update shipping carrier' })
-  @Permissions('shipping.update')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateShippingCarrierDto,
-  ) {
-    return this.handleAsyncOperation(
-      this.shippingService.updateCarrier(id, dto),
-    );
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete shipping carrier' })
-  @Permissions('shipping.delete')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.shippingService.removeCarrier(id));
-  }
-}
-
-@ApiTags('Shipping Rates')
-@Controller('shipping/rates')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
-@ApiBearerAuth('JWT-auth')
-export class ShippingRatesController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) {
-    super();
-  }
-
-  @Post()
-  @ApiOperation({ summary: 'Create shipping rate' })
-  @Permissions('shipping.create')
-  create(@Body() dto: CreateShippingRateDto) {
-    return this.handleAsyncOperation(this.shippingService.createRate(dto));
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get shipping rates' })
-  @ApiQuery({ name: 'zoneId', required: false })
-  @ApiQuery({ name: 'methodId', required: false })
-  @Permissions('shipping.read')
-  findAll(
+  @Get('methods')
+  @ApiOperation({ summary: 'List shipping methods' })
+  @ApiQuery({
+    name: 'zoneId',
+    required: false,
+    type: String,
+    description: 'Filter by zone UUID',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiResponse({ status: 200, description: 'Methods list returned' })
+  findAllMethods(
     @Query('zoneId') zoneId?: string,
-    @Query('methodId') methodId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.handleAsyncOperation(
-      this.shippingService.findRates(zoneId, methodId),
-    );
+    return this.svc.findAllMethods(zoneId, +(page || 1), +(limit || 50));
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update shipping rate' })
-  @Permissions('shipping.update')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateShippingRateDto,
-  ) {
-    return this.handleAsyncOperation(this.shippingService.updateRate(id, dto));
+  @Get('methods/:id')
+  @ApiOperation({ summary: 'Get shipping method by ID' })
+  @ApiParam({ name: 'id', description: 'Method UUID' })
+  @ApiResponse({ status: 200, description: 'Method found' })
+  findMethod(@Param('id') id: string) {
+    return this.svc.findMethod(id);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete shipping rate' })
-  @Permissions('shipping.delete')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.shippingService.removeRate(id));
-  }
-}
-
-@ApiTags('Shipping Calculator')
-@Controller('shipping/calculate')
-export class ShippingCalculatorController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) {
-    super();
+  @Put('methods/:id')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update a shipping method (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Method UUID' })
+  @ApiResponse({ status: 200, description: 'Method updated' })
+  updateMethod(@Param('id') id: string, @Body() dto: UpdateShippingMethodDto) {
+    return this.svc.updateMethod(id, dto);
   }
 
-  @Post()
-  @ApiOperation({ summary: 'Calculate shipping options' })
-  calculate(
-    @Body() body: { zoneId: string; weight: number; totalAmount: number },
-  ) {
-    return this.handleAsyncOperation(
-      this.shippingService.calculateShipping(
-        body.zoneId,
-        body.weight,
-        body.totalAmount,
-      ),
-    );
-  }
-}
-
-@ApiTags('Delivery Slots')
-@Controller('shipping/slots')
-export class DeliverySlotsController extends BaseController {
-  constructor(private readonly shippingService: ShippingService) {
-    super();
+  @Post('shipments')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN, RoleEnum.SELLER)
+  @ApiOperation({ summary: 'Create a shipment (Seller/Admin)' })
+  @ApiResponse({ status: 201, description: 'Shipment created' })
+  createShipment(@Body() dto: CreateShipmentDto) {
+    return this.svc.createShipment(dto);
   }
 
-  @Post()
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create delivery slot' })
-  @Permissions('shipping.create')
-  create(@Body() dto: CreateDeliverySlotDto) {
-    return this.handleAsyncOperation(this.shippingService.createSlot(dto));
+  @Get('shipments/:id')
+  @ApiOperation({ summary: 'Get shipment by ID' })
+  @ApiParam({ name: 'id', description: 'Shipment UUID' })
+  @ApiResponse({ status: 200, description: 'Shipment found' })
+  findShipment(@Param('id') id: string) {
+    return this.svc.findShipment(id);
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Get available delivery slots' })
-  findAvailable() {
-    return this.handleAsyncOperation(this.shippingService.getAvailableSlots());
+  @Put('shipments/:id')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN, RoleEnum.SELLER)
+  @ApiOperation({ summary: 'Update a shipment (Seller/Admin)' })
+  @ApiParam({ name: 'id', description: 'Shipment UUID' })
+  @ApiResponse({ status: 200, description: 'Shipment updated' })
+  updateShipment(@Param('id') id: string, @Body() dto: UpdateShipmentDto) {
+    return this.svc.updateShipment(id, dto);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get delivery slot by ID' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.shippingService.findOneSlot(id));
+  @Post('shipments/:id/events')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN, RoleEnum.SELLER)
+  @ApiOperation({ summary: 'Add tracking event to shipment' })
+  @ApiParam({ name: 'id', description: 'Shipment UUID' })
+  @ApiResponse({ status: 201, description: 'Event added' })
+  addEvent(@Param('id') id: string, @Body() dto: CreateShipmentEventDto) {
+    return this.svc.addShipmentEvent({ ...dto, shipmentId: id });
   }
 
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update delivery slot' })
-  @Permissions('shipping.update')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateDeliverySlotDto,
-  ) {
-    return this.handleAsyncOperation(this.shippingService.updateSlot(id, dto));
+  @Get('shipments/:id/events')
+  @ApiOperation({ summary: 'Get tracking events for shipment' })
+  @ApiParam({ name: 'id', description: 'Shipment UUID' })
+  @ApiResponse({ status: 200, description: 'Events returned' })
+  getEvents(@Param('id') id: string) {
+    return this.svc.getShipmentEvents(id);
   }
 
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Delete delivery slot' })
-  @Permissions('shipping.delete')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.shippingService.removeSlot(id));
+  @Get('order/:orderId/shipments')
+  @ApiOperation({ summary: 'Get shipments for an order' })
+  @ApiParam({ name: 'orderId', description: 'Order UUID' })
+  @ApiResponse({ status: 200, description: 'Order shipments returned' })
+  findByOrder(@Param('orderId') orderId: string) {
+    return this.svc.findShipmentsByOrder(orderId);
   }
 }

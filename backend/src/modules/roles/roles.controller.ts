@@ -2,83 +2,81 @@ import {
   Controller,
   Get,
   Post,
-  Body,
-  Patch,
-  Param,
+  Put,
   Delete,
+  Body,
+  Param,
+  Query,
+  UsePipes,
+  ValidationPipe,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { Permissions } from '../../common/decorators/permissions.decorator';
 import { RoleEnum } from './role.enum';
-import { SecurityUtil } from '../../common/utils/security.util';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { BaseController } from '../../common/controllers/base.controller';
+import { Auditable } from '../../common/interceptor/audit.interceptor';
 
-@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @ApiTags('Roles')
 @Controller('roles')
-export class RolesController extends BaseController {
-  constructor(private readonly rolesService: RolesService) {
-    super();
-  }
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+@ApiBearerAuth('JWT-auth')
+@UsePipes(new ValidationPipe({ whitelist: true }))
+export class RolesController {
+  constructor(private readonly rolesService: RolesService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create a new role' })
-  @Roles(RoleEnum.ADMIN)
-  @Permissions('roles.create')
+  @ApiOperation({ summary: 'Create a new role (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Role created' })
+  @Auditable({ action: 'CREATE', tableName: 'roles' })
   create(@Body() dto: CreateRoleDto) {
-    return this.handleAsyncOperation(this.rolesService.create(dto));
+    return this.rolesService.create(dto);
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Retrieve all roles' })
-  @Roles(RoleEnum.ADMIN)
-  @Permissions('roles.read')
-  findAll() {
-    return this.handleAsyncOperation(this.rolesService.findAll());
+  @ApiOperation({ summary: 'List all roles (Admin only)' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiResponse({ status: 200, description: 'Roles list returned' })
+  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.rolesService.findAll(+(page || 1), +(limit || 50));
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Retrieve a role by ID' })
-  @Permissions('roles.read')
-  @Roles(RoleEnum.ADMIN)
+  @ApiOperation({ summary: 'Get role by ID (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Role UUID' })
+  @ApiResponse({ status: 200, description: 'Role found' })
   findOne(@Param('id') id: string) {
-    const validId = SecurityUtil.validateId(id);
-    return this.handleAsyncOperation(this.rolesService.findOne(validId));
+    return this.rolesService.findOne(id);
   }
 
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update a role by ID' })
-  @Roles(RoleEnum.ADMIN)
-  @Permissions('roles.update')
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a role (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Role UUID' })
+  @ApiResponse({ status: 200, description: 'Role updated' })
+  @Auditable({ action: 'UPDATE', tableName: 'roles' })
   update(@Param('id') id: string, @Body() dto: UpdateRoleDto) {
-    const validId = SecurityUtil.validateId(id);
-    return this.handleAsyncOperation(this.rolesService.update(validId, dto));
+    return this.rolesService.update(id, dto);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Remove a role by ID' })
-  @Roles(RoleEnum.ADMIN)
-  @Permissions('roles.delete')
+  @ApiOperation({ summary: 'Delete a role (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Role UUID' })
+  @ApiResponse({ status: 200, description: 'Role deleted' })
+  @Auditable({ action: 'DELETE', tableName: 'roles' })
   remove(@Param('id') id: string) {
-    const validId = SecurityUtil.validateId(id);
-    return this.handleAsyncOperation(this.rolesService.remove(validId));
+    return this.rolesService.remove(id);
   }
 }

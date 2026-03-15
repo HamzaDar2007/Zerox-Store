@@ -75,7 +75,7 @@
 14. [Rate Limiting & Security](#14-rate-limiting--security)
 15. [Swagger / OpenAPI Documentation](#15-swagger--openapi-documentation)
 16. [Real-Time Features (WebSocket)](#16-real-time-features-websocket)
-17. [File Storage (Supabase)](#17-file-storage-supabase)
+17. [File Storage (Cloudflare R2)](#17-file-storage-cloudflare-r2)
 18. [Testing](#18-testing)
 19. [Deployment Guide](#19-deployment-guide)
 20. [Project Structure](#20-project-structure)
@@ -146,7 +146,7 @@
           └────────────────────────────┘
               │                    │
     ┌─────────▼────────┐  ┌───────▼────────┐
-    │  Supabase Storage │  │  Socket.IO     │
+    │  Cloudflare R2     │  │  Socket.IO     │
     │  (File Uploads)   │  │  (Real-time)   │
     └──────────────────┘  └────────────────┘
 ```
@@ -215,7 +215,7 @@ The application is organized into **34 modules** (7 core + 26 feature + MailModu
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `@supabase/supabase-js` | ^2.56.0 | Supabase client (file storage) |
+| `@aws-sdk/client-s3` | ^3.x | Cloudflare R2 / S3-compatible storage |
 | `@nestjs/websockets` | ^10.0.0 | WebSocket support |
 | `@nestjs/platform-socket.io` | ^10.0.0 | Socket.IO adapter |
 | `multer` | ^1.4.5-lts.1 | File upload handling |
@@ -317,11 +317,12 @@ Create a `.env` file in the project root with the following variables:
 | **Rate Limiting** | | | |
 | `THROTTLE_TTL` | No | `60000` | Throttle window in milliseconds |
 | `THROTTLE_LIMIT` | No | `100` | Max requests per throttle window |
-| **Supabase (File Storage)** | | | |
-| `SUPABASE_URL` | No | — | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | No | — | Supabase service role key |
-| `SUPABASE_ANON_KEY` | No | — | Supabase anonymous key |
-| `SUPABASE_BUCKET_NAME` | No | — | Supabase storage bucket name |
+| **Cloudflare R2 (File Storage)** | | | |
+| `R2_ACCESS_KEY_ID` | No | — | R2 access key ID |
+| `R2_SECRET_ACCESS_KEY` | No | — | R2 secret access key |
+| `R2_ENDPOINT` | No | — | R2 S3-compatible endpoint URL |
+| `R2_BUCKET_NAME` | No | — | R2 bucket name |
+| `R2_PUBLIC_URL` | No | — | R2 public bucket URL |
 | **Super Admin Seed** | | | |
 | `SUPER_ADMIN_NAME` | No | — | Name for seeded super admin user |
 | `SUPER_ADMIN_EMAIL` | No | — | Email for seeded super admin user |
@@ -351,11 +352,12 @@ JWT_EXPIRES_IN=15m
 THROTTLE_TTL=60000
 THROTTLE_LIMIT=100
 
-# Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_BUCKET_NAME=uploads
+# Cloudflare R2
+R2_ACCESS_KEY_ID=your-r2-access-key
+R2_SECRET_ACCESS_KEY=your-r2-secret-key
+R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+R2_BUCKET_NAME=your-bucket
+R2_PUBLIC_URL=https://pub-xxxxx.r2.dev
 
 # Super Admin
 SUPER_ADMIN_NAME=Super Admin
@@ -5716,37 +5718,47 @@ socket.on('message', (data) => {
 
 ---
 
-## 17. File Storage (Supabase)
+## 17. File Storage (Cloudflare R2)
 
-> **⚠️ Partially Implemented** — The `SupabaseService` (`src/common/services/supabase.service.ts`) exists with Supabase SDK integration, but it is **not currently wired into any module's upload flow**. File upload endpoints are not yet functional.
+> **Fully Implemented** — The `StorageService` (`src/common/services/storage.service.ts`) uses the AWS S3 SDK to talk to Cloudflare R2. A centralized upload controller exposes `POST /upload/image` and `POST /upload/images` endpoints.
 
-The application uses **Supabase Storage** for file uploads (product images, seller documents, review images, etc.).
+The application uses **Cloudflare R2** (S3-compatible) for file uploads (product images, seller documents, review images, etc.).
 
 ### Configuration
 
 Set these environment variables:
 
 ```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_BUCKET_NAME=uploads
+R2_ACCESS_KEY_ID=your-r2-access-key
+R2_SECRET_ACCESS_KEY=your-r2-secret-key
+R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+R2_BUCKET_NAME=your-bucket
+R2_PUBLIC_URL=https://pub-xxxxx.r2.dev
 ```
 
 ### File Upload Flow
 
-1. Client uploads file via multipart form data (handled by `multer`)
-2. Server validates file type and size
-3. File is uploaded to Supabase Storage bucket
-4. Public URL is returned and stored in the database
+1. Client uploads file via multipart form data to `POST /upload/image?folder=products`
+2. Server validates file type (JPEG, PNG, WebP, GIF, SVG) and size (≤ 5 MB)
+3. File is uploaded to Cloudflare R2 bucket under the specified folder
+4. Public URL is returned — store it when creating / updating entities
+
+### Upload Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/upload/image?folder=<name>` | POST | Upload a single image (field: `file`) |
+| `/upload/images?folder=<name>` | POST | Upload up to 10 images (field: `files`) |
+
+Both endpoints require a valid JWT Bearer token.
 
 ### Supported File Types
 
-Files are typically images (JPEG, PNG, WebP) and documents (PDF) uploaded for:
+Images (JPEG, PNG, WebP, GIF, SVG) uploaded for:
 - Product images
 - Product variant images
 - Review images
-- Seller documents (CNIC, tax certificates)
+- Seller documents
 - Store logos and banners
 - CMS banner images
 - Dispute evidence
@@ -5876,7 +5888,7 @@ CMD ["node", "dist/main"]
 - [ ] Configure `FRONTEND_URLS` with production domains
 - [ ] Set `TYPEORM_LOGGING=false`
 - [ ] Use a managed PostgreSQL instance
-- [ ] Configure Supabase production keys
+- [ ] Configure Cloudflare R2 production keys
 - [ ] Run migrations: `npm run migration:run`
 - [ ] Seed data (first deployment): `npm run seed:all`
 - [ ] Set up HTTPS/TLS termination (via reverse proxy)
@@ -5892,7 +5904,7 @@ CMD ["node", "dist/main"]
 | **Reverse Proxy** | Nginx or AWS ALB |
 | **Process Manager** | PM2 or Docker containers |
 | **Database** | AWS RDS PostgreSQL or Supabase Postgres |
-| **File Storage** | Supabase Storage |
+| **File Storage** | Cloudflare R2 |
 | **SSL/TLS** | Let's Encrypt or AWS ACM |
 | **Monitoring** | PM2 monitoring, CloudWatch, or Datadog |
 | **CI/CD** | GitHub Actions |

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { withRetry } from '../../utils/retry.util';
 import {
   EmailTemplate,
   OrderItemInfo,
@@ -96,12 +97,18 @@ export class MailService {
     }
 
     try {
-      const info = await this.transporter.sendMail({
-        from: this.mailFrom,
-        to,
-        subject: template.subject,
-        html: template.html,
-      });
+      const info = await withRetry(
+        () =>
+          this.transporter.sendMail({
+            from: this.mailFrom,
+            to,
+            subject: template.subject,
+            html: template.html,
+          }),
+        3,
+        1000,
+        'MailService',
+      );
       this.logger.log(
         `Email sent: "${template.subject}" → ${to} (messageId: ${info.messageId})`,
       );

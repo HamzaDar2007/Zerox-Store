@@ -57,9 +57,9 @@ export class PermissionsGuard implements CanActivate {
         `
         SELECT DISTINCT p.module, p.action
         FROM permissions p
-        JOIN roles r ON r.id = p.role_id
-        JOIN users u ON u.role::text = r.name
-        WHERE u.id = $1
+        JOIN role_permissions rp ON rp.permission_id = p.id
+        JOIN user_roles ur ON ur.role_id = rp.role_id
+        WHERE ur.user_id = $1
         `,
         [user.id],
       );

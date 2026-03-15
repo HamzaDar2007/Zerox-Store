@@ -1,151 +1,76 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsNotEmpty,
-  IsOptional,
   IsString,
-  MaxLength,
-  IsEnum,
+  IsOptional,
+  IsUUID,
   IsNumber,
+  MaxLength,
   Min,
-  IsInt,
-  IsBoolean,
-  IsObject,
-  IsDateString,
 } from 'class-validator';
-import { OrderStatus } from '@common/enums';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateOrderDto {
-  @ApiProperty({ description: 'User ID' })
-  @IsNotEmpty()
-  @IsUuidString()
-  userId: string;
-
-  @ApiProperty({ description: 'Store ID' })
-  @IsNotEmpty()
-  @IsUuidString()
-  storeId: string;
-
-  @ApiPropertyOptional({ description: 'Order status', enum: OrderStatus })
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Applied coupon UUID',
+  })
   @IsOptional()
-  @IsEnum(OrderStatus)
-  status?: OrderStatus;
+  @IsUUID()
+  couponId?: string;
 
-  @ApiPropertyOptional({ description: 'Currency code', default: 'PKR' })
+  @ApiPropertyOptional({ example: 200, description: 'Shipping fee' })
   @IsOptional()
-  @IsString()
-  @MaxLength(3)
-  currencyCode?: string;
-
-  @ApiProperty({ description: 'Subtotal amount' })
-  @IsNotEmpty()
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  subtotal: number;
-
-  @ApiPropertyOptional({ description: 'Discount amount', default: 0 })
-  @IsOptional()
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  discountAmount?: number;
-
-  @ApiPropertyOptional({ description: 'Tax amount', default: 0 })
-  @IsOptional()
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  taxAmount?: number;
-
-  @ApiPropertyOptional({ description: 'Shipping amount', default: 0 })
-  @IsOptional()
-  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsNumber()
   @Min(0)
   shippingAmount?: number;
 
-  @ApiProperty({ description: 'Total amount' })
-  @IsNotEmpty()
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  totalAmount: number;
-
-  @ApiPropertyOptional({ description: 'Voucher ID' })
-  @IsOptional()
-  @IsUuidString()
-  voucherId?: string;
-
-  @ApiPropertyOptional({ description: 'Voucher code' })
+  @ApiPropertyOptional({
+    example: '123 Main Street',
+    description: 'Shipping address line 1',
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(50)
-  voucherCode?: string;
+  shippingLine1?: string;
 
-  @ApiProperty({ description: 'Shipping address as JSON' })
-  @IsNotEmpty()
-  @IsObject()
-  shippingAddress: Record<string, any>;
-
-  @ApiPropertyOptional({ description: 'Billing address as JSON' })
+  @ApiPropertyOptional({
+    example: 'Apt 4B',
+    description: 'Shipping address line 2',
+  })
   @IsOptional()
-  @IsObject()
-  billingAddress?: Record<string, any>;
+  @IsString()
+  shippingLine2?: string;
 
-  @ApiPropertyOptional({ description: 'Shipping method' })
+  @ApiPropertyOptional({
+    example: 'Lahore',
+    description: 'Shipping city',
+    maxLength: 100,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(100)
-  shippingMethod?: string;
+  shippingCity?: string;
 
-  @ApiPropertyOptional({ description: 'Payment method' })
+  @ApiPropertyOptional({
+    example: 'Punjab',
+    description: 'Shipping state',
+    maxLength: 100,
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(50)
-  paymentMethod?: string;
+  @MaxLength(100)
+  shippingState?: string;
 
-  @ApiPropertyOptional({ description: 'Customer notes' })
-  @IsOptional()
-  @IsString()
-  customerNotes?: string;
-
-  @ApiPropertyOptional({ description: 'Is this a gift?', default: false })
-  @IsOptional()
-  @IsBoolean()
-  isGift?: boolean;
-
-  @ApiPropertyOptional({ description: 'Gift message' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  giftMessage?: string;
-
-  @ApiPropertyOptional({ description: 'Gift wrap requested', default: false })
-  @IsOptional()
-  @IsBoolean()
-  giftWrapRequested?: boolean;
-
-  @ApiPropertyOptional({ description: 'Loyalty points used', default: 0 })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  loyaltyPointsUsed?: number;
-
-  @ApiPropertyOptional({ description: 'Estimated delivery date' })
-  @IsOptional()
-  @IsDateString()
-  estimatedDeliveryDate?: string;
-
-  @ApiPropertyOptional({ description: 'Source platform', default: 'web' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  sourcePlatform?: string;
-
-  @ApiPropertyOptional({ description: 'Device type' })
+  @ApiPropertyOptional({
+    example: '54000',
+    description: 'Shipping postal code',
+    maxLength: 20,
+  })
   @IsOptional()
   @IsString()
   @MaxLength(20)
-  deviceType?: string;
+  shippingPostalCode?: string;
 
-  @ApiPropertyOptional({ description: 'IP address' })
+  @ApiPropertyOptional({ example: 'PK', description: 'Shipping country code' })
   @IsOptional()
   @IsString()
-  ipAddress?: string;
+  shippingCountry?: string;
 }

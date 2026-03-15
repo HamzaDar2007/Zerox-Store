@@ -1,119 +1,55 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
 import {
   IsString,
-  IsNotEmpty,
   IsOptional,
-  MaxLength,
+  IsNotEmpty,
   IsBoolean,
-  IsNumber,
-  IsEmail,
-  Min,
-  Max,
+  MaxLength,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateWarehouseDto {
-  @ApiPropertyOptional({
-    description: 'Seller ID (null for platform warehouses)',
+  @ApiProperty({
+    example: 'WH-LHR-01',
+    description: 'Warehouse code',
+    maxLength: 20,
   })
-  @IsOptional()
-  @IsUuidString()
-  sellerId?: string;
-
-  @ApiProperty({ description: 'Warehouse name', maxLength: 100 })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  @Transform(({ value }) => value?.trim())
-  name: string;
-
-  @ApiProperty({ description: 'Warehouse code', maxLength: 20 })
   @IsString()
   @IsNotEmpty()
   @MaxLength(20)
   code: string;
 
-  @ApiPropertyOptional({ description: 'Address line 1' })
-  @IsOptional()
+  @ApiProperty({
+    example: 'Lahore Main Warehouse',
+    description: 'Warehouse name',
+    maxLength: 200,
+  })
   @IsString()
+  @IsNotEmpty()
   @MaxLength(200)
-  addressLine1?: string;
+  name: string;
 
-  @ApiPropertyOptional({ description: 'Address line 2' })
-  @IsOptional()
+  @ApiProperty({ example: '45 Industrial Area', description: 'Address line 1' })
   @IsString()
-  @MaxLength(200)
-  addressLine2?: string;
+  @IsNotEmpty()
+  line1: string;
 
-  @ApiPropertyOptional({ description: 'City' })
-  @IsOptional()
+  @ApiProperty({ example: 'Lahore', description: 'City', maxLength: 100 })
   @IsString()
+  @IsNotEmpty()
   @MaxLength(100)
-  city?: string;
+  city: string;
 
-  @ApiPropertyOptional({ description: 'State' })
-  @IsOptional()
+  @ApiProperty({ example: 'Pakistan', description: 'Country', maxLength: 100 })
   @IsString()
+  @IsNotEmpty()
   @MaxLength(100)
-  state?: string;
+  country: string;
 
-  @ApiPropertyOptional({ description: 'Postal code' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(20)
-  postalCode?: string;
-
-  @ApiPropertyOptional({ description: 'Country code', default: 'PK' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(3)
-  countryCode?: string;
-
-  @ApiPropertyOptional({ description: 'Latitude' })
-  @IsOptional()
-  @IsNumber()
-  @Min(-90)
-  @Max(90)
-  latitude?: number;
-
-  @ApiPropertyOptional({ description: 'Longitude' })
-  @IsOptional()
-  @IsNumber()
-  @Min(-180)
-  @Max(180)
-  longitude?: number;
-
-  @ApiPropertyOptional({ description: 'Contact name' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  contactName?: string;
-
-  @ApiPropertyOptional({ description: 'Contact phone' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(20)
-  contactPhone?: string;
-
-  @ApiPropertyOptional({ description: 'Contact email' })
-  @IsOptional()
-  @IsEmail()
-  @MaxLength(150)
-  contactEmail?: string;
-
-  @ApiPropertyOptional({ description: 'Is active', default: true })
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether the warehouse is active',
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
-
-  @ApiPropertyOptional({ description: 'Is default warehouse', default: false })
-  @IsOptional()
-  @IsBoolean()
-  isDefault?: boolean;
-
-  @ApiPropertyOptional({ description: 'Priority', default: 0 })
-  @IsOptional()
-  @IsNumber()
-  priority?: number;
 }

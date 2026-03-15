@@ -1,206 +1,125 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
 import {
   IsString,
-  IsNotEmpty,
   IsOptional,
-  IsEnum,
-  MaxLength,
-  IsBoolean,
+  IsNotEmpty,
+  IsUUID,
   IsNumber,
+  IsBoolean,
+  MaxLength,
+  Length,
   Min,
-  Max,
-  IsArray,
-  Matches,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ProductStatus, WarrantyType } from '@common/enums';
 
 export class CreateProductDto {
-  @ApiProperty({ description: 'Seller ID' })
-  @IsUuidString()
-  @IsNotEmpty()
-  sellerId: string;
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Store UUID',
+  })
+  @IsUUID()
+  storeId: string;
 
-  @ApiProperty({ description: 'Category ID' })
-  @IsUuidString()
-  @IsNotEmpty()
-  categoryId: string;
-
-  @ApiPropertyOptional({ description: 'Brand ID' })
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    description: 'Category UUID',
+  })
   @IsOptional()
-  @IsUuidString()
+  @IsUUID()
+  categoryId?: string;
+
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440002',
+    description: 'Brand UUID',
+  })
+  @IsOptional()
+  @IsUUID()
   brandId?: string;
 
-  @ApiProperty({ description: 'Product name', maxLength: 300 })
+  @ApiPropertyOptional({
+    example: 'Wireless Bluetooth Headphones',
+    description: 'Product name',
+    maxLength: 300,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  name?: string;
+
+  @ApiProperty({
+    example: 'wireless-bluetooth-headphones',
+    description: 'URL-friendly slug (unique)',
+    maxLength: 300,
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(300)
-  @Transform(({ value }) => value?.trim())
-  name: string;
+  slug: string;
 
   @ApiPropertyOptional({
-    description: 'Product slug (auto-generated if not provided)',
+    example: 'Premium wireless headphones with ANC',
+    description: 'Short description',
   })
   @IsOptional()
   @IsString()
-  @MaxLength(300)
-  @Matches(/^[a-z0-9-]+$/, {
-    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
-  })
-  slug?: string;
-
-  @ApiPropertyOptional({ description: 'Full product description' })
-  @IsOptional()
-  @IsString()
-  description?: string;
+  @MaxLength(1000)
+  shortDesc?: string;
 
   @ApiPropertyOptional({
-    description: 'Short description for listing',
-    maxLength: 500,
+    example: 'Full product description with features...',
+    description: 'Full description',
   })
   @IsOptional()
   @IsString()
-  @MaxLength(500)
-  shortDescription?: string;
+  @MaxLength(10000)
+  fullDesc?: string;
 
-  @ApiProperty({ description: 'Product price', minimum: 0 })
+  @ApiProperty({ example: 4999.99, description: 'Base price' })
   @IsNumber()
   @Min(0)
-  price: number;
+  basePrice: number;
 
   @ApiPropertyOptional({
-    description: 'Compare at price (original price for discounts)',
+    example: 'PKR',
+    description: 'Currency code (ISO 3-letter)',
+    minLength: 3,
+    maxLength: 3,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  compareAtPrice?: number;
-
-  @ApiPropertyOptional({ description: 'Cost price' })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  costPrice?: number;
-
-  @ApiPropertyOptional({ description: 'Currency code', default: 'PKR' })
-  @IsOptional()
   @IsString()
-  @MaxLength(3)
-  currencyCode?: string;
+  @Length(3, 3)
+  currency?: string;
 
-  @ApiPropertyOptional({ description: 'Stock quantity', default: 0 })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  stock?: number;
-
-  @ApiPropertyOptional({ description: 'Low stock alert threshold', default: 5 })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  lowStockThreshold?: number;
-
-  @ApiPropertyOptional({ description: 'SKU', maxLength: 100 })
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  sku?: string;
-
-  @ApiPropertyOptional({ description: 'Barcode', maxLength: 50 })
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  barcode?: string;
-
-  @ApiPropertyOptional({ description: 'Weight' })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  weight?: number;
-
-  @ApiPropertyOptional({ description: 'Weight unit', default: 'kg' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(10)
-  weightUnit?: string;
-
-  @ApiPropertyOptional({ description: 'Length' })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  length?: number;
-
-  @ApiPropertyOptional({ description: 'Width' })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  width?: number;
-
-  @ApiPropertyOptional({ description: 'Height' })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  height?: number;
-
-  @ApiPropertyOptional({ description: 'Dimension unit', default: 'cm' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(10)
-  dimensionUnit?: string;
-
-  @ApiPropertyOptional({ enum: WarrantyType })
-  @IsOptional()
-  @IsEnum(WarrantyType)
-  warrantyType?: WarrantyType;
-
-  @ApiPropertyOptional({ description: 'Warranty duration in months' })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(120)
-  warrantyDurationMonths?: number;
-
-  @ApiPropertyOptional({ description: 'Product tags', type: [String] })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tags?: string[];
-
-  @ApiPropertyOptional({ enum: ProductStatus, default: ProductStatus.DRAFT })
-  @IsOptional()
-  @IsEnum(ProductStatus)
-  status?: ProductStatus;
-
-  @ApiPropertyOptional({ description: 'Is featured product', default: false })
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether the product is active',
+  })
   @IsOptional()
   @IsBoolean()
-  isFeatured?: boolean;
+  isActive?: boolean;
 
-  @ApiPropertyOptional({ description: 'Is digital product', default: false })
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Whether this is a digital product',
+  })
   @IsOptional()
   @IsBoolean()
   isDigital?: boolean;
 
-  @ApiPropertyOptional({ description: 'Requires shipping', default: true })
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether the product requires shipping',
+  })
   @IsOptional()
   @IsBoolean()
   requiresShipping?: boolean;
 
-  @ApiPropertyOptional({ description: 'Is taxable', default: true })
-  @IsOptional()
-  @IsBoolean()
-  isTaxable?: boolean;
-
-  @ApiPropertyOptional({ description: 'Meta title for SEO' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  metaTitle?: string;
-
-  @ApiPropertyOptional({ description: 'Meta description for SEO' })
+  @ApiPropertyOptional({
+    example: 'standard',
+    description: 'Tax class',
+    maxLength: 50,
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(500)
-  metaDescription?: string;
+  @MaxLength(50)
+  taxClass?: string;
 }

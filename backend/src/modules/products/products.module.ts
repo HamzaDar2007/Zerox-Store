@@ -5,11 +5,10 @@ import { ProductsController } from './products.controller';
 import { Product } from './entities/product.entity';
 import { ProductVariant } from './entities/product-variant.entity';
 import { ProductImage } from './entities/product-image.entity';
-import { ProductAttribute } from './entities/product-attribute.entity';
-import { ProductQuestion } from './entities/product-question.entity';
-import { ProductAnswer } from './entities/product-answer.entity';
-import { PriceHistory } from './entities/price-history.entity';
-import { Seller } from '../sellers/entities/seller.entity';
+import { AttributeKey } from './entities/attribute-key.entity';
+import { AttributeValue } from './entities/attribute-value.entity';
+import { VariantAttributeValue } from './entities/variant-attribute-value.entity';
+import { ProductCategory } from './entities/product-category.entity';
 import { SharedModule } from '../shared/shared.module';
 import { GuardsModule } from '../../common/modules/guards.module';
 
@@ -19,11 +18,10 @@ import { GuardsModule } from '../../common/modules/guards.module';
       Product,
       ProductVariant,
       ProductImage,
-      ProductAttribute,
-      ProductQuestion,
-      ProductAnswer,
-      PriceHistory,
-      Seller,
+      AttributeKey,
+      AttributeValue,
+      VariantAttributeValue,
+      ProductCategory,
     ]),
     SharedModule,
     GuardsModule,

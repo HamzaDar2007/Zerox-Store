@@ -1,4 +1,8 @@
-export * from './cart.entity';
-export * from './cart-item.entity';
-export * from './wishlist.entity';
-export * from './checkout-session.entity';
+export { Cart } from './cart.entity';
+export { CartItem } from './cart-item.entity';
+export { Wishlist } from './wishlist.entity';
+export { WishlistItem } from './wishlist-item.entity';
+export { Coupon } from './coupon.entity';
+export { CouponScope } from './coupon-scope.entity';
+export { FlashSale } from './flash-sale.entity';
+export { FlashSaleItem } from './flash-sale-item.entity';

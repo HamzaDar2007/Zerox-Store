@@ -60,3 +60,20 @@ export enum PaymentAttemptStatus {
   FAILED = 'failed',
   CANCELLED = 'cancelled',
 }
+
+export enum DeviceType {
+  DESKTOP = 'desktop',
+  MOBILE = 'mobile',
+  TABLET = 'tablet',
+  OTHER = 'other',
+}
+
+export enum CardBrand {
+  VISA = 'visa',
+  MASTERCARD = 'mastercard',
+  AMEX = 'amex',
+  UNIONPAY = 'unionpay',
+  JCB = 'jcb',
+  DISCOVER = 'discover',
+  OTHER = 'other',
+}

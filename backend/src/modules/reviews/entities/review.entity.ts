@@ -2,22 +2,18 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   ManyToOne,
-  OneToMany,
   JoinColumn,
   Unique,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { ReviewStatus } from '@common/enums';
 import { Product } from '../../products/entities/product.entity';
 import { User } from '../../users/entities/user.entity';
 import { Order } from '../../orders/entities/order.entity';
-import { ReviewHelpfulness } from './review-helpfulness.entity';
-import { ReviewReport } from './review-report.entity';
 
 @Entity('reviews')
-@Unique(['userId', 'productId'])
+@Unique(['productId', 'userId', 'orderId'])
 export class Review {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -25,82 +21,38 @@ export class Review {
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 
-  @ManyToOne(() => Product)
+  @ManyToOne(() => Product, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ name: 'order_id', type: 'uuid', nullable: true })
   orderId: string | null;
 
-  @ManyToOne(() => Order)
+  @ManyToOne(() => Order, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'order_id' })
   order: Order | null;
 
-  @Column({ type: 'integer' })
+  @Column({ type: 'smallint' })
   rating: number;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 300, nullable: true })
   title: string | null;
 
   @Column({ type: 'text', nullable: true })
-  content: string | null;
+  body: string | null;
 
-  @Column({ type: 'text', array: true, default: '{}' })
-  pros: string[];
+  @Column({ name: 'is_verified', type: 'boolean', default: false })
+  isVerified: boolean;
 
-  @Column({ type: 'text', array: true, default: '{}' })
-  cons: string[];
-
-  @Column({ type: 'text', array: true, default: '{}' })
-  images: string[];
-
-  @Column({ name: 'is_verified_purchase', type: 'boolean', default: false })
-  isVerifiedPurchase: boolean;
-
-  @Column({
-    type: 'enum',
-    enum: ReviewStatus,
-    default: ReviewStatus.PENDING,
-  })
-  status: ReviewStatus;
-
-  @Column({ name: 'helpful_count', type: 'integer', default: 0 })
-  helpfulCount: number;
-
-  @Column({ name: 'not_helpful_count', type: 'integer', default: 0 })
-  notHelpfulCount: number;
-
-  @Column({ name: 'seller_response', type: 'text', nullable: true })
-  sellerResponse: string | null;
-
-  @Column({ name: 'seller_response_at', type: 'timestamptz', nullable: true })
-  sellerResponseAt: Date | null;
-
-  @Column({ name: 'moderated_by', type: 'uuid', nullable: true })
-  moderatedBy: string | null;
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'moderated_by' })
-  moderatedByUser: User | null;
-
-  @Column({ name: 'moderated_at', type: 'timestamptz', nullable: true })
-  moderatedAt: Date | null;
-
-  @Column({ name: 'moderation_notes', type: 'text', nullable: true })
-  moderationNotes: string | null;
-
-  @OneToMany(() => ReviewHelpfulness, (helpfulness) => helpfulness.review)
-  helpfulness: ReviewHelpfulness[];
-
-  @OneToMany(() => ReviewReport, (report) => report.review)
-  reports: ReviewReport[];
+  @Column({ type: 'varchar', length: 20, default: 'pending' })
+  status: string = 'pending';
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

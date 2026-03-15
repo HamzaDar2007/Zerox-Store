@@ -1,34 +1,4 @@
-import { IsString, IsOptional, MaxLength } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { PartialType } from '@nestjs/swagger';
+import { CreateRoleDto } from './create-role.dto';
 
-export class UpdateRoleDto {
-  @ApiPropertyOptional({
-    description: 'The new unique name of the role',
-    example: 'super_admin',
-    maxLength: 50,
-  })
-  @IsOptional()
-  @IsString({ message: 'Role name must be a string' })
-  @MaxLength(50, { message: 'Role name cannot exceed 50 characters' })
-  name?: string;
-
-  @ApiPropertyOptional({
-    description: 'Display name for the role',
-    example: 'Super Administrator',
-    maxLength: 100,
-  })
-  @IsOptional()
-  @IsString({ message: 'Display name must be a string' })
-  @MaxLength(100, { message: 'Display name cannot exceed 100 characters' })
-  displayName?: string;
-
-  @ApiPropertyOptional({
-    description: 'The new description for the role',
-    example: 'Grants full administrative access.',
-    maxLength: 255,
-  })
-  @IsOptional()
-  @IsString({ message: 'Description must be a string' })
-  @MaxLength(255, { message: 'Description cannot exceed 255 characters' })
-  description?: string;
-}
+export class UpdateRoleDto extends PartialType(CreateRoleDto) {}

@@ -176,7 +176,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (isValidationError) {
       return {
         success: false,
-        message: exception.message,
+        message: 'Validation failed',
         error: 'Bad Request',
         statusCode: HttpStatus.BAD_REQUEST,
         timestamp,
@@ -187,7 +187,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (isAuthError) {
       return {
         success: false,
-        message: exception.message,
+        message: 'Authentication required',
         error: 'Unauthorized',
         statusCode: HttpStatus.UNAUTHORIZED,
         timestamp,
@@ -198,7 +198,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (isNotFoundError) {
       return {
         success: false,
-        message: exception.message,
+        message: 'Resource not found',
         error: 'Not Found',
         statusCode: HttpStatus.NOT_FOUND,
         timestamp,

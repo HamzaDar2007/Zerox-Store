@@ -1,44 +1,55 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
 import {
   IsString,
-  IsNotEmpty,
   IsOptional,
-  MaxLength,
+  IsNotEmpty,
+  IsUUID,
+  IsInt,
   IsBoolean,
-  IsNumber,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateProductImageDto {
-  @ApiProperty({ description: 'Product ID' })
-  @IsUuidString()
-  @IsNotEmpty()
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Product UUID',
+  })
+  @IsUUID()
   productId: string;
 
-  @ApiPropertyOptional({ description: 'Variant ID' })
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    description: 'Variant UUID (optional)',
+  })
   @IsOptional()
-  @IsUuidString()
+  @IsUUID()
   variantId?: string;
 
-  @ApiProperty({ description: 'Image URL' })
+  @ApiProperty({
+    example: 'https://example.com/product-image.jpg',
+    description: 'Image URL',
+  })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(500)
   url: string;
 
-  @ApiPropertyOptional({ description: 'Alt text', maxLength: 200 })
+  @ApiPropertyOptional({
+    example: 'Front view of headphones',
+    description: 'Alt text for accessibility',
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(200)
   altText?: string;
 
-  @ApiPropertyOptional({ description: 'Is primary image', default: false })
+  @ApiPropertyOptional({ example: 1, description: 'Display sort order' })
+  @IsOptional()
+  @IsInt()
+  sortOrder?: number;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether this is the primary image',
+  })
   @IsOptional()
   @IsBoolean()
   isPrimary?: boolean;
-
-  @ApiPropertyOptional({ description: 'Sort order', default: 0 })
-  @IsOptional()
-  @IsNumber()
-  sortOrder?: number;
 }

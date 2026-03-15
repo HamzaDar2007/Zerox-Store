@@ -1,449 +1,315 @@
 import {
   Injectable,
   NotFoundException,
+  ForbiddenException,
   BadRequestException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Cart } from './entities/cart.entity';
 import { CartItem } from './entities/cart-item.entity';
 import { Wishlist } from './entities/wishlist.entity';
-import { CheckoutSession } from './entities/checkout-session.entity';
-import { Product } from '../products/entities/product.entity';
-import { ServiceResponse } from '../../common/interfaces/service-response.interface';
-import { CheckoutStep } from '@common/enums';
-import { OrdersService } from '../orders/orders.service';
-import { MarketingService } from '../marketing/marketing.service';
+import { WishlistItem } from './entities/wishlist-item.entity';
+import { Coupon } from './entities/coupon.entity';
+import { CouponScope } from './entities/coupon-scope.entity';
+import { FlashSale } from './entities/flash-sale.entity';
+import { FlashSaleItem } from './entities/flash-sale-item.entity';
 
 @Injectable()
 export class CartService {
   constructor(
-    @InjectRepository(Cart)
-    private cartRepository: Repository<Cart>,
-    @InjectRepository(CartItem)
-    private cartItemRepository: Repository<CartItem>,
-    @InjectRepository(Wishlist)
-    private wishlistRepository: Repository<Wishlist>,
-    @InjectRepository(CheckoutSession)
-    private checkoutSessionRepository: Repository<CheckoutSession>,
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
-    @Inject(forwardRef(() => OrdersService))
-    private ordersService: OrdersService,
-    private readonly marketingService: MarketingService,
+    @InjectRepository(Cart) private cartRepo: Repository<Cart>,
+    @InjectRepository(CartItem) private cartItemRepo: Repository<CartItem>,
+    @InjectRepository(Wishlist) private wishlistRepo: Repository<Wishlist>,
+    @InjectRepository(WishlistItem)
+    private wishlistItemRepo: Repository<WishlistItem>,
+    @InjectRepository(Coupon) private couponRepo: Repository<Coupon>,
+    @InjectRepository(CouponScope)
+    private couponScopeRepo: Repository<CouponScope>,
+    @InjectRepository(FlashSale) private flashSaleRepo: Repository<FlashSale>,
+    @InjectRepository(FlashSaleItem)
+    private flashSaleItemRepo: Repository<FlashSaleItem>,
+    private dataSource: DataSource,
   ) {}
 
-  async getOrCreateCart(
-    userId?: string,
-    sessionId?: string,
-  ): Promise<ServiceResponse<Cart>> {
-    let cart: Cart | null = null;
-    if (userId) {
-      cart = await this.cartRepository.findOne({
-        where: { userId },
-        relations: ['items', 'items.product', 'items.variant'],
-      });
-    } else if (sessionId) {
-      cart = await this.cartRepository.findOne({
-        where: { sessionId },
-        relations: ['items', 'items.product', 'items.variant'],
-      });
-    }
+  async getOrCreateCart(userId: string): Promise<Cart> {
+    let cart = await this.cartRepo.findOne({ where: { userId } });
     if (!cart) {
-      const newCart = new Cart();
-      newCart.userId = userId || null;
-      newCart.sessionId = sessionId || null;
-      newCart.currencyCode = 'PKR';
-      cart = await this.cartRepository.save(newCart);
+      cart = this.cartRepo.create({ userId });
+      cart = await this.cartRepo.save(cart);
     }
-    return { success: true, message: 'Cart retrieved', data: cart };
+    return cart;
   }
 
-  async getCart(userId: string): Promise<ServiceResponse<Cart>> {
-    const result = await this.getOrCreateCart(userId);
-    return result;
-  }
-
-  async getCartById(id: string): Promise<ServiceResponse<Cart>> {
-    const cart = await this.cartRepository.findOne({
-      where: { id },
-      relations: ['items', 'items.product', 'items.variant'],
-    });
-    if (!cart) throw new NotFoundException('Cart not found');
-    return { success: true, message: 'Cart retrieved', data: cart };
-  }
-
-  async addItem(
-    userId: string,
-    dto: {
-      productId: string;
-      variantId?: string;
-      quantity?: number;
-      priceAtAddition?: number;
-    },
-  ): Promise<ServiceResponse<CartItem>> {
-    const cartResult = await this.getOrCreateCart(userId);
-    const cart = cartResult.data!;
-
-    let item = await this.cartItemRepository.findOne({
-      where: {
-        cartId: cart.id,
-        productId: dto.productId,
-        variantId: dto.variantId || null,
-      },
-    });
-
-    const qty = dto.quantity || 1;
-    if (item) {
-      item.quantity += qty;
-    } else {
-      // Look up the product price if not provided
-      let price = dto.priceAtAddition;
-      if (price === undefined || price === null || price <= 0) {
-        const product = await this.productRepository.findOne({
-          where: { id: dto.productId },
-        });
-        if (!product) throw new NotFoundException('Product not found');
-        price = Number(product.price) || 1;
-      }
-
-      item = new CartItem();
-      item.cartId = cart.id;
-      item.productId = dto.productId;
-      item.variantId = dto.variantId || null;
-      item.quantity = qty;
-      item.priceAtAddition = price;
+  async getOrCreateGuestCart(sessionId: string): Promise<Cart> {
+    let cart = await this.cartRepo.findOne({ where: { sessionId } });
+    if (!cart) {
+      cart = this.cartRepo.create({ sessionId });
+      cart = await this.cartRepo.save(cart);
     }
-
-    const savedItem = await this.cartItemRepository.save(item);
-    return { success: true, message: 'Item added to cart', data: savedItem };
+    return cart;
   }
 
-  async updateItemQuantity(
-    cartId: string,
-    itemId: string,
-    quantity: number,
-  ): Promise<ServiceResponse<CartItem>> {
-    const item = await this.cartItemRepository.findOne({
-      where: { id: itemId, cartId },
-    });
-    if (!item) throw new NotFoundException('Cart item not found');
-    if (quantity <= 0) {
-      await this.cartItemRepository.remove(item);
-      return { success: true, message: 'Item removed from cart', data: item };
+  async deleteCart(userId: string): Promise<void> {
+    const cart = await this.cartRepo.findOne({ where: { userId } });
+    if (cart) {
+      await this.cartItemRepo.delete({ cartId: cart.id });
+      await this.cartRepo.remove(cart);
     }
-    item.quantity = quantity;
-    const saved = await this.cartItemRepository.save(item);
-    return { success: true, message: 'Cart item updated', data: saved };
+  }
+
+  async addItem(userId: string, dto: Partial<CartItem>): Promise<CartItem> {
+    const cart = await this.getOrCreateCart(userId);
+    const quantity = dto.quantity || 1;
+
+    // Look up the variant price server-side
+    const variant = await this.dataSource.query(
+      'SELECT price FROM product_variants WHERE id = $1',
+      [dto.variantId],
+    );
+    if (!variant?.length)
+      throw new NotFoundException('Product variant not found');
+    const unitPrice = Number(variant[0].price);
+
+    // Atomic upsert: INSERT or increment quantity on conflict
+    await this.dataSource.query(
+      `INSERT INTO cart_items (cart_id, variant_id, quantity, unit_price)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (cart_id, variant_id)
+       DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity`,
+      [cart.id, dto.variantId, quantity, unitPrice],
+    );
+
+    return this.cartItemRepo.findOne({
+      where: { cartId: cart.id, variantId: dto.variantId },
+    });
   }
 
   async updateItem(
     itemId: string,
-    dto: { quantity?: number },
-    userId?: string,
-  ): Promise<ServiceResponse<CartItem>> {
-    const item = await this.cartItemRepository.findOne({
+    quantity: number,
+    callerId: string,
+  ): Promise<CartItem> {
+    const item = await this.cartItemRepo.findOne({
       where: { id: itemId },
       relations: ['cart'],
     });
     if (!item) throw new NotFoundException('Cart item not found');
-    if (userId && item.cart && item.cart.userId !== userId) {
-      throw new NotFoundException('Cart item not found');
-    }
-    if (dto.quantity !== undefined) {
-      if (dto.quantity <= 0) {
-        await this.cartItemRepository.remove(item);
-        return { success: true, message: 'Item removed from cart', data: item };
-      }
-      item.quantity = dto.quantity;
-    }
-    const saved = await this.cartItemRepository.save(item);
-    return { success: true, message: 'Cart item updated', data: saved };
+    if (item.cart?.userId !== callerId)
+      throw new ForbiddenException('You do not have access to this cart item');
+    item.quantity = quantity;
+    return this.cartItemRepo.save(item);
   }
 
-  async removeItem(
-    itemId: string,
-    userId?: string,
-  ): Promise<ServiceResponse<void>> {
-    const item = await this.cartItemRepository.findOne({
+  async removeItem(itemId: string, callerId: string): Promise<void> {
+    const item = await this.cartItemRepo.findOne({
       where: { id: itemId },
       relations: ['cart'],
     });
     if (!item) throw new NotFoundException('Cart item not found');
-    if (userId && item.cart && item.cart.userId !== userId) {
-      throw new NotFoundException('Cart item not found');
-    }
-    await this.cartItemRepository.remove(item);
-    return { success: true, message: 'Item removed', data: undefined };
+    if (item.cart?.userId !== callerId)
+      throw new ForbiddenException('You do not have access to this cart item');
+    await this.cartItemRepo.delete(itemId);
   }
 
-  async clearCart(userId: string): Promise<ServiceResponse<void>> {
-    const cart = await this.cartRepository.findOne({ where: { userId } });
-    if (cart) {
-      await this.cartItemRepository.delete({ cartId: cart.id });
-    }
-    return { success: true, message: 'Cart cleared', data: undefined };
-  }
-
-  async getCartSummary(cartId: string): Promise<
-    ServiceResponse<{
-      subtotal: number;
-      itemCount: number;
-      discount: number;
-      total: number;
-    }>
-  > {
-    const cart = await this.cartRepository.findOne({
-      where: { id: cartId },
-      relations: ['items', 'items.product'],
+  async getCartItems(userId: string): Promise<CartItem[]> {
+    const cart = await this.getOrCreateCart(userId);
+    return this.cartItemRepo.find({
+      where: { cartId: cart.id },
+      relations: ['variant'],
     });
-    if (!cart) throw new NotFoundException('Cart not found');
+  }
 
-    let subtotal = 0;
-    let itemCount = 0;
-    for (const item of cart.items || []) {
-      subtotal += Number(item.priceAtAddition) * item.quantity;
-      itemCount += item.quantity;
-    }
-    const discount = Number(cart.discountAmount) || 0;
+  async clearCart(userId: string): Promise<void> {
+    const cart = await this.cartRepo.findOne({ where: { userId } });
+    if (cart) await this.cartItemRepo.delete({ cartId: cart.id });
+  }
 
-    return {
-      success: true,
-      message: 'Cart summary',
-      data: { subtotal, itemCount, discount, total: subtotal - discount },
-    };
+  async createWishlist(userId: string, name?: string): Promise<Wishlist> {
+    const wl = this.wishlistRepo.create({
+      userId,
+      name: name || 'My Wishlist',
+    });
+    return this.wishlistRepo.save(wl);
+  }
+
+  async getWishlists(userId: string): Promise<Wishlist[]> {
+    return this.wishlistRepo.find({ where: { userId } });
   }
 
   async addToWishlist(
-    userId: string,
-    dto: { productId: string },
-  ): Promise<ServiceResponse<Wishlist>> {
-    const existing = await this.wishlistRepository.findOne({
-      where: { userId, productId: dto.productId },
+    wishlistId: string,
+    variantId: string,
+    callerId: string,
+  ): Promise<WishlistItem> {
+    const wl = await this.wishlistRepo.findOne({ where: { id: wishlistId } });
+    if (!wl) throw new NotFoundException('Wishlist not found');
+    if (wl.userId !== callerId)
+      throw new ForbiddenException('You do not have access to this wishlist');
+    const item = this.wishlistItemRepo.create({ wishlistId, variantId });
+    return this.wishlistItemRepo.save(item);
+  }
+
+  async removeFromWishlist(itemId: string, callerId: string): Promise<void> {
+    const item = await this.wishlistItemRepo.findOne({
+      where: { id: itemId },
+      relations: ['wishlist'],
     });
-    if (existing) throw new BadRequestException('Item already in wishlist');
-    const item = new Wishlist();
-    item.userId = userId;
-    item.productId = dto.productId;
-    const saved = await this.wishlistRepository.save(item);
-    return { success: true, message: 'Added to wishlist', data: saved };
-  }
-
-  async isInWishlist(
-    userId: string,
-    productId: string,
-  ): Promise<ServiceResponse<{ isInWishlist: boolean }>> {
-    const item = await this.wishlistRepository.findOne({
-      where: { userId, productId },
-    });
-    return {
-      success: true,
-      message: 'Wishlist check',
-      data: { isInWishlist: !!item },
-    };
-  }
-
-  async removeFromWishlist(
-    userId: string,
-    productId: string,
-  ): Promise<ServiceResponse<void>> {
-    const result = await this.wishlistRepository.delete({ userId, productId });
-    if (!result.affected)
-      throw new NotFoundException('Wishlist item not found');
-    return { success: true, message: 'Removed from wishlist', data: undefined };
-  }
-
-  async getWishlist(userId: string): Promise<ServiceResponse<Wishlist[]>> {
-    const items = await this.wishlistRepository.find({
-      where: { userId },
-      relations: ['product'],
-      order: { createdAt: 'DESC' },
-    });
-    return { success: true, message: 'Wishlist retrieved', data: items };
-  }
-
-  async createCheckoutSession(
-    userId: string,
-    dto: { cartId?: string },
-  ): Promise<ServiceResponse<CheckoutSession>> {
-    let cart;
-    if (dto.cartId) {
-      cart = await this.cartRepository.findOne({
-        where: { id: dto.cartId },
-        relations: ['items'],
-      });
-    } else {
-      cart = await this.cartRepository.findOne({
-        where: { userId },
-        relations: ['items'],
-      });
-    }
-    if (!cart || !cart.items?.length)
-      throw new BadRequestException('Cart is empty');
-
-    const session = new CheckoutSession();
-    session.cartId = cart.id;
-    session.userId = userId;
-    session.sessionToken =
-      'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 12);
-    session.expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-    const saved = await this.checkoutSessionRepository.save(session);
-    return { success: true, message: 'Checkout session created', data: saved };
-  }
-
-  async updateCheckoutSession(
-    sessionId: string,
-    dto: any,
-  ): Promise<ServiceResponse<CheckoutSession>> {
-    const session = await this.checkoutSessionRepository.findOne({
-      where: { id: sessionId },
-    });
-    if (!session) throw new NotFoundException('Session not found');
-    Object.assign(session, dto);
-    const saved = await this.checkoutSessionRepository.save(session);
-    return { success: true, message: 'Session updated', data: saved };
-  }
-
-  async completeCheckoutSession(
-    sessionId: string,
-  ): Promise<ServiceResponse<{ session: CheckoutSession; orderId: string }>> {
-    const session = await this.checkoutSessionRepository.findOne({
-      where: { id: sessionId },
-      relations: ['cart', 'cart.items', 'cart.items.product'],
-    });
-    if (!session) throw new NotFoundException('Session not found');
-    if (session.expiresAt && session.expiresAt < new Date())
-      throw new BadRequestException('Session expired');
-
-    const cart = session.cart;
-    if (!cart?.items?.length) throw new BadRequestException('Cart is empty');
-
-    // Require a shipping address for order creation
-    if (!session.shippingAddressId && !session.cartSnapshot?.shippingAddress) {
-      throw new BadRequestException(
-        'Shipping address is required to complete checkout',
+    if (!item) throw new NotFoundException('Wishlist item not found');
+    if ((item as any).wishlist?.userId !== callerId)
+      throw new ForbiddenException(
+        'You do not have access to this wishlist item',
       );
-    }
-
-    // Build order items from cart items
-    const orderItems = cart.items.map((item) => ({
-      productId: item.productId,
-      variantId: item.variantId || undefined,
-      quantity: item.quantity,
-      unitPrice: Number(item.priceAtAddition),
-      productSnapshot: {
-        name: item.product?.name,
-        sku: item.product?.sku,
-        image: item.product?.images?.[0],
-        storeId: (item.product as any)?.storeId,
-      },
-    }));
-
-    const shippingAddress = session.cartSnapshot?.shippingAddress || {
-      addressId: session.shippingAddressId,
-    };
-
-    // Create real order via OrdersService
-    const orderResult = await this.ordersService.createFromCheckout({
-      userId: session.userId,
-      items: orderItems,
-      shippingAddress,
-      billingAddress: session.cartSnapshot?.billingAddress || undefined,
-      shippingMethod: session.cartSnapshot?.shippingMethod || undefined,
-      shippingAmount: Number(session.shippingAmount) || 0,
-      paymentMethod: session.paymentMethod || undefined,
-      discountAmount: Number(session.discountAmount) || 0,
-      voucherId: cart.voucherId || undefined,
-      customerNotes: session.cartSnapshot?.customerNotes || undefined,
-      isGift: session.giftWrapRequested,
-      giftMessage: session.giftMessage || undefined,
-    });
-
-    // Mark the checkout as completed
-    session.step = CheckoutStep.COMPLETED;
-    await this.checkoutSessionRepository.save(session);
-
-    // Clear the cart after successful order creation
-    await this.cartItemRepository.delete({ cartId: cart.id });
-
-    return {
-      success: true,
-      message: 'Checkout completed — order created',
-      data: { session, orderId: orderResult.data.id },
-    };
+    await this.wishlistItemRepo.delete(itemId);
   }
 
-  async getCheckoutSession(
-    sessionId: string,
-  ): Promise<ServiceResponse<CheckoutSession>> {
-    const session = await this.checkoutSessionRepository.findOne({
-      where: { id: sessionId },
-      relations: ['cart', 'cart.items'],
+  async getWishlistItems(
+    wishlistId: string,
+    callerId: string,
+  ): Promise<WishlistItem[]> {
+    const wl = await this.wishlistRepo.findOne({ where: { id: wishlistId } });
+    if (!wl) throw new NotFoundException('Wishlist not found');
+    if (wl.userId !== callerId)
+      throw new ForbiddenException('You do not have access to this wishlist');
+    return this.wishlistItemRepo.find({
+      where: { wishlistId },
+      relations: ['variant'],
     });
-    if (!session) throw new NotFoundException('Session not found');
-    if (session.expiresAt < new Date())
-      throw new BadRequestException('Session expired');
-    return { success: true, message: 'Session retrieved', data: session };
   }
 
-  async applyVoucherToCart(
-    userId: string,
-    code: string,
-  ): Promise<ServiceResponse<{ discount: number; message: string }>> {
-    const cartResult = await this.getOrCreateCart(userId);
-    const cart = cartResult.data!;
-
-    // Calculate cart subtotal
-    const fullCart = await this.cartRepository.findOne({
-      where: { id: cart.id },
-      relations: ['items'],
-    });
-    let subtotal = 0;
-    for (const item of fullCart?.items || []) {
-      subtotal += Number(item.priceAtAddition) * item.quantity;
-    }
-
-    // Validate the voucher via the marketing service
-    const validation = await this.marketingService.validateVoucher(
-      code,
-      userId,
-      subtotal,
-    );
-    if (!validation.data?.valid) {
-      throw new BadRequestException(
-        validation.data?.message || 'Invalid voucher',
-      );
-    }
-
-    // Find the voucher to store its ID
-    const voucherResult = await this.marketingService.findVoucherByCode(code);
-    const voucher = voucherResult.data;
-
-    // Store voucher on the cart
-    cart.voucherId = voucher?.id || null;
-    cart.discountAmount = validation.data.discount;
-    await this.cartRepository.save(cart);
-
-    return {
-      success: true,
-      message: 'Voucher applied',
-      data: {
-        discount: validation.data.discount,
-        message: validation.data.message,
-      },
-    };
+  async updateWishlist(
+    wishlistId: string,
+    callerId: string,
+    dto: { name?: string; isPublic?: boolean },
+  ): Promise<Wishlist> {
+    const wl = await this.wishlistRepo.findOne({ where: { id: wishlistId } });
+    if (!wl) throw new NotFoundException('Wishlist not found');
+    if (wl.userId !== callerId)
+      throw new ForbiddenException('You do not have access to this wishlist');
+    if (dto.name !== undefined) wl.name = dto.name;
+    if (dto.isPublic !== undefined) wl.isPublic = dto.isPublic;
+    return this.wishlistRepo.save(wl);
   }
 
-  async removeVoucherFromCart(userId: string): Promise<ServiceResponse<void>> {
-    const cart = await this.cartRepository.findOne({ where: { userId } });
-    if (!cart) throw new NotFoundException('Cart not found');
+  async deleteWishlist(wishlistId: string, callerId: string): Promise<void> {
+    const wl = await this.wishlistRepo.findOne({ where: { id: wishlistId } });
+    if (!wl) throw new NotFoundException('Wishlist not found');
+    if (wl.userId !== callerId)
+      throw new ForbiddenException('You do not have access to this wishlist');
+    await this.wishlistItemRepo.delete({ wishlistId });
+    await this.wishlistRepo.remove(wl);
+  }
 
-    cart.voucherId = null;
-    cart.discountAmount = 0;
-    await this.cartRepository.save(cart);
+  // ─── Coupons ───────────────────────────────────────────────────────────
 
-    return { success: true, message: 'Voucher removed', data: undefined };
+  async createCoupon(dto: Partial<Coupon>): Promise<Coupon> {
+    const coupon = this.couponRepo.create(dto);
+    return this.couponRepo.save(coupon);
+  }
+
+  async findAllCoupons(page = 1, limit = 50): Promise<Coupon[]> {
+    return this.couponRepo.find({
+      order: { code: 'ASC' },
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+  }
+
+  async findCoupon(id: string): Promise<Coupon> {
+    const c = await this.couponRepo.findOne({ where: { id } });
+    if (!c) throw new NotFoundException('Coupon not found');
+    return c;
+  }
+
+  async findCouponByCode(code: string): Promise<Coupon> {
+    const c = await this.couponRepo.findOne({ where: { code } });
+    if (!c) throw new NotFoundException('Coupon not found');
+    return c;
+  }
+
+  async updateCoupon(id: string, dto: Partial<Coupon>): Promise<Coupon> {
+    const c = await this.findCoupon(id);
+    Object.assign(c, dto);
+    return this.couponRepo.save(c);
+  }
+
+  async removeCoupon(id: string): Promise<void> {
+    const c = await this.findCoupon(id);
+    await this.couponRepo.remove(c);
+  }
+
+  // ─── Coupon Scopes ─────────────────────────────────────────────────────
+
+  async addCouponScope(dto: Partial<CouponScope>): Promise<CouponScope> {
+    const scope = this.couponScopeRepo.create(dto);
+    return this.couponScopeRepo.save(scope);
+  }
+
+  async findCouponScopes(couponId: string): Promise<CouponScope[]> {
+    return this.couponScopeRepo.find({ where: { couponId } });
+  }
+
+  async removeCouponScope(id: string): Promise<void> {
+    const scope = await this.couponScopeRepo.findOne({ where: { id } });
+    if (!scope) throw new NotFoundException('Coupon scope not found');
+    await this.couponScopeRepo.remove(scope);
+  }
+
+  // ─── Flash Sales ───────────────────────────────────────────────────────
+
+  async createFlashSale(dto: Partial<FlashSale>): Promise<FlashSale> {
+    if (dto.startsAt && dto.endsAt && dto.endsAt <= dto.startsAt) {
+      throw new BadRequestException('endsAt must be after startsAt');
+    }
+    const sale = this.flashSaleRepo.create(dto);
+    return this.flashSaleRepo.save(sale);
+  }
+
+  async findAllFlashSales(page = 1, limit = 50): Promise<FlashSale[]> {
+    return this.flashSaleRepo.find({
+      order: { startsAt: 'DESC' },
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+  }
+
+  async findFlashSale(id: string): Promise<FlashSale> {
+    const s = await this.flashSaleRepo.findOne({ where: { id } });
+    if (!s) throw new NotFoundException('Flash sale not found');
+    return s;
+  }
+
+  async updateFlashSale(
+    id: string,
+    dto: Partial<FlashSale>,
+  ): Promise<FlashSale> {
+    const s = await this.findFlashSale(id);
+    Object.assign(s, dto);
+    return this.flashSaleRepo.save(s);
+  }
+
+  async removeFlashSale(id: string): Promise<void> {
+    const s = await this.findFlashSale(id);
+    await this.flashSaleRepo.remove(s);
+  }
+
+  // ─── Flash Sale Items ──────────────────────────────────────────────────
+
+  async addFlashSaleItem(dto: Partial<FlashSaleItem>): Promise<FlashSaleItem> {
+    const item = this.flashSaleItemRepo.create(dto);
+    return this.flashSaleItemRepo.save(item);
+  }
+
+  async findFlashSaleItems(flashSaleId: string): Promise<FlashSaleItem[]> {
+    return this.flashSaleItemRepo.find({
+      where: { flashSaleId },
+      relations: ['variant'],
+    });
+  }
+
+  async removeFlashSaleItem(id: string): Promise<void> {
+    const item = await this.flashSaleItemRepo.findOne({ where: { id } });
+    if (!item) throw new NotFoundException('Flash sale item not found');
+    await this.flashSaleItemRepo.remove(item);
   }
 }

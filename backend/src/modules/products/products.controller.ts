@@ -2,276 +2,467 @@ import {
   Controller,
   Get,
   Post,
-  Body,
-  Patch,
-  Param,
+  Put,
   Delete,
-  UseGuards,
-  ParseUUIDPipe,
+  Body,
+  Param,
   Query,
+  UsePipes,
+  ValidationPipe,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
   ApiQuery,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateProductVariantDto } from './dto/create-product-variant.dto';
 import { UpdateProductVariantDto } from './dto/update-product-variant.dto';
 import { CreateProductImageDto } from './dto/create-product-image.dto';
+import {
+  UploadProductImageDto,
+  UploadProductImagesDto,
+} from './dto/upload-product-image.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { Permissions } from '../../common/decorators/permissions.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../roles/role.enum';
+import { Auditable } from '../../common/interceptor/audit.interceptor';
+import { StorageService } from '../../common/services/storage.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
-import { BaseController } from '../../common/controllers/base.controller';
-import { ProductStatus } from '@common/enums';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Products')
 @Controller('products')
-export class ProductsController extends BaseController {
-  constructor(private readonly productsService: ProductsService) {
-    super();
-  }
+@UsePipes(new ValidationPipe({ whitelist: true }))
+export class ProductsController {
+  constructor(
+    private readonly svc: ProductsService,
+    private readonly storage: StorageService,
+  ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create product' })
-  @ApiResponse({ status: 201, description: 'Product created successfully' })
-  @Permissions('products.create')
-  create(@Body() dto: CreateProductDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(this.productsService.create(dto, user.id));
+  @ApiOperation({ summary: 'Create a new product (Seller/Admin)' })
+  @ApiResponse({ status: 201, description: 'Product created' })
+  @Auditable({ action: 'CREATE', tableName: 'products' })
+  create(@Body() dto: CreateProductDto, @CurrentUser() user: any) {
+    return this.svc.create(dto, user.id, user.role);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all products' })
-  @ApiResponse({ status: 200, description: 'Products retrieved successfully' })
-  @ApiQuery({ name: 'categoryId', required: false })
-  @ApiQuery({ name: 'brandId', required: false })
-  @ApiQuery({ name: 'sellerId', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: ProductStatus })
-  @ApiQuery({ name: 'search', required: false })
-  @ApiQuery({ name: 'sortBy', required: false })
-  @ApiQuery({ name: 'sortOrder', required: false, enum: ['ASC', 'DESC'] })
+  @Public()
+  @ApiOperation({ summary: 'List products with filters and pagination' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({
+    name: 'storeId',
+    required: false,
+    type: String,
+    description: 'Filter by store UUID',
+  })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    type: String,
+    description: 'Filter by category UUID',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search by name',
+  })
+  @ApiResponse({ status: 200, description: 'Products list returned' })
   findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('storeId') storeId?: string,
     @Query('categoryId') categoryId?: string,
-    @Query('brandId') brandId?: string,
-    @Query('sellerId') sellerId?: string,
-    @Query('status') status?: ProductStatus,
     @Query('search') search?: string,
-    @Query('sortBy') sortBy?: string,
-    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC',
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
   ) {
-    return this.handleAsyncOperation(
-      this.productsService.findAll({
-        categoryId,
-        brandId,
-        sellerId,
-        status,
-        search,
-        sortBy,
-        sortOrder,
-        page,
-        limit,
-      }),
-    );
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get product by ID' })
-  @ApiResponse({ status: 200, description: 'Product retrieved successfully' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.productsService.findOne(id));
+    return this.svc.findAll({
+      page: page ? Math.max(1, +page) : undefined,
+      limit: limit ? Math.min(Math.max(1, +limit), 100) : undefined,
+      storeId,
+      categoryId,
+      search,
+    });
   }
 
   @Get('slug/:slug')
-  @ApiOperation({ summary: 'Get product by slug' })
-  @ApiResponse({ status: 200, description: 'Product retrieved successfully' })
+  @Public()
+  @ApiOperation({ summary: 'Find product by slug' })
+  @ApiParam({ name: 'slug', description: 'Product URL slug' })
+  @ApiResponse({ status: 200, description: 'Product found' })
   findBySlug(@Param('slug') slug: string) {
-    return this.handleAsyncOperation(this.productsService.findBySlug(slug));
+    return this.svc.findBySlug(slug);
   }
 
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Get(':id')
+  @Public()
+  @ApiOperation({ summary: 'Get product by ID' })
+  @ApiParam({ name: 'id', description: 'Product UUID' })
+  @ApiResponse({ status: 200, description: 'Product found' })
+  findOne(@Param('id') id: string) {
+    return this.svc.findOne(id);
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update product' })
-  @ApiResponse({ status: 200, description: 'Product updated successfully' })
-  @Permissions('products.update')
+  @ApiOperation({ summary: 'Update a product (Seller/Admin)' })
+  @ApiParam({ name: 'id', description: 'Product UUID' })
+  @ApiResponse({ status: 200, description: 'Product updated' })
+  @Auditable({ action: 'UPDATE', tableName: 'products' })
   update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() dto: UpdateProductDto,
+    @CurrentUser() user: any,
   ) {
-    return this.handleAsyncOperation(this.productsService.update(id, dto));
+    return this.svc.update(id, dto, user.id, user.role);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Delete product' })
-  @ApiResponse({ status: 200, description: 'Product deleted successfully' })
-  @Permissions('products.delete')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.productsService.remove(id));
+  @ApiOperation({ summary: 'Delete a product (Seller/Admin)' })
+  @ApiParam({ name: 'id', description: 'Product UUID' })
+  @ApiResponse({ status: 200, description: 'Product deleted' })
+  @Auditable({ action: 'DELETE', tableName: 'products' })
+  remove(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.remove(id, user.id, user.role);
   }
 
-  @Patch(':id/status')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Post('variants')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update product status' })
-  @Permissions('products.update')
-  updateStatus(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body('status') status: ProductStatus,
-  ) {
-    return this.handleAsyncOperation(
-      this.productsService.updateStatus(id, status),
-    );
-  }
-
-  // ==================== VARIANTS ====================
-
-  @Post(':productId/variants')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create product variant' })
-  @Permissions('products.update')
+  @ApiOperation({ summary: 'Create a product variant' })
+  @ApiResponse({ status: 201, description: 'Variant created' })
   createVariant(
-    @Param('productId', ParseUUIDPipe) productId: string,
     @Body() dto: CreateProductVariantDto,
+    @CurrentUser() user: any,
   ) {
-    return this.handleAsyncOperation(
-      this.productsService.createVariant(productId, dto),
-    );
+    return this.svc.createVariant(dto, user.id, user.role);
   }
 
   @Get(':productId/variants')
-  @ApiOperation({ summary: 'Get product variants' })
-  getVariants(@Param('productId', ParseUUIDPipe) productId: string) {
-    return this.handleAsyncOperation(
-      this.productsService.findAllVariants(productId),
-    );
+  @Public()
+  @ApiOperation({ summary: 'List variants for a product' })
+  @ApiParam({ name: 'productId', description: 'Product UUID' })
+  @ApiResponse({ status: 200, description: 'Variants list returned' })
+  findVariants(@Param('productId') productId: string) {
+    return this.svc.findVariants(productId);
   }
 
-  @Patch('variants/:id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Put('variants/:id')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update variant' })
-  @Permissions('products.update')
+  @ApiOperation({ summary: 'Update a product variant' })
+  @ApiParam({ name: 'id', description: 'Variant UUID' })
+  @ApiResponse({ status: 200, description: 'Variant updated' })
   updateVariant(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Body() dto: UpdateProductVariantDto,
+    @CurrentUser() user: any,
   ) {
-    return this.handleAsyncOperation(
-      this.productsService.updateVariant(id, dto),
-    );
+    return this.svc.updateVariant(id, dto, user.id, user.role);
   }
 
   @Delete('variants/:id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Delete variant' })
-  @Permissions('products.update')
-  removeVariant(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.productsService.removeVariant(id));
+  @ApiOperation({ summary: 'Delete a product variant' })
+  @ApiParam({ name: 'id', description: 'Variant UUID' })
+  @ApiResponse({ status: 200, description: 'Variant deleted' })
+  removeVariant(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.removeVariant(id, user.id, user.role);
   }
 
-  // ==================== IMAGES ====================
-
-  @Post(':productId/images')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Post('images')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Add product image' })
-  @Permissions('products.update')
-  addImage(
-    @Param('productId', ParseUUIDPipe) productId: string,
-    @Body() dto: CreateProductImageDto,
-  ) {
-    return this.handleAsyncOperation(
-      this.productsService.addImage(productId, dto),
-    );
+  @ApiOperation({ summary: 'Add a product image' })
+  @ApiResponse({ status: 201, description: 'Image added' })
+  createImage(@Body() dto: CreateProductImageDto, @CurrentUser() user: any) {
+    return this.svc.createImage(dto, user.id, user.role);
+  }
+
+  @Get(':productId/images')
+  @Public()
+  @ApiOperation({ summary: 'List images for a product' })
+  @ApiParam({ name: 'productId', description: 'Product UUID' })
+  @ApiResponse({ status: 200, description: 'Images list returned' })
+  findImages(@Param('productId') productId: string) {
+    return this.svc.findImages(productId);
   }
 
   @Delete('images/:id')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Remove product image' })
-  @Permissions('products.update')
-  removeImage(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.productsService.removeImage(id));
+  @ApiOperation({ summary: 'Delete a product image' })
+  @ApiParam({ name: 'id', description: 'Image UUID' })
+  @ApiResponse({ status: 200, description: 'Image deleted' })
+  removeImage(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.removeImage(id, user.id, user.role);
   }
 
-  // ==================== Q&A ====================
-
-  @Get(':productId/questions')
-  @ApiOperation({ summary: 'Get product questions' })
-  getQuestions(@Param('productId', ParseUUIDPipe) productId: string) {
-    return this.handleAsyncOperation(
-      this.productsService.getProductQuestions(productId),
+  @Post('images/upload')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Upload a product image file to R2 and create image record',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        productId: { type: 'string' },
+        altText: { type: 'string' },
+        sortOrder: { type: 'number' },
+        isPrimary: { type: 'boolean' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Product image uploaded and saved' })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  async uploadProductImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: UploadProductImageDto,
+    @CurrentUser() user: any,
+  ) {
+    const url = await this.storage.upload(file, 'products');
+    return this.svc.createImage(
+      {
+        productId: body.productId,
+        url,
+        altText: body.altText,
+        sortOrder: body.sortOrder ? +body.sortOrder : 0,
+        isPrimary: body.isPrimary === 'true',
+      },
+      user.id,
+      user.role,
     );
   }
 
-  @Post(':productId/questions')
+  @Post('images/upload-multiple')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Ask a question about product' })
-  askQuestion(
-    @Param('productId', ParseUUIDPipe) productId: string,
-    @Body('question') question: string,
-    @CurrentUser() user: User,
+  @ApiOperation({ summary: 'Upload multiple product images to R2' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        files: { type: 'array', items: { type: 'string', format: 'binary' } },
+        productId: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Product images uploaded and saved',
+  })
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  async uploadProductImages(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() body: UploadProductImagesDto,
+    @CurrentUser() user: any,
   ) {
-    return this.handleAsyncOperation(
-      this.productsService.askQuestion(productId, user.id, question),
-    );
-  }
-
-  @Post('questions/:questionId/answers')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Answer a product question' })
-  answerQuestion(
-    @Param('questionId', ParseUUIDPipe) questionId: string,
-    @Body('answer') answer: string,
-    @Body('isSellerAnswer') isSellerAnswer: boolean,
-    @CurrentUser() user: User,
-  ) {
-    return this.handleAsyncOperation(
-      this.productsService.answerQuestion(
-        questionId,
-        user.id,
-        answer,
-        isSellerAnswer,
+    const urls = await this.storage.uploadMany(files, 'products');
+    const images = await Promise.all(
+      urls.map((url, i) =>
+        this.svc.createImage(
+          { productId: body.productId, url, sortOrder: i },
+          user.id,
+          user.role,
+        ),
       ),
     );
+    return { images };
   }
 
-  // ==================== PRICE HISTORY ====================
+  // ─── Attribute Keys ────────────────────────────────────────────────────
 
-  @Get(':productId/price-history')
-  @ApiOperation({ summary: 'Get product price history' })
-  getPriceHistory(@Param('productId', ParseUUIDPipe) productId: string) {
-    return this.handleAsyncOperation(
-      this.productsService.getPriceHistory(productId),
-    );
+  @Post('attributes/keys')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Create an attribute key (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Attribute key created' })
+  createAttributeKey(@Body() dto: any) {
+    return this.svc.createAttributeKey(dto);
   }
 
-  @Get(':productId/related')
-  @ApiOperation({ summary: 'Get related products' })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  getRelated(
-    @Param('productId', ParseUUIDPipe) productId: string,
-    @Query('limit') limit?: number,
+  @Get('attributes/keys')
+  @Public()
+  @ApiOperation({ summary: 'List all attribute keys' })
+  @ApiResponse({ status: 200, description: 'Attribute keys returned' })
+  findAttributeKeys() {
+    return this.svc.findAllAttributeKeys();
+  }
+
+  @Get('attributes/keys/:id')
+  @Public()
+  @ApiOperation({ summary: 'Get attribute key by ID' })
+  @ApiParam({ name: 'id', description: 'Attribute key UUID' })
+  @ApiResponse({ status: 200, description: 'Attribute key found' })
+  findAttributeKey(@Param('id') id: string) {
+    return this.svc.findAttributeKey(id);
+  }
+
+  @Put('attributes/keys/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Update attribute key (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Attribute key UUID' })
+  @ApiResponse({ status: 200, description: 'Attribute key updated' })
+  updateAttributeKey(@Param('id') id: string, @Body() dto: any) {
+    return this.svc.updateAttributeKey(id, dto);
+  }
+
+  @Delete('attributes/keys/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Delete attribute key (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Attribute key UUID' })
+  @ApiResponse({ status: 200, description: 'Attribute key deleted' })
+  removeAttributeKey(@Param('id') id: string) {
+    return this.svc.removeAttributeKey(id);
+  }
+
+  // ─── Attribute Values ──────────────────────────────────────────────────
+
+  @Post('attributes/keys/:keyId/values')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Add a value to an attribute key (Admin only)' })
+  @ApiParam({ name: 'keyId', description: 'Attribute key UUID' })
+  @ApiResponse({ status: 201, description: 'Attribute value created' })
+  createAttributeValue(@Param('keyId') keyId: string, @Body() dto: any) {
+    return this.svc.createAttributeValue({ ...dto, attributeKeyId: keyId });
+  }
+
+  @Get('attributes/keys/:keyId/values')
+  @Public()
+  @ApiOperation({ summary: 'List values for an attribute key' })
+  @ApiParam({ name: 'keyId', description: 'Attribute key UUID' })
+  @ApiResponse({ status: 200, description: 'Attribute values returned' })
+  findAttributeValues(@Param('keyId') keyId: string) {
+    return this.svc.findAttributeValues(keyId);
+  }
+
+  @Delete('attributes/values/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Delete an attribute value (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Attribute value UUID' })
+  @ApiResponse({ status: 200, description: 'Attribute value deleted' })
+  removeAttributeValue(@Param('id') id: string) {
+    return this.svc.removeAttributeValue(id);
+  }
+
+  // ─── Variant Attributes ────────────────────────────────────────────────
+
+  @Post('variants/:variantId/attributes')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Assign attribute to variant' })
+  @ApiParam({ name: 'variantId', description: 'Variant UUID' })
+  @ApiResponse({ status: 201, description: 'Attribute assigned' })
+  assignVariantAttribute(@Param('variantId') variantId: string, @Body() dto: any) {
+    return this.svc.assignVariantAttribute({ ...dto, variantId });
+  }
+
+  @Get('variants/:variantId/attributes')
+  @Public()
+  @ApiOperation({ summary: 'List attributes for a variant' })
+  @ApiParam({ name: 'variantId', description: 'Variant UUID' })
+  @ApiResponse({ status: 200, description: 'Variant attributes returned' })
+  findVariantAttributes(@Param('variantId') variantId: string) {
+    return this.svc.findVariantAttributes(variantId);
+  }
+
+  @Delete('variants/:variantId/attributes/:keyId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Remove attribute from variant' })
+  @ApiParam({ name: 'variantId', description: 'Variant UUID' })
+  @ApiParam({ name: 'keyId', description: 'Attribute key UUID' })
+  @ApiResponse({ status: 200, description: 'Attribute removed from variant' })
+  removeVariantAttribute(
+    @Param('variantId') variantId: string,
+    @Param('keyId') keyId: string,
   ) {
-    return this.handleAsyncOperation(
-      this.productsService.getRelatedProducts(productId, limit ? Number(limit) : undefined),
-    );
+    return this.svc.removeVariantAttribute(variantId, keyId);
+  }
+
+  // ─── Product Categories ────────────────────────────────────────────────
+
+  @Post(':productId/categories/:categoryId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Assign product to a category' })
+  @ApiParam({ name: 'productId', description: 'Product UUID' })
+  @ApiParam({ name: 'categoryId', description: 'Category UUID' })
+  @ApiResponse({ status: 201, description: 'Product category assigned' })
+  addProductCategory(
+    @Param('productId') productId: string,
+    @Param('categoryId') categoryId: string,
+  ) {
+    return this.svc.addProductCategory(productId, categoryId);
+  }
+
+  @Get(':productId/categories')
+  @Public()
+  @ApiOperation({ summary: 'List categories for a product' })
+  @ApiParam({ name: 'productId', description: 'Product UUID' })
+  @ApiResponse({ status: 200, description: 'Product categories returned' })
+  findProductCategories(@Param('productId') productId: string) {
+    return this.svc.findProductCategories(productId);
+  }
+
+  @Delete(':productId/categories/:categoryId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Remove product from a category' })
+  @ApiParam({ name: 'productId', description: 'Product UUID' })
+  @ApiParam({ name: 'categoryId', description: 'Category UUID' })
+  @ApiResponse({ status: 200, description: 'Product category removed' })
+  removeProductCategory(
+    @Param('productId') productId: string,
+    @Param('categoryId') categoryId: string,
+  ) {
+    return this.svc.removeProductCategory(productId, categoryId);
   }
 }

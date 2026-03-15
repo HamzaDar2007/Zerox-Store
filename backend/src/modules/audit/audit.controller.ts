@@ -5,161 +5,99 @@ import {
   Body,
   Param,
   Query,
+  UsePipes,
+  ValidationPipe,
   UseGuards,
-  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
+  ApiResponse,
   ApiBearerAuth,
+  ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
 import { AuditService } from './audit.service';
+import { CreateAuditLogDto } from './dto/create-audit-log.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { Permissions } from '../../common/decorators/permissions.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
-import { BaseController } from '../../common/controllers/base.controller';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../roles/role.enum';
 
-@ApiTags('Audit - Logs')
-@Controller('audit/logs')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@ApiTags('Audit Logs')
+@Controller('audit-logs')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
 @ApiBearerAuth('JWT-auth')
-export class AuditLogsController extends BaseController {
-  constructor(private readonly auditService: AuditService) {
-    super();
+@UsePipes(new ValidationPipe({ whitelist: true }))
+export class AuditController {
+  constructor(private readonly svc: AuditService) {}
+
+  @Post()
+  @ApiOperation({ summary: 'Create an audit log entry (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Audit log created' })
+  create(@Body() dto: CreateAuditLogDto) {
+    return this.svc.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all audit logs' })
-  @ApiQuery({ name: 'userId', required: false })
-  @ApiQuery({ name: 'action', required: false })
-  @ApiQuery({ name: 'entityType', required: false })
-  @ApiQuery({ name: 'startDate', required: false })
-  @ApiQuery({ name: 'endDate', required: false })
-  @Permissions('audit.read')
+  @ApiOperation({ summary: 'List audit logs with filters (Admin only)' })
+  @ApiQuery({
+    name: 'actorId',
+    required: false,
+    type: String,
+    description: 'Filter by actor UUID',
+  })
+  @ApiQuery({
+    name: 'action',
+    required: false,
+    type: String,
+    description: 'Filter by action',
+  })
+  @ApiQuery({
+    name: 'tableName',
+    required: false,
+    type: String,
+    description: 'Filter by table',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Audit logs returned' })
   findAll(
-    @Query('userId') userId?: string,
+    @Query('actorId') actorId?: string,
     @Query('action') action?: string,
-    @Query('entityType') entityType?: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('tableName') tableName?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.handleAsyncOperation(
-      this.auditService.findAllAuditLogs({
-        userId,
-        action,
-        entityType,
-        startDate: startDate ? new Date(startDate) : undefined,
-        endDate: endDate ? new Date(endDate) : undefined,
-        page,
-        limit,
-      }),
-    );
+    return this.svc.findAll({
+      actorId,
+      action,
+      tableName,
+      page: page ? Math.max(1, +page) : undefined,
+      limit: limit ? Math.min(Math.max(1, +limit), 100) : undefined,
+    });
   }
 
-  @Get('entity/:entityType/:entityId')
-  @ApiOperation({ summary: 'Get entity audit history' })
-  @Permissions('audit.read')
-  getEntityHistory(
-    @Param('entityType') entityType: string,
-    @Param('entityId') entityId: string,
+  @Get('entity/:tableName/:recordId')
+  @ApiOperation({
+    summary: 'Get audit logs for a specific entity (Admin only)',
+  })
+  @ApiParam({ name: 'tableName', description: 'Database table name' })
+  @ApiParam({ name: 'recordId', description: 'Record UUID' })
+  @ApiResponse({ status: 200, description: 'Entity audit logs returned' })
+  findByEntity(
+    @Param('tableName') tableName: string,
+    @Param('recordId') recordId: string,
   ) {
-    return this.handleAsyncOperation(
-      this.auditService.getEntityHistory(entityType, entityId),
-    );
-  }
-
-  @Get('user/:userId')
-  @ApiOperation({ summary: 'Get user audit activity' })
-  @Permissions('audit.read')
-  getUserActivity(
-    @Param('userId', ParseUUIDPipe) userId: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-  ) {
-    return this.handleAsyncOperation(
-      this.auditService.getUserActivity(
-        userId,
-        startDate ? new Date(startDate) : undefined,
-        endDate ? new Date(endDate) : undefined,
-      ),
-    );
+    return this.svc.findByEntity(tableName, recordId);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get audit log by ID' })
-  @Permissions('audit.read')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.auditService.findAuditLog(id));
-  }
-
-  @Post('cleanup')
-  @ApiOperation({ summary: 'Cleanup old audit logs' })
-  @Permissions('audit.delete')
-  cleanup(@Body('daysToKeep') daysToKeep?: number) {
-    return this.handleAsyncOperation(
-      this.auditService.cleanupOldLogs(daysToKeep),
-    );
-  }
-}
-
-@ApiTags('Audit - Activity')
-@Controller('audit/activity')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
-@ApiBearerAuth('JWT-auth')
-export class ActivityLogsController extends BaseController {
-  constructor(private readonly auditService: AuditService) {
-    super();
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get all activity logs' })
-  @ApiQuery({ name: 'userId', required: false })
-  @ApiQuery({ name: 'activityType', required: false })
-  @ApiQuery({ name: 'startDate', required: false })
-  @ApiQuery({ name: 'endDate', required: false })
-  @Permissions('audit.read')
-  findAll(
-    @Query('userId') userId?: string,
-    @Query('activityType') activityType?: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.handleAsyncOperation(
-      this.auditService.findAllActivityLogs({
-        userId,
-        activityType,
-        startDate: startDate ? new Date(startDate) : undefined,
-        endDate: endDate ? new Date(endDate) : undefined,
-        page,
-        limit,
-      }),
-    );
-  }
-
-  @Get('my-activity')
-  @ApiOperation({ summary: 'Get my activity summary' })
-  getMyActivity(@CurrentUser() user: User, @Query('days') days?: number) {
-    return this.handleAsyncOperation(
-      this.auditService.getActivitySummary(user.id, days),
-    );
-  }
-
-  @Get('user/:userId/summary')
-  @ApiOperation({ summary: 'Get user activity summary' })
-  @Permissions('audit.read')
-  getUserSummary(
-    @Param('userId', ParseUUIDPipe) userId: string,
-    @Query('days') days?: number,
-  ) {
-    return this.handleAsyncOperation(
-      this.auditService.getActivitySummary(userId, days),
-    );
+  @ApiOperation({ summary: 'Get audit log by ID (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Audit log UUID' })
+  @ApiResponse({ status: 200, description: 'Audit log found' })
+  findOne(@Param('id') id: string) {
+    return this.svc.findOne(id);
   }
 }

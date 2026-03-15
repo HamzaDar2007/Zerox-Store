@@ -8,14 +8,18 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UsersModule } from '../users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { RefreshToken } from './entities/refresh-token.entity';
+import { AuthSession } from './entities/auth-session.entity';
+import { AuthToken } from './entities/auth-token.entity';
 import { User } from '../users/entities/user.entity';
+import { UserRole } from '../users/entities/user-role.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
-    TypeOrmModule.forFeature([RefreshToken, User]),
+    TypeOrmModule.forFeature([AuthSession, AuthToken, User, UserRole]),
+    NotificationsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

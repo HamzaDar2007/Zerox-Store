@@ -1,73 +1,57 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsNotEmpty,
-  IsOptional,
   IsString,
-  MaxLength,
+  IsOptional,
+  IsUUID,
   IsInt,
   Min,
   Max,
-  IsArray,
-  IsEnum,
-  IsBoolean,
+  MaxLength,
 } from 'class-validator';
-import { ReviewStatus } from '@common/enums';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateReviewDto {
-  @ApiProperty({ description: 'Product ID' })
-  @IsNotEmpty()
-  @IsUuidString()
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Product UUID',
+  })
+  @IsUUID()
   productId: string;
 
-  @ApiPropertyOptional({ description: 'Order ID (for verified purchase)' })
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    description: 'Order UUID (for verified purchase)',
+  })
   @IsOptional()
-  @IsUuidString()
+  @IsUUID()
   orderId?: string;
 
-  @ApiProperty({ description: 'Rating (1-5)' })
-  @IsNotEmpty()
+  @ApiProperty({
+    example: 5,
+    description: 'Rating from 1 to 5',
+    minimum: 1,
+    maximum: 5,
+  })
   @IsInt()
   @Min(1)
   @Max(5)
   rating: number;
 
-  @ApiPropertyOptional({ description: 'Review title' })
+  @ApiPropertyOptional({
+    example: 'Excellent headphones!',
+    description: 'Review title',
+    maxLength: 300,
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(255)
+  @MaxLength(300)
   title?: string;
 
-  @ApiPropertyOptional({ description: 'Review content' })
+  @ApiPropertyOptional({
+    example: 'Great sound quality and comfortable to wear...',
+    description: 'Review body',
+  })
   @IsOptional()
   @IsString()
-  content?: string;
-
-  @ApiPropertyOptional({ description: 'Pros list' })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  pros?: string[];
-
-  @ApiPropertyOptional({ description: 'Cons list' })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  cons?: string[];
-
-  @ApiPropertyOptional({ description: 'Review images URLs' })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  images?: string[];
-
-  @ApiPropertyOptional({ description: 'Is verified purchase', default: false })
-  @IsOptional()
-  @IsBoolean()
-  isVerifiedPurchase?: boolean;
-
-  @ApiPropertyOptional({ description: 'Review status', enum: ReviewStatus })
-  @IsOptional()
-  @IsEnum(ReviewStatus)
-  status?: ReviewStatus;
+  @MaxLength(5000)
+  body?: string;
 }

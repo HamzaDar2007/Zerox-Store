@@ -1,7 +1,24 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty } from 'class-validator';
 import { MailService } from './mail.service';
+import { JwtAuthGuard } from '../../../modules/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../guards/roles.guard';
+import { Roles } from '../../decorators/roles.decorator';
+import { RoleEnum } from '../../../modules/roles/role.enum';
 
 class SendTestEmailDto {
   @IsEmail()
@@ -11,6 +28,9 @@ class SendTestEmailDto {
 
 @ApiTags('Mail')
 @Controller('mail')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+@ApiBearerAuth('JWT-auth')
 export class MailController {
   constructor(private readonly mailService: MailService) {}
 

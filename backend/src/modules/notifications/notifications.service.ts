@@ -1,173 +1,91 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
-import { Notification } from './entities/notification.entity';
-import { NotificationPreference } from './entities/notification-preference.entity';
-import { NotificationTemplate } from './entities/notification-template.entity';
-import { ServiceResponse } from '../../common/interfaces/service-response.interface';
 import {
-  CreateNotificationTemplateDto,
-  UpdateNotificationTemplateDto,
-} from './dto';
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Notification } from './entities/notification.entity';
 
 @Injectable()
 export class NotificationsService {
   constructor(
-    @InjectRepository(Notification)
-    private notificationRepository: Repository<Notification>,
-    @InjectRepository(NotificationPreference)
-    private preferenceRepository: Repository<NotificationPreference>,
-    @InjectRepository(NotificationTemplate)
-    private templateRepository: Repository<NotificationTemplate>,
+    @InjectRepository(Notification) private notifRepo: Repository<Notification>,
   ) {}
 
   async create(
     userId: string,
-    dto: any,
-  ): Promise<ServiceResponse<Notification>> {
-    const notification = new Notification();
-    Object.assign(notification, { ...dto, userId });
-    const saved = await this.notificationRepository.save(notification);
-    return { success: true, message: 'Notification created', data: saved };
+    dto: Partial<Notification>,
+  ): Promise<Notification> {
+    const notif = this.notifRepo.create({ userId, ...dto });
+    return this.notifRepo.save(notif);
   }
 
-  async findAll(
+  async findByUser(
     userId: string,
-    options?: {
-      isRead?: boolean;
-      type?: string;
-      page?: number;
-      limit?: number;
-    },
-  ): Promise<ServiceResponse<Notification[]>> {
-    const query = this.notificationRepository
-      .createQueryBuilder('notification')
-      .where('notification.userId = :userId', { userId })
-      .orderBy('notification.createdAt', 'DESC');
-
-    if (options?.isRead !== undefined) {
-      if (options.isRead) {
-        query.andWhere('notification.readAt IS NOT NULL');
-      } else {
-        query.andWhere('notification.readAt IS NULL');
-      }
-    }
-    if (options?.type)
-      query.andWhere('notification.type = :type', { type: options.type });
-
-    const page = options?.page || 1;
-    const limit = options?.limit || 20;
-    query.skip((page - 1) * limit).take(limit);
-
-    const [notifications, total] = await query.getManyAndCount();
-    return {
-      success: true,
-      message: 'Notifications retrieved',
-      data: notifications,
-      meta: { total, page, limit },
-    };
-  }
-
-  async markAsRead(
-    id: string,
-    userId?: string,
-  ): Promise<ServiceResponse<Notification>> {
-    const notification = await this.notificationRepository.findOne({
-      where: { id },
+    page = 1,
+    limit = 20,
+  ): Promise<Notification[]> {
+    return this.notifRepo.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip: (page - 1) * limit,
     });
-    if (!notification) throw new NotFoundException('Notification not found');
-    if (userId && notification.userId !== userId)
-      throw new NotFoundException('Notification not found');
-    notification.readAt = new Date();
-    const updated = await this.notificationRepository.save(notification);
-    return {
-      success: true,
-      message: 'Notification marked as read',
-      data: updated,
-    };
   }
 
-  async markAllAsRead(userId: string): Promise<ServiceResponse<void>> {
-    await this.notificationRepository.update(
-      { userId, readAt: IsNull() },
-      { readAt: new Date() },
+  async findOne(id: string): Promise<Notification> {
+    const notif = await this.notifRepo.findOne({ where: { id } });
+    if (!notif) throw new NotFoundException('Notification not found');
+    return notif;
+  }
+
+  async findOneForUser(
+    id: string,
+    callerId: string,
+    callerRole?: string,
+  ): Promise<Notification> {
+    const notif = await this.findOne(id);
+    if (
+      callerRole !== 'admin' &&
+      callerRole !== 'super_admin' &&
+      notif.userId !== callerId
+    ) {
+      throw new ForbiddenException(
+        'You do not have access to this notification',
+      );
+    }
+    return notif;
+  }
+
+  async markRead(id: string, callerId: string): Promise<Notification> {
+    const notif = await this.findOne(id);
+    if (notif.userId !== callerId)
+      throw new ForbiddenException(
+        'You do not have access to this notification',
+      );
+    notif.isRead = true;
+    notif.readAt = new Date();
+    return this.notifRepo.save(notif);
+  }
+
+  async markAllRead(userId: string): Promise<void> {
+    await this.notifRepo.update(
+      { userId, isRead: false },
+      { isRead: true, readAt: new Date() },
     );
-    return { success: true, message: 'All notifications marked as read' };
   }
 
-  async remove(id: string, userId?: string): Promise<ServiceResponse<void>> {
-    const notification = await this.notificationRepository.findOne({
-      where: { id },
-    });
-    if (!notification) throw new NotFoundException('Notification not found');
-    if (userId && notification.userId !== userId)
-      throw new NotFoundException('Notification not found');
-    await this.notificationRepository.remove(notification);
-    return { success: true, message: 'Notification deleted' };
+  async getUnreadCount(userId: string): Promise<number> {
+    return this.notifRepo.count({ where: { userId, isRead: false } });
   }
 
-  async getUnreadCount(userId: string): Promise<ServiceResponse<number>> {
-    const count = await this.notificationRepository.count({
-      where: { userId, readAt: IsNull() },
-    });
-    return { success: true, message: 'Unread count retrieved', data: count };
-  }
-
-  async getPreferences(
-    userId: string,
-  ): Promise<ServiceResponse<NotificationPreference[]>> {
-    const prefs = await this.preferenceRepository.find({ where: { userId } });
-    return { success: true, message: 'Preferences retrieved', data: prefs };
-  }
-
-  async updatePreference(
-    userId: string,
-    type: string,
-    dto: any,
-  ): Promise<ServiceResponse<NotificationPreference>> {
-    let pref = await this.preferenceRepository.findOne({
-      where: { userId, type: type as any },
-    });
-    if (!pref) {
-      pref = new NotificationPreference();
-      Object.assign(pref, { userId, type });
-    }
-    Object.assign(pref, dto);
-    const saved = await this.preferenceRepository.save(pref);
-    return { success: true, message: 'Preference updated', data: saved };
-  }
-
-  async getTemplates(): Promise<ServiceResponse<NotificationTemplate[]>> {
-    const templates = await this.templateRepository.find({
-      where: { isActive: true },
-    });
-    return { success: true, message: 'Templates retrieved', data: templates };
-  }
-
-  async createTemplate(
-    dto: CreateNotificationTemplateDto,
-  ): Promise<ServiceResponse<NotificationTemplate>> {
-    const template = new NotificationTemplate();
-    Object.assign(template, dto);
-    const saved = await this.templateRepository.save(template);
-    return { success: true, message: 'Template created', data: saved };
-  }
-
-  async updateTemplate(
-    id: string,
-    dto: UpdateNotificationTemplateDto,
-  ): Promise<ServiceResponse<NotificationTemplate>> {
-    const template = await this.templateRepository.findOne({ where: { id } });
-    if (!template) throw new NotFoundException('Template not found');
-    Object.assign(template, dto);
-    const updated = await this.templateRepository.save(template);
-    return { success: true, message: 'Template updated', data: updated };
-  }
-
-  async deleteTemplate(id: string): Promise<ServiceResponse<void>> {
-    const template = await this.templateRepository.findOne({ where: { id } });
-    if (!template) throw new NotFoundException('Template not found');
-    await this.templateRepository.remove(template);
-    return { success: true, message: 'Template deleted' };
+  async remove(id: string, callerId: string): Promise<void> {
+    const notif = await this.findOne(id);
+    if (notif.userId !== callerId)
+      throw new ForbiddenException(
+        'You do not have access to this notification',
+      );
+    await this.notifRepo.delete(id);
   }
 }

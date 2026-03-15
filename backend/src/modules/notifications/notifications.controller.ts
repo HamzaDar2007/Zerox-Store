@@ -2,159 +2,97 @@ import {
   Controller,
   Get,
   Post,
-  Patch,
+  Put,
   Delete,
   Body,
   Param,
   Query,
+  UsePipes,
+  ValidationPipe,
   UseGuards,
-  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
+  ApiResponse,
   ApiBearerAuth,
-  ApiQuery,
+  ApiParam,
 } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
-import {
-  CreateNotificationTemplateDto,
-  UpdateNotificationTemplateDto,
-  UpdateNotificationPreferenceDto,
-} from './dto';
+import { CreateNotificationDto } from './dto/create-notification.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { Permissions } from '../../common/decorators/permissions.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../roles/role.enum';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
-import { BaseController } from '../../common/controllers/base.controller';
 
 @ApiTags('Notifications')
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
-export class NotificationsController extends BaseController {
-  constructor(private readonly notificationsService: NotificationsService) {
-    super();
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get user notifications' })
-  @ApiQuery({ name: 'isRead', required: false, type: Boolean })
-  @ApiQuery({ name: 'type', required: false })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  findAll(
-    @CurrentUser() user: User,
-    @Query('isRead') isRead?: boolean,
-    @Query('type') type?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.handleAsyncOperation(
-      this.notificationsService.findAll(user.id, { isRead, type, page, limit }),
-    );
-  }
-
-  @Get('unread-count')
-  @ApiOperation({ summary: 'Get unread notification count' })
-  getUnreadCount(@CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.notificationsService.getUnreadCount(user.id),
-    );
-  }
-
-  @Patch(':id/read')
-  @ApiOperation({ summary: 'Mark notification as read' })
-  markAsRead(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: User,
-  ) {
-    return this.handleAsyncOperation(
-      this.notificationsService.markAsRead(id, user.id),
-    );
-  }
-
-  @Patch('read-all')
-  @ApiOperation({ summary: 'Mark all notifications as read' })
-  markAllAsRead(@CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.notificationsService.markAllAsRead(user.id),
-    );
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete notification' })
-  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.notificationsService.remove(id, user.id),
-    );
-  }
-
-  @Get('preferences')
-  @ApiOperation({ summary: 'Get notification preferences' })
-  getPreferences(@CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.notificationsService.getPreferences(user.id),
-    );
-  }
-
-  @Patch('preferences/:type')
-  @ApiOperation({ summary: 'Update notification preference' })
-  updatePreference(
-    @CurrentUser() user: User,
-    @Param('type') type: string,
-    @Body() dto: UpdateNotificationPreferenceDto,
-  ) {
-    return this.handleAsyncOperation(
-      this.notificationsService.updatePreference(user.id, type, dto),
-    );
-  }
-}
-
-@ApiTags('Notification Templates')
-@Controller('notification-templates')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
-@ApiBearerAuth('JWT-auth')
-export class NotificationTemplatesController extends BaseController {
-  constructor(private readonly notificationsService: NotificationsService) {
-    super();
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get notification templates' })
-  @Permissions('notifications.read')
-  findAll() {
-    return this.handleAsyncOperation(this.notificationsService.getTemplates());
-  }
+@UsePipes(new ValidationPipe({ whitelist: true }))
+export class NotificationsController {
+  constructor(private readonly svc: NotificationsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create notification template' })
-  @Permissions('notifications.create')
-  create(@Body() dto: CreateNotificationTemplateDto) {
-    return this.handleAsyncOperation(
-      this.notificationsService.createTemplate(dto),
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Create a notification for a user (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Notification created' })
+  create(@Body() dto: CreateNotificationDto) {
+    return this.svc.create(dto.userId, dto);
+  }
+
+  @Get('mine')
+  @ApiOperation({ summary: 'Get all notifications for current user' })
+  @ApiResponse({ status: 200, description: 'Notifications returned' })
+  findMine(
+    @CurrentUser() user: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.svc.findByUser(
+      user.id,
+      page ? Math.max(1, +page) : 1,
+      limit ? Math.min(Math.max(1, +limit), 100) : 20,
     );
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update notification template' })
-  @Permissions('notifications.update')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateNotificationTemplateDto,
-  ) {
-    return this.handleAsyncOperation(
-      this.notificationsService.updateTemplate(id, dto),
-    );
+  @Get('mine/unread-count')
+  @ApiOperation({ summary: 'Get unread notification count for current user' })
+  @ApiResponse({ status: 200, description: 'Unread count returned' })
+  getUnreadCount(@CurrentUser() user: any) {
+    return this.svc.getUnreadCount(user.id);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get notification by ID' })
+  @ApiParam({ name: 'id', description: 'Notification UUID' })
+  @ApiResponse({ status: 200, description: 'Notification found' })
+  findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.findOneForUser(id, user.id, user.role);
+  }
+
+  @Put(':id/read')
+  @ApiOperation({ summary: 'Mark notification as read' })
+  @ApiParam({ name: 'id', description: 'Notification UUID' })
+  @ApiResponse({ status: 200, description: 'Notification marked as read' })
+  markRead(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.markRead(id, user.id);
+  }
+
+  @Put('mine/read-all')
+  @ApiOperation({ summary: 'Mark all notifications as read for current user' })
+  @ApiResponse({ status: 200, description: 'All notifications marked as read' })
+  markAllRead(@CurrentUser() user: any) {
+    return this.svc.markAllRead(user.id);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete notification template' })
-  @Permissions('notifications.delete')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(
-      this.notificationsService.deleteTemplate(id),
-    );
+  @ApiOperation({ summary: 'Delete a notification' })
+  @ApiParam({ name: 'id', description: 'Notification UUID' })
+  @ApiResponse({ status: 200, description: 'Notification deleted' })
+  remove(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.remove(id, user.id);
   }
 }

@@ -1,59 +1,71 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsNotEmpty,
-  IsOptional,
   IsString,
-  MaxLength,
-  IsEnum,
+  IsOptional,
+  IsNotEmpty,
   IsObject,
+  MaxLength,
+  IsUUID,
 } from 'class-validator';
-import {
-  NotificationType,
-  NotificationChannel,
-  NotificationStatus,
-} from '@common/enums';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateNotificationDto {
-  @ApiProperty({ description: 'User ID' })
-  @IsNotEmpty()
-  @IsUuidString()
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Target user UUID',
+  })
+  @IsUUID()
   userId: string;
 
-  @ApiProperty({ description: 'Notification type', enum: NotificationType })
+  @ApiProperty({
+    example: 'push',
+    description: 'Notification channel (push, email, sms)',
+    maxLength: 20,
+  })
+  @IsString()
   @IsNotEmpty()
-  @IsEnum(NotificationType)
-  type: NotificationType;
+  @MaxLength(20)
+  channel: string;
 
   @ApiProperty({
-    description: 'Notification channel',
-    enum: NotificationChannel,
+    example: 'order_update',
+    description: 'Notification type',
+    maxLength: 100,
   })
-  @IsNotEmpty()
-  @IsEnum(NotificationChannel)
-  channel: NotificationChannel;
-
-  @ApiProperty({ description: 'Notification title' })
-  @IsNotEmpty()
   @IsString()
-  @MaxLength(255)
-  title: string;
-
-  @ApiProperty({ description: 'Notification body' })
   @IsNotEmpty()
-  @IsString()
-  body: string;
-
-  @ApiPropertyOptional({ description: 'Additional data as JSON' })
-  @IsOptional()
-  @IsObject()
-  data?: Record<string, any>;
+  @MaxLength(100)
+  type: string;
 
   @ApiPropertyOptional({
-    description: 'Notification status',
-    enum: NotificationStatus,
+    example: 'Order Shipped!',
+    description: 'Notification title',
+    maxLength: 300,
   })
   @IsOptional()
-  @IsEnum(NotificationStatus)
-  status?: NotificationStatus;
+  @IsString()
+  @MaxLength(300)
+  title?: string;
+
+  @ApiPropertyOptional({
+    example: 'Your order #123 has been shipped',
+    description: 'Notification body',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  body?: string;
+
+  @ApiPropertyOptional({ example: '/orders/123', description: 'Action URL' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  actionUrl?: string;
+
+  @ApiPropertyOptional({
+    example: { orderId: '123' },
+    description: 'Additional metadata',
+  })
+  @IsOptional()
+  @IsObject()
+  metadata?: Record<string, any>;
 }

@@ -1,396 +1,145 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual } from 'typeorm';
+import { Repository } from 'typeorm';
+import { SubscriptionPlan } from './entities/subscription-plan.entity';
 import { Subscription } from './entities/subscription.entity';
-import { SubscriptionOrder } from './entities/subscription-order.entity';
-import { ServiceResponse } from '../../common/interfaces/service-response.interface';
-import { SubscriptionStatus, SubscriptionFrequency } from '@common/enums';
-import { CreateSubscriptionDto } from './dto/create-subscription.dto';
-import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
+import { NotificationHelperService } from '../notifications/notification-helper.service';
+import { enforceOwnerOrAdmin } from '../../common/guards/ownership.helper';
 import { MailService } from '../../common/modules/mail/mail.service';
-import { StripeService } from '../payments/providers/stripe.service';
 
 @Injectable()
 export class SubscriptionsService {
-  private readonly logger = new Logger(SubscriptionsService.name);
-
   constructor(
-    @InjectRepository(Subscription)
-    private subscriptionRepository: Repository<Subscription>,
-    @InjectRepository(SubscriptionOrder)
-    private orderRepository: Repository<SubscriptionOrder>,
-    private readonly mailService: MailService,
-    private readonly stripeService: StripeService,
+    @InjectRepository(SubscriptionPlan)
+    private planRepo: Repository<SubscriptionPlan>,
+    @InjectRepository(Subscription) private subRepo: Repository<Subscription>,
+    private notificationHelper: NotificationHelperService,
+    private mailService: MailService,
   ) {}
 
-  async create(
-    userId: string,
-    dto: CreateSubscriptionDto,
-  ): Promise<ServiceResponse<Subscription>> {
-    const subscription = new Subscription();
-    Object.assign(subscription, dto);
-    subscription.userId = userId;
-    subscription.status = SubscriptionStatus.ACTIVE;
-    subscription.nextDeliveryDate = this.calculateNextDeliveryDate(
-      dto.frequency || SubscriptionFrequency.MONTHLY,
-    );
-
-    // If Stripe Billing params are provided, create a Stripe Subscription
-    if ((dto as any).stripePriceId && (dto as any).stripeCustomerId) {
-      try {
-        const stripeSub = await this.stripeService.createSubscription({
-          customerId: (dto as any).stripeCustomerId,
-          priceId: (dto as any).stripePriceId,
-          metadata: { userId, productId: dto.productId || '' },
-        });
-        subscription.stripeSubscriptionId = stripeSub.id;
-        subscription.stripeCustomerId = (dto as any).stripeCustomerId;
-        subscription.stripePriceId = (dto as any).stripePriceId;
-      } catch (err) {
-        this.logger.warn(`Stripe subscription creation failed: ${err.message}`);
-        // Continue with local subscription even if Stripe fails
-      }
-    }
-
-    const saved = await this.subscriptionRepository.save(subscription);
-
-    // Send subscription created email (fire-and-forget)
-    this.sendSubscriptionEmail(saved, 'created').catch(() => {});
-
-    return { success: true, message: 'Subscription created', data: saved };
+  async createPlan(dto: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
+    const plan = this.planRepo.create(dto);
+    return this.planRepo.save(plan);
   }
 
-  async findAll(options?: {
-    userId?: string;
-    status?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<ServiceResponse<Subscription[]>> {
-    const query = this.subscriptionRepository
-      .createQueryBuilder('subscription')
-      .leftJoinAndSelect('subscription.product', 'product')
-      .orderBy('subscription.createdAt', 'DESC');
-    if (options?.userId)
-      query.andWhere('subscription.userId = :userId', {
-        userId: options.userId,
+  async findAllPlans(): Promise<SubscriptionPlan[]> {
+    return this.planRepo.find({ order: { price: 'ASC' } });
+  }
+
+  async findPlan(id: string): Promise<SubscriptionPlan> {
+    const plan = await this.planRepo.findOne({ where: { id } });
+    if (!plan) throw new NotFoundException('Plan not found');
+    return plan;
+  }
+
+  async updatePlan(
+    id: string,
+    dto: Partial<SubscriptionPlan>,
+  ): Promise<SubscriptionPlan> {
+    const plan = await this.findPlan(id);
+    Object.assign(plan, dto);
+    return this.planRepo.save(plan);
+  }
+
+  async removePlan(id: string): Promise<void> {
+    const plan = await this.findPlan(id);
+    await this.planRepo.remove(plan);
+  }
+
+  async subscribe(dto: Partial<Subscription>): Promise<Subscription> {
+    dto.status = dto.status || 'active';
+    const sub = this.subRepo.create(dto);
+    const saved = await this.subRepo.save(sub);
+
+    if (dto.userId && dto.planId) {
+      const plan = await this.planRepo.findOne({
+        where: { id: dto.planId as string },
       });
-    if (options?.status)
-      query.andWhere('subscription.status = :status', {
-        status: options.status,
-      });
-    const page = options?.page || 1;
-    const limit = options?.limit || 20;
-    query.skip((page - 1) * limit).take(limit);
-    const [subscriptions, total] = await query.getManyAndCount();
-    return {
-      success: true,
-      message: 'Subscriptions retrieved',
-      data: subscriptions,
-      meta: { total, page, limit },
-    };
+      this.notificationHelper
+        .notify(dto.userId as string, 'SUBSCRIPTION_CREATED', {
+          planName: plan?.name || 'plan',
+        })
+        .catch(() => {});
+    }
+
+    return saved;
   }
 
-  async findOne(id: string): Promise<ServiceResponse<Subscription>> {
-    const subscription = await this.subscriptionRepository.findOne({
-      where: { id },
-      relations: ['product', 'subscriptionOrders'],
-    });
-    if (!subscription) throw new NotFoundException('Subscription not found');
-    return {
-      success: true,
-      message: 'Subscription retrieved',
-      data: subscription,
-    };
-  }
-
-  async findByUser(userId: string): Promise<ServiceResponse<Subscription[]>> {
-    const subscriptions = await this.subscriptionRepository.find({
-      where: { userId },
-      relations: ['product'],
-    });
-    return {
-      success: true,
-      message: 'Subscriptions retrieved',
-      data: subscriptions,
-    };
-  }
-
-  async update(
+  async findSubscription(
     id: string,
-    dto: UpdateSubscriptionDto,
-    userId?: string,
-  ): Promise<ServiceResponse<Subscription>> {
-    const subscription = await this.subscriptionRepository.findOne({
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<Subscription> {
+    const sub = await this.subRepo.findOne({
       where: { id },
+      relations: ['user', 'plan'],
     });
-    if (!subscription) throw new NotFoundException('Subscription not found');
-    if (userId && subscription.userId !== userId)
-      throw new NotFoundException('Subscription not found');
-    Object.assign(subscription, dto);
-    const updated = await this.subscriptionRepository.save(subscription);
-    return { success: true, message: 'Subscription updated', data: updated };
+    if (!sub) throw new NotFoundException('Subscription not found');
+    if (callerId) enforceOwnerOrAdmin(callerId, callerRole, sub.userId);
+    return sub;
   }
 
-  async cancel(
-    id: string,
-    reason?: string,
-    userId?: string,
-  ): Promise<ServiceResponse<Subscription>> {
-    const subscription = await this.subscriptionRepository.findOne({
-      where: { id },
-    });
-    if (!subscription) throw new NotFoundException('Subscription not found');
-    if (userId && subscription.userId !== userId)
-      throw new NotFoundException('Subscription not found');
+  async findByUser(userId: string): Promise<Subscription[]> {
+    return this.subRepo.find({ where: { userId }, relations: ['plan'] });
+  }
 
-    // Cancel Stripe subscription if linked
-    if (subscription.stripeSubscriptionId) {
-      try {
-        await this.stripeService.cancelSubscription(
-          subscription.stripeSubscriptionId,
-          true,
-        );
-      } catch (err) {
-        this.logger.warn(
-          `Failed to cancel Stripe subscription: ${err.message}`,
-        );
+  async findByGatewaySubId(gatewaySubId: string): Promise<Subscription | null> {
+    return this.subRepo.findOne({
+      where: { gatewaySubId },
+      relations: ['user', 'plan'],
+    });
+  }
+
+  async updateSubscription(
+    id: string,
+    dto: Partial<Subscription>,
+  ): Promise<Subscription> {
+    const sub = await this.findSubscription(id);
+    Object.assign(sub, dto);
+    return this.subRepo.save(sub);
+  }
+
+  async cancelSubscription(
+    id: string,
+    callerId?: string,
+    callerRole?: string,
+  ): Promise<Subscription> {
+    const sub = await this.findSubscription(id, callerId, callerRole);
+    sub.status = 'cancelled';
+    sub.cancelledAt = new Date();
+    const saved = await this.subRepo.save(sub);
+
+    if (sub.userId) {
+      const plan =
+        sub.plan ||
+        (sub.planId
+          ? await this.planRepo.findOne({ where: { id: sub.planId } })
+          : null);
+      this.notificationHelper
+        .notify(sub.userId, 'SUBSCRIPTION_CANCELLED', {
+          planName: plan?.name || 'plan',
+        })
+        .catch(() => {});
+      // Send cancellation email
+      if (sub.user?.email) {
+        this.mailService
+          .sendSubscriptionCancelledEmail(
+            sub.user.email,
+            sub.user.firstName || 'Customer',
+            plan?.name || 'plan',
+          )
+          .catch(() => {});
       }
     }
 
-    subscription.status = SubscriptionStatus.CANCELLED;
-    subscription.cancelledAt = new Date();
-    subscription.cancellationReason = reason || null;
-    const updated = await this.subscriptionRepository.save(subscription);
-
-    // Send subscription cancelled email (fire-and-forget)
-    this.sendSubscriptionEmail(updated, 'cancelled').catch(() => {});
-
-    return { success: true, message: 'Subscription cancelled', data: updated };
+    return saved;
   }
 
-  async pause(
-    id: string,
-    userId?: string,
-  ): Promise<ServiceResponse<Subscription>> {
-    const subscription = await this.subscriptionRepository.findOne({
-      where: { id },
-    });
-    if (!subscription) throw new NotFoundException('Subscription not found');
-    if (userId && subscription.userId !== userId)
-      throw new NotFoundException('Subscription not found');
-    if (subscription.status !== SubscriptionStatus.ACTIVE)
-      throw new BadRequestException('Can only pause active subscriptions');
-
-    // Pause Stripe subscription if linked
-    if (subscription.stripeSubscriptionId) {
-      try {
-        await this.stripeService.pauseSubscription(
-          subscription.stripeSubscriptionId,
-        );
-      } catch (err) {
-        this.logger.warn(`Failed to pause Stripe subscription: ${err.message}`);
-      }
-    }
-
-    subscription.status = SubscriptionStatus.PAUSED;
-    subscription.pausedAt = new Date();
-    const updated = await this.subscriptionRepository.save(subscription);
-
-    // Send subscription paused email (fire-and-forget)
-    this.sendSubscriptionEmail(updated, 'paused').catch(() => {});
-
-    return { success: true, message: 'Subscription paused', data: updated };
-  }
-
-  async resume(
-    id: string,
-    userId?: string,
-  ): Promise<ServiceResponse<Subscription>> {
-    const subscription = await this.subscriptionRepository.findOne({
-      where: { id },
-    });
-    if (!subscription) throw new NotFoundException('Subscription not found');
-    if (userId && subscription.userId !== userId)
-      throw new NotFoundException('Subscription not found');
-    if (subscription.status !== SubscriptionStatus.PAUSED)
-      throw new BadRequestException('Only paused subscriptions can be resumed');
-
-    // Resume Stripe subscription if linked
-    if (subscription.stripeSubscriptionId) {
-      try {
-        await this.stripeService.resumeSubscription(
-          subscription.stripeSubscriptionId,
-        );
-      } catch (err) {
-        this.logger.warn(
-          `Failed to resume Stripe subscription: ${err.message}`,
-        );
-      }
-    }
-
-    subscription.status = SubscriptionStatus.ACTIVE;
-    subscription.pausedAt = null;
-    subscription.nextDeliveryDate = this.calculateNextDeliveryDate(
-      subscription.frequency,
-    );
-    const updated = await this.subscriptionRepository.save(subscription);
-
-    // Send subscription resumed email (fire-and-forget)
-    this.sendSubscriptionEmail(updated, 'resumed').catch(() => {});
-
-    return { success: true, message: 'Subscription resumed', data: updated };
-  }
-
-  async createOrder(
-    subscriptionId: string,
-    dto: Partial<SubscriptionOrder>,
-  ): Promise<ServiceResponse<SubscriptionOrder>> {
-    const subscription = await this.subscriptionRepository.findOne({
-      where: { id: subscriptionId },
-    });
-    if (!subscription) throw new NotFoundException('Subscription not found');
-    const order = new SubscriptionOrder();
-    Object.assign(order, dto);
-    order.subscriptionId = subscriptionId;
-    const saved = await this.orderRepository.save(order);
-    return {
-      success: true,
-      message: 'Subscription order created',
-      data: saved,
-    };
-  }
-
-  async getOrders(
-    subscriptionId: string,
-  ): Promise<ServiceResponse<SubscriptionOrder[]>> {
-    const orders = await this.orderRepository.find({
-      where: { subscriptionId },
-      order: { createdAt: 'DESC' },
-    });
-    return { success: true, message: 'Orders retrieved', data: orders };
-  }
-
-  async getDueSubscriptions(): Promise<ServiceResponse<Subscription[]>> {
-    const dueSubscriptions = await this.subscriptionRepository.find({
-      where: {
-        status: SubscriptionStatus.ACTIVE,
-        nextDeliveryDate: LessThanOrEqual(new Date()),
-      },
-      relations: ['user', 'product'],
-    });
-    return {
-      success: true,
-      message: 'Due subscriptions retrieved',
-      data: dueSubscriptions,
-    };
-  }
-
-  async processRenewal(id: string): Promise<ServiceResponse<Subscription>> {
-    const subscription = await this.subscriptionRepository.findOne({
-      where: { id },
-    });
-    if (!subscription) throw new NotFoundException('Subscription not found');
-    subscription.lastOrderDate = new Date();
-    subscription.nextDeliveryDate = this.calculateNextDeliveryDate(
-      subscription.frequency,
-    );
-    subscription.totalOrders = (subscription.totalOrders || 0) + 1;
-    const updated = await this.subscriptionRepository.save(subscription);
-
-    // Send subscription renewal email (fire-and-forget)
-    this.sendSubscriptionEmail(updated, 'renewed').catch(() => {});
-
-    return { success: true, message: 'Subscription renewed', data: updated };
-  }
-
-  private calculateNextDeliveryDate(frequency: SubscriptionFrequency): Date {
-    const next = new Date();
-    switch (frequency) {
-      case SubscriptionFrequency.WEEKLY:
-        next.setDate(next.getDate() + 7);
-        break;
-      case SubscriptionFrequency.BIWEEKLY:
-        next.setDate(next.getDate() + 14);
-        break;
-      case SubscriptionFrequency.MONTHLY:
-        next.setMonth(next.getMonth() + 1);
-        break;
-      case SubscriptionFrequency.BIMONTHLY:
-        next.setMonth(next.getMonth() + 2);
-        break;
-      case SubscriptionFrequency.QUARTERLY:
-        next.setMonth(next.getMonth() + 3);
-        break;
-      default:
-        next.setMonth(next.getMonth() + 1);
-    }
-    return next;
-  }
-
-  private async sendSubscriptionEmail(
-    subscription: Subscription,
-    action: string,
-  ): Promise<void> {
-    try {
-      const full = await this.subscriptionRepository.findOne({
-        where: { id: subscription.id },
-        relations: ['user', 'product'],
-      });
-      if (!full?.user?.email) return;
-      const name = full.user.name || 'Customer';
-      const productName = full.product?.name || 'Product';
-      const nextDate = full.nextDeliveryDate
-        ? new Date(full.nextDeliveryDate).toLocaleDateString()
-        : 'TBD';
-
-      switch (action) {
-        case 'created':
-          await this.mailService.sendSubscriptionCreatedEmail(
-            full.user.email,
-            name,
-            productName,
-            full.frequency,
-          );
-          break;
-        case 'cancelled':
-          await this.mailService.sendSubscriptionCancelledEmail(
-            full.user.email,
-            name,
-            productName,
-            full.cancellationReason,
-          );
-          break;
-        case 'paused':
-          await this.mailService.sendSubscriptionPausedEmail(
-            full.user.email,
-            name,
-            productName,
-          );
-          break;
-        case 'resumed':
-          await this.mailService.sendSubscriptionResumedEmail(
-            full.user.email,
-            name,
-            productName,
-            nextDate,
-          );
-          break;
-        case 'renewed':
-          await this.mailService.sendSubscriptionRenewalEmail(
-            full.user.email,
-            name,
-            productName,
-            nextDate,
-          );
-          break;
-      }
-    } catch (_) {
-      /* silently ignore */
-    }
+  async findDueForRenewal(): Promise<Subscription[]> {
+    return this.subRepo
+      .createQueryBuilder('s')
+      .where('s.status = :status', { status: 'active' })
+      .andWhere('s.currentPeriodEnd <= :now', { now: new Date() })
+      .getMany();
   }
 }

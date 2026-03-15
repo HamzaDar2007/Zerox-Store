@@ -1,72 +1,72 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsOptional,
-  IsEnum,
-  IsArray,
+  IsNotEmpty,
+  IsUUID,
+  IsObject,
   IsIP,
   MaxLength,
 } from 'class-validator';
-import { AuditAction } from '@common/enums';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateAuditLogDto {
-  @ApiPropertyOptional({ description: 'User ID who performed the action' })
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Actor user UUID',
+  })
   @IsOptional()
-  @IsUuidString()
-  userId?: string;
+  @IsUUID()
+  actorId?: string;
 
-  @ApiProperty({ description: 'Action performed', enum: AuditAction })
-  @IsEnum(AuditAction)
-  action: AuditAction;
-
-  @ApiProperty({ description: 'Entity type affected', maxLength: 50 })
+  @ApiProperty({
+    example: 'UPDATE',
+    description: 'Action performed',
+    maxLength: 50,
+  })
   @IsString()
+  @IsNotEmpty()
   @MaxLength(50)
-  entityType: string;
+  action: string;
 
-  @ApiPropertyOptional({ description: 'Entity ID affected' })
-  @IsOptional()
-  @IsUuidString()
-  entityId?: string;
+  @ApiProperty({
+    example: 'products',
+    description: 'Database table affected',
+    maxLength: 100,
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  tableName: string;
 
   @ApiPropertyOptional({
-    description: 'Previous values before change',
-    type: Object,
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    description: 'Record UUID',
   })
   @IsOptional()
-  oldValues?: Record<string, any>;
-
-  @ApiPropertyOptional({ description: 'New values after change', type: Object })
-  @IsOptional()
-  newValues?: Record<string, any>;
+  @IsUUID()
+  recordId?: string;
 
   @ApiPropertyOptional({
-    description: 'List of changed field names',
-    type: [String],
+    example: { name: { from: 'Old', to: 'New' } },
+    description: 'Changes diff',
   })
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  changedFields?: string[];
+  @IsObject()
+  diff?: Record<string, any>;
 
-  @ApiPropertyOptional({ description: 'Client IP address' })
+  @ApiPropertyOptional({
+    example: '192.168.1.1',
+    description: 'Client IP address',
+  })
   @IsOptional()
   @IsIP()
   ipAddress?: string;
 
-  @ApiPropertyOptional({ description: 'Client user agent' })
+  @ApiPropertyOptional({
+    example: 'Mozilla/5.0...',
+    description: 'User agent string',
+  })
   @IsOptional()
   @IsString()
   userAgent?: string;
-
-  @ApiPropertyOptional({ description: 'Session ID' })
-  @IsOptional()
-  @IsUuidString()
-  sessionId?: string;
-
-  @ApiPropertyOptional({ description: 'Action description' })
-  @IsOptional()
-  @IsString()
-  description?: string;
 }

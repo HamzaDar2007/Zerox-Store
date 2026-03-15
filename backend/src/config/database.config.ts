@@ -9,17 +9,28 @@ const databaseConfig = (): TypeOrmModuleOptions => ({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432', 10),
   username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || '',
+  password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE || 'postgres',
 
   entities: [__dirname + '/../modules/**/entities/*.entity.{ts,js}'],
 
-  migrations: [__dirname + '/../../migrations/*.{ts,js}'],
+  migrations: [__dirname + '/../migrations/*.{ts,js}'],
 
   synchronize: false,
 
-  logging: process.env.TYPEORM_LOGGING === 'true',
+  logging:
+    process.env.NODE_ENV === 'production'
+      ? false
+      : process.env.TYPEORM_LOGGING === 'true',
   namingStrategy: new SnakeNamingStrategy(),
+  ssl:
+    process.env.DB_SSL === 'true'
+      ? {
+          rejectUnauthorized:
+            process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+          ...(process.env.DB_SSL_CA ? { ca: process.env.DB_SSL_CA } : {}),
+        }
+      : false,
 });
 
 export default databaseConfig;

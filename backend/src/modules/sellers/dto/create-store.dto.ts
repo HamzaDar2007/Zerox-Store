@@ -1,68 +1,64 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
 import {
   IsString,
-  IsNotEmpty,
   IsOptional,
-  MaxLength,
+  IsNotEmpty,
   IsBoolean,
-  Matches,
+  MaxLength,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateStoreDto {
-  @ApiProperty({ description: 'Seller ID' })
-  @IsUuidString()
-  @IsNotEmpty()
-  sellerId: string;
+  @ApiPropertyOptional({
+    example: 'TechStore Official',
+    description: 'Store name',
+    maxLength: 200,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  name?: string;
 
-  @ApiProperty({ description: 'Store name', maxLength: 100 })
+  @ApiProperty({
+    example: 'techstore-official',
+    description: 'URL-friendly slug (unique)',
+    maxLength: 200,
+  })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(100)
-  @Transform(({ value }) => value?.trim())
-  name: string;
+  @MaxLength(200)
+  slug: string;
 
   @ApiPropertyOptional({
-    description: 'Store slug (auto-generated if not provided)',
-    maxLength: 100,
+    example: 'Best tech gadgets store',
+    description: 'Store description',
   })
   @IsOptional()
   @IsString()
-  @MaxLength(100)
-  @Matches(/^[a-z0-9-]+$/, {
-    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
-  })
-  slug?: string;
-
-  @ApiPropertyOptional({ description: 'Logo URL' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  logoUrl?: string;
-
-  @ApiPropertyOptional({ description: 'Banner URL' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  bannerUrl?: string;
-
-  @ApiPropertyOptional({ description: 'Store description' })
-  @IsOptional()
-  @IsString()
+  @MaxLength(2000)
   description?: string;
 
-  @ApiPropertyOptional({ description: 'Return policy' })
+  @ApiPropertyOptional({
+    example: 'https://example.com/logo.png',
+    description: 'Store logo URL',
+  })
   @IsOptional()
   @IsString()
-  returnPolicy?: string;
+  @MaxLength(2048)
+  logoUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Shipping policy' })
+  @ApiPropertyOptional({
+    example: 'https://example.com/banner.jpg',
+    description: 'Store banner URL',
+  })
   @IsOptional()
   @IsString()
-  shippingPolicy?: string;
+  @MaxLength(2048)
+  bannerUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Is store active', default: true })
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether the store is active',
+  })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

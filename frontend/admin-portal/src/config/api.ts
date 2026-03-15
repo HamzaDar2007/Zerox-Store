@@ -1,0 +1,53 @@
+import axios from 'axios'
+import { useAuthStore } from '@/store/auth.store'
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+
+const api = axios.create({
+  baseURL: BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+api.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().accessToken
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// Unwrap the backend's standard envelope: { success, message, data, timestamp } → data
+api.interceptors.response.use(
+  (response) => {
+    const body = response.data
+    if (body && typeof body === 'object' && 'success' in body && 'data' in body) {
+      response.data = body.data
+    }
+    return response
+  },
+  async (error) => {
+    const originalRequest = error.config
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+      const refreshToken = useAuthStore.getState().refreshToken
+      if (refreshToken) {
+        try {
+          const { data } = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken })
+          const inner = data?.data ?? data
+          useAuthStore.getState().setTokens(inner.accessToken, inner.refreshToken)
+          originalRequest.headers.Authorization = `Bearer ${inner.accessToken}`
+          return api(originalRequest)
+        } catch {
+          useAuthStore.getState().logout()
+          window.location.href = '/login'
+        }
+      } else {
+        useAuthStore.getState().logout()
+        window.location.href = '/login'
+      }
+    }
+    return Promise.reject(error)
+  },
+)
+
+export default api

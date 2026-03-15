@@ -1,47 +1,33 @@
 import {
   IsString,
-  IsNotEmpty,
-  MaxLength,
   IsOptional,
   IsBoolean,
+  IsNotEmpty,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateRoleDto {
-  @ApiProperty({
-    description: 'The unique name of the role',
-    example: 'super_admin',
-    maxLength: 50,
-  })
-  @IsString({ message: 'Role name must be a string' })
-  @IsNotEmpty({ message: 'Role name is required' })
-  @MaxLength(50, { message: 'Role name cannot exceed 50 characters' })
+  @ApiProperty({ example: 'seller', description: 'Role name', maxLength: 100 })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
   name: string;
 
   @ApiPropertyOptional({
-    description: 'Display name for the role',
-    example: 'Super Administrator',
-    maxLength: 100,
+    example: 'Seller role with store management permissions',
+    description: 'Role description',
   })
   @IsOptional()
-  @IsString({ message: 'Display name must be a string' })
-  @MaxLength(100, { message: 'Display name cannot exceed 100 characters' })
-  displayName?: string;
-
-  @ApiPropertyOptional({
-    description: 'A description for the role',
-    example: 'Grants full administrative access.',
-  })
-  @IsOptional()
-  @IsString({ message: 'Description must be a string' })
+  @IsString()
+  @MaxLength(500)
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'Whether this is a system role (cannot be deleted)',
     example: false,
-    default: false,
+    description: 'Whether this is a system role (cannot be deleted)',
   })
   @IsOptional()
-  @IsBoolean({ message: 'isSystem must be a boolean' })
+  @IsBoolean()
   isSystem?: boolean;
 }

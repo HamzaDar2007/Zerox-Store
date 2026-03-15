@@ -1,77 +1,54 @@
 import {
   IsString,
-  IsNotEmpty,
   IsOptional,
-  MaxLength,
+  IsNotEmpty,
   IsBoolean,
-  Matches,
+  MaxLength,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateBrandDto {
-  @ApiProperty({ description: 'Brand name', maxLength: 100 })
+  @ApiPropertyOptional({
+    example: 'Samsung',
+    description: 'Brand name',
+    maxLength: 200,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  name?: string;
+
+  @ApiProperty({
+    example: 'samsung',
+    description: 'URL-friendly slug (unique)',
+    maxLength: 200,
+  })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(100)
-  @Transform(({ value }) => value?.trim())
-  name: string;
+  @MaxLength(200)
+  slug: string;
 
   @ApiPropertyOptional({
-    description: 'Brand slug (auto-generated if not provided)',
+    example: 'https://example.com/samsung-logo.png',
+    description: 'Brand logo URL',
   })
   @IsOptional()
   @IsString()
-  @MaxLength(100)
-  @Matches(/^[a-z0-9-]+$/, {
-    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
-  })
-  slug?: string;
-
-  @ApiPropertyOptional({ description: 'Logo URL' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
   logoUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Brand description' })
+  @ApiPropertyOptional({
+    example: 'https://www.samsung.com',
+    description: 'Brand website URL',
+  })
   @IsOptional()
   @IsString()
-  description?: string;
-
-  @ApiPropertyOptional({ description: 'Website URL' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
   websiteUrl?: string;
 
   @ApiPropertyOptional({
-    description: 'Country of origin code (ISO 3166-1 alpha-2)',
+    example: true,
+    description: 'Whether the brand is active',
   })
-  @IsOptional()
-  @IsString()
-  @MaxLength(3)
-  countryOfOrigin?: string;
-
-  @ApiPropertyOptional({ description: 'Is brand active', default: true })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
-
-  @ApiPropertyOptional({ description: 'Is featured brand', default: false })
-  @IsOptional()
-  @IsBoolean()
-  isFeatured?: boolean;
-
-  @ApiPropertyOptional({ description: 'Meta title for SEO' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  metaTitle?: string;
-
-  @ApiPropertyOptional({ description: 'Meta description for SEO' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  metaDescription?: string;
 }

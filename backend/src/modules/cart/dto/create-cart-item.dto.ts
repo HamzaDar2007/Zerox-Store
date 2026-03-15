@@ -1,36 +1,16 @@
-import { IsUuidString } from '@common/decorators/is-uuid-string.decorator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsInt, Min, IsNumber } from 'class-validator';
+import { IsUUID, IsInt, Min } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCartItemDto {
-  @ApiPropertyOptional({
-    description: 'Cart ID (auto-resolved from user if omitted)',
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Product variant UUID',
   })
-  @IsOptional()
-  @IsUuidString()
-  cartId?: string;
+  @IsUUID()
+  variantId: string;
 
-  @ApiProperty({ description: 'Product ID' })
-  @IsNotEmpty()
-  @IsUuidString()
-  productId: string;
-
-  @ApiPropertyOptional({ description: 'Product variant ID' })
-  @IsOptional()
-  @IsUuidString()
-  variantId?: string;
-
-  @ApiPropertyOptional({ description: 'Quantity', default: 1 })
-  @IsOptional()
+  @ApiProperty({ example: 2, description: 'Quantity (min 1)', minimum: 1 })
   @IsInt()
   @Min(1)
-  quantity?: number;
-
-  @ApiPropertyOptional({
-    description: 'Price at the time of addition (auto-resolved if omitted)',
-  })
-  @IsOptional()
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  priceAtAddition?: number;
+  quantity: number;
 }

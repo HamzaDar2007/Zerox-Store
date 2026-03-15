@@ -1,0 +1,15 @@
+node_modules
+dist
+.git
+.gitignore
+.env*
+*.md
+test
+test_scripts
+seeds
+.vscode
+.idea
+*.log
+coverage
+.dockerignore
+Dockerfile

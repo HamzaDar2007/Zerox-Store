@@ -1,31 +1,16 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-} from 'typeorm';
-import { Role } from '../../roles/entities/role.entity';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('permissions')
 export class Permission {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'role_id', type: 'uuid' })
-  roleId: string;
+  @Column({ type: 'varchar', length: 200, unique: true })
+  code: string;
 
-  @ManyToOne(() => Role, (role) => role.permissions, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'role_id' })
-  role: Role;
-
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 100 })
   module: string;
 
-  @Column({ type: 'varchar', length: 50 })
-  action: string;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
+  @Column({ type: 'text', nullable: true })
+  description: string | null;
 }

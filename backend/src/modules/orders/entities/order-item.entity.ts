@@ -2,15 +2,13 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { OrderItemStatus } from '@common/enums';
 import { Order } from './order.entity';
-import { Product } from '../../products/entities/product.entity';
 import { ProductVariant } from '../../products/entities/product-variant.entity';
+import { Store } from '../../sellers/entities/store.entity';
+import { FlashSale } from '../../cart/entities/flash-sale.entity';
 
 @Entity('order_items')
 export class OrderItem {
@@ -20,85 +18,49 @@ export class OrderItem {
   @Column({ name: 'order_id', type: 'uuid' })
   orderId: string;
 
-  @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Order, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
-  @Column({ name: 'product_id', type: 'uuid' })
-  productId: string;
+  @Column({ name: 'variant_id', type: 'uuid' })
+  variantId: string;
 
-  @ManyToOne(() => Product)
-  @JoinColumn({ name: 'product_id' })
-  product: Product;
-
-  @Column({ name: 'variant_id', type: 'uuid', nullable: true })
-  variantId: string | null;
-
-  @ManyToOne(() => ProductVariant)
+  @ManyToOne(() => ProductVariant, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'variant_id' })
-  variant: ProductVariant | null;
+  variant: ProductVariant;
 
-  @Column({ name: 'product_snapshot', type: 'jsonb' })
-  productSnapshot: Record<string, any>;
+  @Column({ name: 'store_id', type: 'uuid' })
+  storeId: string;
 
-  @Column({ type: 'integer' })
-  quantity: number;
+  @ManyToOne(() => Store, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'store_id' })
+  store: Store;
 
-  @Column({ name: 'unit_price', type: 'decimal', precision: 12, scale: 2 })
+  @Column({ name: 'sku_snapshot', type: 'varchar', length: 200 })
+  skuSnapshot: string;
+
+  @Column({ name: 'name_snapshot', type: 'varchar', length: 300 })
+  nameSnapshot: string;
+
+  @Column({ name: 'unit_price', type: 'numeric', precision: 14, scale: 4 })
   unitPrice: number;
 
-  @Column({
-    name: 'original_price',
-    type: 'decimal',
-    precision: 12,
-    scale: 2,
-    nullable: true,
-  })
-  originalPrice: number | null;
+  @Column({ type: 'int', default: 1 })
+  quantity: number;
 
-  @Column({
-    name: 'discount_amount',
-    type: 'decimal',
-    precision: 12,
-    scale: 2,
-    default: 0,
-  })
+  @Column({ name: 'discount_amount', type: 'numeric', precision: 14, scale: 4 })
   discountAmount: number;
 
-  @Column({
-    name: 'tax_amount',
-    type: 'decimal',
-    precision: 12,
-    scale: 2,
-    default: 0,
-  })
+  @Column({ name: 'tax_amount', type: 'numeric', precision: 14, scale: 4 })
   taxAmount: number;
 
-  @Column({ name: 'total_amount', type: 'decimal', precision: 12, scale: 2 })
+  @Column({ name: 'total_amount', type: 'numeric', precision: 14, scale: 4 })
   totalAmount: number;
 
-  @Column({
-    type: 'enum',
-    enum: OrderItemStatus,
-    default: OrderItemStatus.PENDING,
-  })
-  status: OrderItemStatus;
+  @Column({ name: 'flash_sale_id', type: 'uuid', nullable: true })
+  flashSaleId: string | null;
 
-  @Column({ name: 'is_gift', type: 'boolean', default: false })
-  isGift: boolean;
-
-  @Column({ name: 'fulfilled_quantity', type: 'integer', default: 0 })
-  fulfilledQuantity: number;
-
-  @Column({ name: 'returned_quantity', type: 'integer', default: 0 })
-  returnedQuantity: number;
-
-  @Column({ name: 'refunded_quantity', type: 'integer', default: 0 })
-  refundedQuantity: number;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  updatedAt: Date;
+  @ManyToOne(() => FlashSale, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'flash_sale_id' })
+  flashSale: FlashSale | null;
 }

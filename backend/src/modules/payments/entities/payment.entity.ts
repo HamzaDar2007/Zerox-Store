@@ -2,16 +2,13 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
-  OneToMany,
-  JoinColumn,
 } from 'typeorm';
-import { PaymentStatus, PaymentMethod } from '@common/enums';
 import { Order } from '../../orders/entities/order.entity';
 import { User } from '../../users/entities/user.entity';
-import { PaymentAttempt } from './payment-attempt.entity';
 
 @Entity('payments')
 export class Payment {
@@ -21,77 +18,37 @@ export class Payment {
   @Column({ name: 'order_id', type: 'uuid' })
   orderId: string;
 
-  @ManyToOne(() => Order)
+  @ManyToOne(() => Order, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ name: 'payment_number', type: 'varchar', length: 50, unique: true })
-  paymentNumber: string;
+  @Column({ type: 'varchar', length: 50 })
+  gateway: string;
 
-  @Column({ type: 'decimal', precision: 14, scale: 2 })
+  @Column({ name: 'gateway_tx_id', type: 'text', nullable: true })
+  gatewayTxId: string | null;
+
+  @Column({ type: 'varchar', length: 50 })
+  method: string;
+
+  @Column({ type: 'numeric', precision: 14, scale: 4 })
   amount: number;
 
-  @Column({ name: 'currency_code', type: 'varchar', length: 3, default: 'PKR' })
-  currencyCode: string;
+  @Column({ type: 'char', length: 3 })
+  currency: string;
 
-  @Column({
-    type: 'enum',
-    enum: PaymentMethod,
-    name: 'payment_method',
-  })
-  paymentMethod: PaymentMethod;
-
-  @Column({
-    type: 'enum',
-    enum: PaymentStatus,
-    default: PaymentStatus.PENDING,
-  })
-  status: PaymentStatus;
-
-  @Column({ name: 'gateway_name', type: 'varchar', length: 50, nullable: true })
-  gatewayName: string | null;
-
-  @Column({
-    name: 'gateway_transaction_id',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
-  gatewayTransactionId: string | null;
-
-  @Column({ name: 'gateway_response', type: 'jsonb', nullable: true })
-  gatewayResponse: Record<string, any> | null;
-
-  @Column({ name: 'paid_at', type: 'timestamptz', nullable: true })
-  paidAt: Date | null;
-
-  @Column({ name: 'failed_at', type: 'timestamptz', nullable: true })
-  failedAt: Date | null;
-
-  @Column({ name: 'failure_reason', type: 'text', nullable: true })
-  failureReason: string | null;
-
-  @Column({
-    name: 'refunded_amount',
-    type: 'decimal',
-    precision: 14,
-    scale: 2,
-    default: 0,
-  })
-  refundedAmount: number;
+  @Column({ type: 'varchar', length: 20 })
+  status: string;
 
   @Column({ type: 'jsonb', nullable: true })
   metadata: Record<string, any> | null;
-
-  @OneToMany(() => PaymentAttempt, (attempt) => attempt.payment)
-  attempts: PaymentAttempt[];
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

@@ -2,39 +2,23 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentsService } from './payments.service';
-import {
-  PaymentsController,
-  RefundsController,
-  PaymentMethodsController,
-} from './payments.controller';
-import { StripeWebhookController } from './controllers/stripe-webhook.controller';
+import { PaymentsController } from './payments.controller';
 import { Payment } from './entities/payment.entity';
-import { PaymentAttempt } from './entities/payment-attempt.entity';
-import { Refund } from './entities/refund.entity';
-import { SavedPaymentMethod } from './entities/saved-payment-method.entity';
-import { StripeService } from './providers/stripe.service';
+import { CouponUsage } from './entities/coupon-usage.entity';
 import { SharedModule } from '../shared/shared.module';
 import { GuardsModule } from '../../common/modules/guards.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([
-      Payment,
-      PaymentAttempt,
-      Refund,
-      SavedPaymentMethod,
-    ]),
+    TypeOrmModule.forFeature([Payment, CouponUsage]),
     SharedModule,
     GuardsModule,
+    NotificationsModule,
   ],
-  controllers: [
-    PaymentsController,
-    RefundsController,
-    PaymentMethodsController,
-    StripeWebhookController,
-  ],
-  providers: [PaymentsService, StripeService],
-  exports: [PaymentsService, StripeService, TypeOrmModule],
+  controllers: [PaymentsController],
+  providers: [PaymentsService],
+  exports: [PaymentsService, TypeOrmModule],
 })
 export class PaymentsModule {}

@@ -1,17 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SchedulerService } from './scheduler.service';
-import { InventoryModule } from '../inventory/inventory.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
-import { LoyaltyModule } from '../loyalty/loyalty.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [
-    ScheduleModule.forRoot(),
-    InventoryModule,
-    SubscriptionsModule,
-    LoyaltyModule,
-  ],
+  imports: [ScheduleModule.forRoot(), SubscriptionsModule, NotificationsModule],
   providers: [SchedulerService],
 })
 export class SchedulerModule {}

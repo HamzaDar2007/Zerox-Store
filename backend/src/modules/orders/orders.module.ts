@@ -1,34 +1,21 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrdersService } from './orders.service';
-import { OrdersController, ShipmentsController } from './orders.controller';
+import { OrdersController } from './orders.controller';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
-import { OrderStatusHistory } from './entities/order-status-history.entity';
-import { OrderSnapshot } from './entities/order-snapshot.entity';
-import { Shipment } from './entities/shipment.entity';
-import { ShipmentItem } from './entities/shipment-item.entity';
 import { SharedModule } from '../shared/shared.module';
 import { GuardsModule } from '../../common/modules/guards.module';
-import { InventoryModule } from '../inventory/inventory.module';
-import { LoyaltyModule } from '../loyalty/loyalty.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Order,
-      OrderItem,
-      OrderStatusHistory,
-      OrderSnapshot,
-      Shipment,
-      ShipmentItem,
-    ]),
+    TypeOrmModule.forFeature([Order, OrderItem]),
     SharedModule,
     GuardsModule,
-    InventoryModule,
-    LoyaltyModule,
+    NotificationsModule,
   ],
-  controllers: [OrdersController, ShipmentsController],
+  controllers: [OrdersController],
   providers: [OrdersService],
   exports: [OrdersService, TypeOrmModule],
 })

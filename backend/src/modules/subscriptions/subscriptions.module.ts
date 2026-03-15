@@ -2,18 +2,18 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SubscriptionsService } from './subscriptions.service';
 import { SubscriptionsController } from './subscriptions.controller';
+import { SubscriptionPlan } from './entities/subscription-plan.entity';
 import { Subscription } from './entities/subscription.entity';
-import { SubscriptionOrder } from './entities/subscription-order.entity';
 import { SharedModule } from '../shared/shared.module';
 import { GuardsModule } from '../../common/modules/guards.module';
-import { PaymentsModule } from '../payments/payments.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Subscription, SubscriptionOrder]),
+    TypeOrmModule.forFeature([SubscriptionPlan, Subscription]),
     SharedModule,
     GuardsModule,
-    PaymentsModule,
+    NotificationsModule,
   ],
   controllers: [SubscriptionsController],
   providers: [SubscriptionsService],

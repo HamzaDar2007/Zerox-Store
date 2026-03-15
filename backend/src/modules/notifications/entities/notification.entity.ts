@@ -2,15 +2,11 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import {
-  NotificationType,
-  NotificationChannel,
-  NotificationStatus,
-} from '@common/enums';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('notifications')
@@ -21,37 +17,27 @@ export class Notification {
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({
-    type: 'enum',
-    enum: NotificationType,
-  })
-  type: NotificationType;
+  @Column({ type: 'varchar', length: 20 })
+  channel: string;
 
-  @Column({
-    type: 'enum',
-    enum: NotificationChannel,
-  })
-  channel: NotificationChannel;
+  @Column({ type: 'varchar', length: 100 })
+  type: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  title: string;
+  @Column({ type: 'varchar', length: 300, nullable: true })
+  title: string | null;
 
-  @Column({ type: 'text' })
-  body: string;
+  @Column({ type: 'text', nullable: true })
+  body: string | null;
 
-  @Column({ type: 'jsonb', nullable: true })
-  data: Record<string, any> | null;
+  @Column({ name: 'action_url', type: 'text', nullable: true })
+  actionUrl: string | null;
 
-  @Column({
-    type: 'enum',
-    enum: NotificationStatus,
-    default: NotificationStatus.PENDING,
-  })
-  status: NotificationStatus;
+  @Column({ name: 'is_read', type: 'boolean', default: false })
+  isRead: boolean;
 
   @Column({ name: 'read_at', type: 'timestamptz', nullable: true })
   readAt: Date | null;
@@ -59,9 +45,12 @@ export class Notification {
   @Column({ name: 'sent_at', type: 'timestamptz', nullable: true })
   sentAt: Date | null;
 
-  @Column({ name: 'error_message', type: 'text', nullable: true })
-  errorMessage: string | null;
+  @Column({ type: 'jsonb', nullable: true })
+  metadata: Record<string, any> | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt: Date;
 }

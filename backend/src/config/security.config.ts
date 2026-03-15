@@ -46,7 +46,7 @@ export const SecurityConfig = {
         imgSrc: ["'self'", 'data:', 'https:'],
       },
     },
-    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' as const },
   },
 
   validation: {

@@ -2,14 +2,13 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
-  OneToMany,
-  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
-import { CartItem } from './cart-item.entity';
+import { Coupon } from './coupon.entity';
 
 @Entity('carts')
 export class Cart {
@@ -19,36 +18,22 @@ export class Cart {
   @Column({ name: 'user_id', type: 'uuid', nullable: true })
   userId: string | null;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User | null;
 
-  @Column({ name: 'session_id', type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'session_id', type: 'varchar', length: 200, nullable: true })
   sessionId: string | null;
 
-  @Column({ name: 'currency_code', type: 'varchar', length: 3, default: 'PKR' })
-  currencyCode: string;
+  @Column({ type: 'char', length: 3, default: 'USD' })
+  currency: string;
 
-  @Column({ name: 'voucher_id', type: 'uuid', nullable: true })
-  voucherId: string | null;
+  @Column({ name: 'coupon_id', type: 'uuid', nullable: true })
+  couponId: string | null;
 
-  @Column({
-    name: 'discount_amount',
-    type: 'decimal',
-    precision: 12,
-    scale: 2,
-    default: 0,
-  })
-  discountAmount: number;
-
-  @Column({ name: 'last_activity_at', type: 'timestamptz', nullable: true })
-  lastActivityAt: Date | null;
-
-  @Column({ name: 'abandoned_email_sent', type: 'boolean', default: false })
-  abandonedEmailSent: boolean;
-
-  @OneToMany(() => CartItem, (item) => item.cart)
-  items: CartItem[];
+  @ManyToOne(() => Coupon, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'coupon_id' })
+  coupon: Coupon | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

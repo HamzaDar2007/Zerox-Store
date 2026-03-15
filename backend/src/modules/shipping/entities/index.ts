@@ -1,5 +1,5 @@
-export * from './shipping-method.entity';
-export * from './shipping-zone.entity';
-export * from './shipping-rate.entity';
-export * from './shipping-carrier.entity';
-export * from './delivery-slot.entity';
+export { ShippingZone } from './shipping-zone.entity';
+export { ShippingZoneCountry } from './shipping-zone-country.entity';
+export { ShippingMethod } from './shipping-method.entity';
+export { Shipment } from './shipment.entity';
+export { ShipmentEvent } from './shipment-event.entity';

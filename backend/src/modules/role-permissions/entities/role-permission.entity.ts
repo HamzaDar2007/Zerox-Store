@@ -1,29 +1,23 @@
-// DEPRECATED: This entity is not part of the current migration schema
-// The migration uses a direct permissions table with role_id instead
-// Keeping this file for backwards compatibility but it should not be used
-
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
+import { Role } from '../../roles/entities/role.entity';
+import { Permission } from '../../permissions/entities/permission.entity';
 
 @Entity('role_permissions')
 export class RolePermission {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ name: 'role_id' })
+  @PrimaryColumn({ name: 'role_id', type: 'uuid' })
   roleId: string;
 
-  @Column({ name: 'permission_id' })
+  @ManyToOne(() => Role, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'role_id' })
+  role: Role;
+
+  @PrimaryColumn({ name: 'permission_id', type: 'uuid' })
   permissionId: string;
 
-  @CreateDateColumn({
-    name: 'created_at',
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  createdAt: Date;
+  @ManyToOne(() => Permission, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'permission_id' })
+  permission: Permission;
+
+  @Column({ name: 'granted_at', type: 'timestamptz', default: () => 'NOW()' })
+  grantedAt: Date;
 }

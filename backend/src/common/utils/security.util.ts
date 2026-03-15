@@ -1,4 +1,75 @@
 import { BadRequestException } from '@nestjs/common';
+import {
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+  scryptSync,
+} from 'crypto';
+
+const ALGORITHM = 'aes-256-gcm';
+const IV_LENGTH = 16;
+
+function getEncryptionKey(salt: Buffer): Buffer {
+  const secret = process.env.ENCRYPTION_KEY || process.env.JWT_SECRET;
+  if (!secret) throw new Error('ENCRYPTION_KEY or JWT_SECRET must be set');
+  return scryptSync(secret, salt, 32);
+}
+
+/** TypeORM column transformer that encrypts on write and decrypts on read */
+export const EncryptionTransformer = {
+  to(value: string | null): string | null {
+    if (!value) return value;
+    const salt = randomBytes(16);
+    const key = getEncryptionKey(salt);
+    const iv = randomBytes(IV_LENGTH);
+    const cipher = createCipheriv(ALGORITHM, key, iv);
+    const encrypted = Buffer.concat([
+      cipher.update(value, 'utf8'),
+      cipher.final(),
+    ]);
+    const authTag = cipher.getAuthTag();
+    return `${salt.toString('hex')}:${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted.toString('hex')}`;
+  },
+  from(value: string | null): string | null {
+    if (!value) return value;
+    // Skip decryption for non-encrypted legacy values
+    if (!value.includes(':')) return value;
+    const parts = value.split(':');
+    // Support new 4-part format (salt:iv:authTag:encrypted)
+    if (parts.length === 4) {
+      const [saltHex, ivHex, authTagHex, encryptedHex] = parts;
+      const key = getEncryptionKey(Buffer.from(saltHex, 'hex'));
+      const decipher = createDecipheriv(
+        ALGORITHM,
+        key,
+        Buffer.from(ivHex, 'hex'),
+      );
+      decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
+      return (
+        decipher.update(Buffer.from(encryptedHex, 'hex')) +
+        decipher.final('utf8')
+      );
+    }
+    // Legacy 3-part format (iv:authTag:encrypted) — read-only backward compat
+    if (parts.length === 3) {
+      const [ivHex, authTagHex, encryptedHex] = parts;
+      const secret = process.env.ENCRYPTION_KEY || process.env.JWT_SECRET;
+      if (!secret) throw new Error('ENCRYPTION_KEY or JWT_SECRET must be set');
+      const key = scryptSync(secret, 'salt', 32);
+      const decipher = createDecipheriv(
+        ALGORITHM,
+        key,
+        Buffer.from(ivHex, 'hex'),
+      );
+      decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
+      return (
+        decipher.update(Buffer.from(encryptedHex, 'hex')) +
+        decipher.final('utf8')
+      );
+    }
+    return value;
+  },
+};
 
 export class SecurityUtil {
   /**
@@ -13,7 +84,7 @@ export class SecurityUtil {
         .replace(/['\"]/g, '') // Remove quotes
         .replace(/[{}]/g, '') // Remove braces
         .replace(/[\\[\\]]/g, '') // Remove brackets
-        .replace(/\\$/g, '') // Remove dollar signs (MongoDB operators)
+        .replace(/\$/g, '') // Remove dollar signs (MongoDB operators)
         // Remove the line that removes dots and @ symbols for email compatibility
         .trim()
     );

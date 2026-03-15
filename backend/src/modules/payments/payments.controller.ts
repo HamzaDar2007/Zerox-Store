@@ -2,286 +2,100 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
-  Patch,
   Param,
-  Delete,
-  UseGuards,
-  ParseUUIDPipe,
   Query,
+  UsePipes,
+  ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
-import { CreateRefundDto } from './dto/create-refund.dto';
-import { CreateSavedPaymentMethodDto } from './dto/create-saved-payment-method.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { Permissions } from '../../common/decorators/permissions.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../roles/role.enum';
+import { Auditable } from '../../common/interceptor/audit.interceptor';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
-import { BaseController } from '../../common/controllers/base.controller';
-import { PaymentStatus, RefundStatus } from '@common/enums';
 
 @ApiTags('Payments')
 @Controller('payments')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
-export class PaymentsController extends BaseController {
-  constructor(private readonly paymentsService: PaymentsService) {
-    super();
-  }
+@UsePipes(new ValidationPipe({ whitelist: true }))
+export class PaymentsController {
+  constructor(private readonly svc: PaymentsService) {}
 
   @Post()
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Create payment' })
-  @ApiResponse({ status: 201, description: 'Payment created successfully' })
-  @Permissions('payments.create')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Create a payment record (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Payment created' })
+  @Auditable({ action: 'CREATE', tableName: 'payments' })
   create(@Body() dto: CreatePaymentDto) {
-    return this.handleAsyncOperation(this.paymentsService.createPayment(dto));
+    return this.svc.create(dto);
   }
 
   @Get()
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Get all payments' })
-  @ApiResponse({ status: 200, description: 'Payments retrieved successfully' })
-  @ApiQuery({ name: 'orderId', required: false })
-  @ApiQuery({ name: 'userId', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: PaymentStatus })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @Permissions('payments.read')
+  @ApiOperation({ summary: 'List payments (own for customers, all for admin)' })
+  @ApiQuery({
+    name: 'orderId',
+    required: false,
+    type: String,
+    description: 'Filter by order UUID',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    type: String,
+    description: 'Filter by status',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiResponse({ status: 200, description: 'Payments list returned' })
   findAll(
     @Query('orderId') orderId?: string,
-    @Query('userId') userId?: string,
-    @Query('status') status?: PaymentStatus,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @CurrentUser() user?: any,
   ) {
-    return this.handleAsyncOperation(
-      this.paymentsService.findAllPayments({
-        orderId,
-        userId,
-        status,
-        page,
-        limit,
-      }),
-    );
+    const isAdmin = user.role === 'admin' || user.role === 'super_admin';
+    return this.svc.findAll({
+      orderId,
+      userId: isAdmin ? undefined : user.id,
+      status,
+      page: +(page || 1),
+      limit: +(limit || 50),
+    });
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get payment by ID' })
-  @ApiResponse({ status: 200, description: 'Payment retrieved successfully' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.paymentsService.findOnePayment(id));
+  @ApiParam({ name: 'id', description: 'Payment UUID' })
+  @ApiResponse({ status: 200, description: 'Payment found' })
+  findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.findOne(id, user.id, user.role);
   }
 
-  @Patch(':id')
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Update payment' })
-  @ApiResponse({ status: 200, description: 'Payment updated successfully' })
-  @Permissions('payments.update')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdatePaymentDto,
-  ) {
-    return this.handleAsyncOperation(
-      this.paymentsService.updatePayment(id, dto),
-    );
-  }
-
-  @Post(':id/process')
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Process payment' })
-  @Permissions('payments.update')
-  processPayment(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() paymentData: any,
-  ) {
-    return this.handleAsyncOperation(
-      this.paymentsService.processPayment(id, paymentData),
-    );
-  }
-
-  @Get(':id/attempts')
-  @ApiOperation({ summary: 'Get payment attempts' })
-  getAttempts(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(
-      this.paymentsService.getPaymentAttempts(id),
-    );
-  }
-
-  @Post(':id/stripe/create-intent')
-  @ApiOperation({ summary: 'Create Stripe PaymentIntent for a payment' })
-  @ApiResponse({
-    status: 200,
-    description: 'PaymentIntent created with client secret',
-  })
-  createStripeIntent(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { stripePaymentMethodId?: string; stripeCustomerId?: string },
-  ) {
-    return this.handleAsyncOperation(
-      this.paymentsService.createStripePaymentIntent({
-        paymentId: id,
-        stripePaymentMethodId: body.stripePaymentMethodId,
-        stripeCustomerId: body.stripeCustomerId,
-      }),
-    );
-  }
-
-  @Post(':id/stripe/confirm')
-  @ApiOperation({ summary: 'Confirm a Stripe PaymentIntent (server-side)' })
-  @ApiResponse({ status: 200, description: 'Payment confirmed' })
-  confirmStripePayment(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { stripePaymentMethodId?: string },
-  ) {
-    return this.handleAsyncOperation(
-      this.paymentsService.confirmStripePayment({
-        paymentId: id,
-        stripePaymentMethodId: body.stripePaymentMethodId,
-      }),
-    );
-  }
-}
-
-@ApiTags('Refunds')
-@Controller('refunds')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth('JWT-auth')
-export class RefundsController extends BaseController {
-  constructor(private readonly paymentsService: PaymentsService) {
-    super();
-  }
-
-  @Post()
-  @ApiOperation({ summary: 'Request refund' })
-  @ApiResponse({ status: 201, description: 'Refund request created' })
-  create(@Body() dto: CreateRefundDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.paymentsService.createRefund(dto, user.id),
-    );
-  }
-
-  @Get()
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Get all refunds' })
-  @ApiQuery({ name: 'paymentId', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: RefundStatus })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @Permissions('payments.read')
-  findAll(
-    @Query('paymentId') paymentId?: string,
-    @Query('status') status?: RefundStatus,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.handleAsyncOperation(
-      this.paymentsService.findAllRefunds({ paymentId, status, page, limit }),
-    );
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get refund by ID' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.paymentsService.findOneRefund(id));
-  }
-
-  @Post(':id/process')
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Process refund' })
-  @Permissions('payments.update')
-  processRefund(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.paymentsService.processRefund(id));
-  }
-
-  @Post(':id/reject')
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Reject refund' })
-  @Permissions('payments.update')
-  rejectRefund(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body('reason') reason: string,
-  ) {
-    return this.handleAsyncOperation(
-      this.paymentsService.rejectRefund(id, reason),
-    );
-  }
-}
-
-@ApiTags('Payment Methods')
-@Controller('payment-methods')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth('JWT-auth')
-export class PaymentMethodsController extends BaseController {
-  constructor(private readonly paymentsService: PaymentsService) {
-    super();
-  }
-
-  @Post()
-  @ApiOperation({ summary: 'Save payment method' })
-  @ApiResponse({ status: 201, description: 'Payment method saved' })
-  create(@Body() dto: CreateSavedPaymentMethodDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.paymentsService.savePaymentMethod(user.id, dto),
-    );
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get saved payment methods' })
-  findAll(@CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.paymentsService.getSavedPaymentMethods(user.id),
-    );
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete payment method' })
-  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.paymentsService.deletePaymentMethodWithStripe(id, user.id),
-    );
-  }
-
-  @Post(':id/default')
-  @ApiOperation({ summary: 'Set default payment method' })
-  setDefault(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: User,
-  ) {
-    return this.handleAsyncOperation(
-      this.paymentsService.setDefaultPaymentMethod(id, user.id),
-    );
-  }
-
-  @Post('stripe/save')
-  @ApiOperation({ summary: 'Save a Stripe payment method' })
-  @ApiResponse({ status: 201, description: 'Stripe payment method saved' })
-  saveStripeMethod(
-    @CurrentUser() user: User,
-    @Body()
-    body: {
-      stripePaymentMethodId: string;
-      stripeCustomerId: string;
-      setDefault?: boolean;
-    },
-  ) {
-    return this.handleAsyncOperation(
-      this.paymentsService.saveStripePaymentMethod(
-        user.id,
-        body.stripePaymentMethodId,
-        body.stripeCustomerId,
-        body.setDefault,
-      ),
-    );
+  @Put(':id/status')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update payment status (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Payment UUID' })
+  @ApiResponse({ status: 200, description: 'Payment status updated' })
+  @Auditable({ action: 'UPDATE_STATUS', tableName: 'payments' })
+  updateStatus(@Param('id') id: string, @Body() dto: UpdatePaymentDto) {
+    return this.svc.updateStatus(id, dto.status, dto.gatewayTxId);
   }
 }

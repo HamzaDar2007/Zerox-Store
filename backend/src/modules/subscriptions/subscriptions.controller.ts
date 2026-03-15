@@ -2,138 +2,128 @@ import {
   Controller,
   Get,
   Post,
-  Patch,
+  Put,
+  Delete,
   Body,
   Param,
-  Query,
+  UsePipes,
+  ValidationPipe,
   UseGuards,
-  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
+  ApiResponse,
   ApiBearerAuth,
-  ApiQuery,
+  ApiParam,
 } from '@nestjs/swagger';
 import { SubscriptionsService } from './subscriptions.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { Permissions } from '../../common/decorators/permissions.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
-import { BaseController } from '../../common/controllers/base.controller';
+import { CreateSubscriptionPlanDto } from './dto/create-subscription-plan.dto';
+import { UpdateSubscriptionPlanDto } from './dto/update-subscription-plan.dto';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../roles/role.enum';
+import { Auditable } from '../../common/interceptor/audit.interceptor';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Subscriptions')
 @Controller('subscriptions')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
-export class SubscriptionsController extends BaseController {
-  constructor(private readonly subscriptionsService: SubscriptionsService) {
-    super();
+@UsePipes(new ValidationPipe({ whitelist: true }))
+export class SubscriptionsController {
+  constructor(private readonly svc: SubscriptionsService) {}
+
+  @Post('plans')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Create a subscription plan (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Plan created' })
+  @Auditable({ action: 'CREATE', tableName: 'subscription_plans' })
+  createPlan(@Body() dto: CreateSubscriptionPlanDto) {
+    return this.svc.createPlan(dto);
+  }
+
+  @Get('plans')
+  @Public()
+  @ApiOperation({ summary: 'List all subscription plans' })
+  @ApiResponse({ status: 200, description: 'Plans list returned' })
+  findAllPlans() {
+    return this.svc.findAllPlans();
+  }
+
+  @Get('plans/:id')
+  @Public()
+  @ApiOperation({ summary: 'Get subscription plan by ID' })
+  @ApiParam({ name: 'id', description: 'Plan UUID' })
+  @ApiResponse({ status: 200, description: 'Plan found' })
+  findPlan(@Param('id') id: string) {
+    return this.svc.findPlan(id);
+  }
+
+  @Put('plans/:id')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update a subscription plan (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Plan UUID' })
+  @ApiResponse({ status: 200, description: 'Plan updated' })
+  updatePlan(@Param('id') id: string, @Body() dto: UpdateSubscriptionPlanDto) {
+    return this.svc.updatePlan(id, dto);
+  }
+
+  @Delete('plans/:id')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Delete a subscription plan (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Plan UUID' })
+  @ApiResponse({ status: 200, description: 'Plan deleted' })
+  removePlan(@Param('id') id: string) {
+    return this.svc.removePlan(id);
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create subscription' })
-  create(@Body() dto: CreateSubscriptionDto, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.subscriptionsService.create(user.id, dto),
-    );
+  @ApiOperation({ summary: 'Subscribe to a plan' })
+  @ApiResponse({ status: 201, description: 'Subscription created' })
+  @Auditable({ action: 'SUBSCRIBE', tableName: 'subscriptions' })
+  subscribe(@Body() dto: CreateSubscriptionDto, @CurrentUser() user: any) {
+    return this.svc.subscribe({ ...dto, userId: user.id });
   }
 
-  @Get()
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Get all subscriptions' })
-  @ApiQuery({ name: 'status', required: false })
-  @Permissions('subscriptions.read')
-  findAll(
-    @Query('status') status?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.handleAsyncOperation(
-      this.subscriptionsService.findAll({ status, page, limit }),
-    );
-  }
-
-  @Get('my-subscriptions')
-  @ApiOperation({ summary: 'Get my subscriptions' })
-  getMySubscriptions(@CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.subscriptionsService.findByUser(user.id),
-    );
-  }
-
-  @Get('due')
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Get due subscriptions' })
-  @Permissions('subscriptions.read')
-  getDueSubscriptions() {
-    return this.handleAsyncOperation(
-      this.subscriptionsService.getDueSubscriptions(),
-    );
+  @Get('mine')
+  @ApiOperation({ summary: 'Get subscriptions for current user' })
+  @ApiResponse({ status: 200, description: 'User subscriptions returned' })
+  findMine(@CurrentUser() user: any) {
+    return this.svc.findByUser(user.id);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get subscription by ID' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.subscriptionsService.findOne(id));
+  @ApiParam({ name: 'id', description: 'Subscription UUID' })
+  @ApiResponse({ status: 200, description: 'Subscription found' })
+  findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.findSubscription(id, user.id, user.role);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update subscription' })
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateSubscriptionDto,
-    @CurrentUser() user: User,
-  ) {
-    return this.handleAsyncOperation(
-      this.subscriptionsService.update(id, dto, user.id),
-    );
+  @Put(':id')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update subscription (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Subscription UUID' })
+  @ApiResponse({ status: 200, description: 'Subscription updated' })
+  update(@Param('id') id: string, @Body() dto: UpdateSubscriptionDto) {
+    return this.svc.updateSubscription(id, dto);
   }
 
-  @Post(':id/cancel')
-  @ApiOperation({ summary: 'Cancel subscription' })
-  cancel(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body('reason') reason?: string,
-    @CurrentUser() user?: User,
-  ) {
-    return this.handleAsyncOperation(
-      this.subscriptionsService.cancel(id, reason, user?.id),
-    );
-  }
-
-  @Post(':id/pause')
-  @ApiOperation({ summary: 'Pause subscription' })
-  pause(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.subscriptionsService.pause(id, user.id),
-    );
-  }
-
-  @Post(':id/resume')
-  @ApiOperation({ summary: 'Resume subscription' })
-  resume(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.handleAsyncOperation(
-      this.subscriptionsService.resume(id, user.id),
-    );
-  }
-
-  @Post(':id/renew')
-  @UseGuards(PermissionsGuard)
-  @ApiOperation({ summary: 'Process subscription renewal' })
-  @Permissions('subscriptions.update')
-  processRenewal(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(
-      this.subscriptionsService.processRenewal(id),
-    );
-  }
-
-  @Get(':id/orders')
-  @ApiOperation({ summary: 'Get subscription orders' })
-  getOrders(@Param('id', ParseUUIDPipe) id: string) {
-    return this.handleAsyncOperation(this.subscriptionsService.getOrders(id));
+  @Put(':id/cancel')
+  @ApiOperation({ summary: 'Cancel a subscription' })
+  @ApiParam({ name: 'id', description: 'Subscription UUID' })
+  @ApiResponse({ status: 200, description: 'Subscription cancelled' })
+  @Auditable({ action: 'CANCEL', tableName: 'subscriptions' })
+  cancel(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.svc.cancelSubscription(id, user.id, user.role);
   }
 }

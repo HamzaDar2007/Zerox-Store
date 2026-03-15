@@ -1,0 +1,1590 @@
+
+
+
+🛒 E-Commerce Marketplace
+Complete Database Design Document
+Daraz-like Multi-Vendor Platform
+
+
+📋 Project
+E-commerce Store
+👤 Client
+Rana Awais
+🏢 Company
+Labverse
+🗄️ Database
+PostgreSQL + TypeORM
+
+
+
+Total Tables: 28  |  Modules: 10  |  Version: 1.0
+
+📊 Database Overview
+
+Yeh document E-Commerce platform ke complete database design ko cover karta hai. Har module ki tables, columns, data types aur relationships yahan detail mein explain ki gayi hain.
+
+Module
+Tables
+Count
+🔐 Auth & Users
+users, roles, permissions, sessions, addresses
+5
+🏪 Sellers & Stores
+sellers, stores
+2
+📦 Products
+products, product_variants, product_images, categories, brands
+5
+🛒 Cart
+carts, cart_items
+2
+📋 Orders
+orders, order_items, shipments
+3
+💳 Payments & Refunds
+payments, refunds
+2
+⭐ Reviews
+reviews, ratings
+2
+🎯 Marketing
+vouchers, campaigns, flash_sales, campaign_products
+4
+🔔 Notifications
+notifications
+1
+💰 Wallet
+seller_wallets, wallet_transactions
+2
+
+
+
+🔐 MODULE 1 – AUTH & USERS
+
+
+1.1 users
+Platform ke sab users (Customer, Seller, Admin) is table mein hain.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK, DEFAULT uuid_generate_v4()
+Unique identifier
+name
+VARCHAR(100)
+NOT NULL
+User ka poora naam
+email
+VARCHAR(150)
+NOT NULL, UNIQUE
+Login email
+password
+VARCHAR(255)
+NOT NULL
+Bcrypt hashed password
+phone
+VARCHAR(20)
+NULLABLE
+Mobile number
+role
+ENUM
+NOT NULL, DEFAULT 'customer'
+customer | seller | admin
+is_email_verified
+BOOLEAN
+DEFAULT false
+Email verify hua ya nahi
+is_active
+BOOLEAN
+DEFAULT true
+Account active hai ya nahi
+profile_image
+VARCHAR(500)
+NULLABLE
+S3 image URL
+deleted_at
+TIMESTAMP
+NULLABLE
+Soft delete timestamp
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Registration date
+updated_at
+TIMESTAMP
+DEFAULT NOW()
+Last update date
+
+
+1.2 roles
+RBAC ke liye role definitions.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Unique ID
+name
+VARCHAR(50)
+NOT NULL, UNIQUE
+customer, seller, admin
+description
+TEXT
+NULLABLE
+Role ki description
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+
+
+1.3 permissions
+Har role ke permissions define karta hai.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Unique ID
+🔗 role_id
+UUID
+FK → roles.id
+Kis role ka permission
+module
+VARCHAR(50)
+NOT NULL
+products, orders, users, etc.
+action
+VARCHAR(50)
+NOT NULL
+create, read, update, delete
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+🔗 Relations: permissions.role_id → roles.id (ManyToOne)
+
+
+1.4 sessions
+JWT refresh tokens aur active sessions store karta hai.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Session ID
+🔗 user_id
+UUID
+FK → users.id
+Kis user ki session
+refresh_token
+TEXT
+NOT NULL
+Hashed refresh token
+ip_address
+VARCHAR(50)
+NULLABLE
+User ka IP
+user_agent
+TEXT
+NULLABLE
+Browser/device info
+is_valid
+BOOLEAN
+DEFAULT true
+Token valid hai ya revoked
+expires_at
+TIMESTAMP
+NOT NULL
+Token expiry time
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Login time
+🔗 Relations: sessions.user_id → users.id (ManyToOne)
+
+
+1.5 addresses
+Users ke delivery addresses store karta hai.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Address ID
+🔗 user_id
+UUID
+FK → users.id
+Kis user ka address
+label
+VARCHAR(50)
+NULLABLE
+Home, Office, etc.
+full_name
+VARCHAR(100)
+NOT NULL
+Receiver ka naam
+phone
+VARCHAR(20)
+NOT NULL
+Contact number
+province
+VARCHAR(100)
+NOT NULL
+State/Province
+city
+VARCHAR(100)
+NOT NULL
+City naam
+area
+VARCHAR(100)
+NULLABLE
+Area/Town
+street_address
+TEXT
+NOT NULL
+Complete address
+postal_code
+VARCHAR(20)
+NULLABLE
+Postal/ZIP code
+is_default
+BOOLEAN
+DEFAULT false
+Default address hai?
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+🔗 Relations: addresses.user_id → users.id (ManyToOne)
+
+
+
+🏪 MODULE 2 – SELLERS & STORES
+
+
+2.1 sellers
+Seller onboarding details aur verification status yahan store hoti hai.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Seller ID
+🔗 user_id
+UUID
+FK → users.id, UNIQUE
+Seller ka user account
+business_name
+VARCHAR(200)
+NOT NULL
+Business ya company naam
+cnic
+VARCHAR(20)
+UNIQUE, NULLABLE
+CNIC number
+cnic_image
+VARCHAR(500)
+NULLABLE
+CNIC image URL
+business_reg_no
+VARCHAR(100)
+NULLABLE
+Business registration
+bank_name
+VARCHAR(100)
+NULLABLE
+Bank ka naam
+bank_account_no
+VARCHAR(50)
+NULLABLE
+Account number
+bank_account_title
+VARCHAR(100)
+NULLABLE
+Account title
+verification_status
+ENUM
+DEFAULT 'pending'
+pending | approved | rejected
+rejection_reason
+TEXT
+NULLABLE
+Rejection ki wajah
+commission_rate
+DECIMAL(5,2)
+DEFAULT 10.00
+Platform commission %
+approved_at
+TIMESTAMP
+NULLABLE
+Approval date
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Registration date
+🔗 Relations: sellers.user_id → users.id (OneToOne)
+
+
+2.2 stores
+Seller ka public store page information.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Store ID
+🔗 seller_id
+UUID
+FK → sellers.id, UNIQUE
+Seller ka ID
+name
+VARCHAR(200)
+NOT NULL, UNIQUE
+Store ka naam
+slug
+VARCHAR(200)
+NOT NULL, UNIQUE
+URL-friendly name
+logo_url
+VARCHAR(500)
+NULLABLE
+Store logo
+banner_url
+VARCHAR(500)
+NULLABLE
+Banner image
+description
+TEXT
+NULLABLE
+Store description
+return_policy
+TEXT
+NULLABLE
+Return policy text
+rating
+DECIMAL(3,2)
+DEFAULT 0.00
+Average store rating
+total_sales
+INTEGER
+DEFAULT 0
+Total orders completed
+is_active
+BOOLEAN
+DEFAULT true
+Store active hai?
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Store creation date
+🔗 Relations: stores.seller_id → sellers.id (OneToOne)
+
+
+2.3 seller_wallets
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Wallet ID
+🔗 seller_id
+UUID
+FK → sellers.id, UNIQUE
+Seller ka ID
+balance
+DECIMAL(12,2)
+DEFAULT 0.00
+Current balance
+total_earned
+DECIMAL(12,2)
+DEFAULT 0.00
+Total earnings
+total_withdrawn
+DECIMAL(12,2)
+DEFAULT 0.00
+Total withdrawn
+updated_at
+TIMESTAMP
+DEFAULT NOW()
+Last updated
+
+
+2.4 wallet_transactions
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Transaction ID
+🔗 wallet_id
+UUID
+FK → seller_wallets.id
+Wallet ID
+🔗 order_id
+UUID
+FK → orders.id, NULLABLE
+Related order
+type
+ENUM
+NOT NULL
+credit | debit | withdrawal
+amount
+DECIMAL(12,2)
+NOT NULL
+Transaction amount
+commission
+DECIMAL(12,2)
+DEFAULT 0.00
+Platform commission
+net_amount
+DECIMAL(12,2)
+NOT NULL
+Amount after commission
+description
+TEXT
+NULLABLE
+Transaction note
+status
+ENUM
+DEFAULT 'completed'
+pending | completed | failed
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Transaction date
+
+
+
+🗂️ MODULE 3 – CATEGORIES & BRANDS
+
+
+3.1 categories
+Hierarchical categories (parent/child structure). Electronics → Mobile Phones → Smartphones
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Category ID
+🔗 parent_id
+UUID
+FK → categories.id, NULLABLE
+Parent category (null = top level)
+name
+VARCHAR(100)
+NOT NULL
+Category naam
+slug
+VARCHAR(100)
+NOT NULL, UNIQUE
+URL friendly naam
+image_url
+VARCHAR(500)
+NULLABLE
+Category image
+description
+TEXT
+NULLABLE
+Category description
+is_active
+BOOLEAN
+DEFAULT true
+Active hai?
+sort_order
+INTEGER
+DEFAULT 0
+Display order
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+🔗 Relations: categories.parent_id → categories.id (Self-referencing ManyToOne)
+
+
+3.2 brands
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Brand ID
+name
+VARCHAR(100)
+NOT NULL, UNIQUE
+Brand naam
+slug
+VARCHAR(100)
+NOT NULL, UNIQUE
+URL friendly
+logo_url
+VARCHAR(500)
+NULLABLE
+Brand logo
+is_active
+BOOLEAN
+DEFAULT true
+Active hai?
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+
+
+
+📦 MODULE 4 – PRODUCTS
+
+
+4.1 products
+Main product information yahan store hoti hai.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Product ID
+🔗 seller_id
+UUID
+FK → sellers.id
+Seller ID
+🔗 category_id
+UUID
+FK → categories.id
+Category ID
+🔗 brand_id
+UUID
+FK → brands.id, NULLABLE
+Brand ID
+name
+VARCHAR(300)
+NOT NULL
+Product naam
+slug
+VARCHAR(300)
+NOT NULL, UNIQUE
+URL friendly naam
+description
+TEXT
+NOT NULL
+Full description
+price
+DECIMAL(12,2)
+NOT NULL
+Original price
+sale_price
+DECIMAL(12,2)
+NULLABLE
+Sale/discounted price
+stock
+INTEGER
+NOT NULL, DEFAULT 0
+Total stock quantity
+sku
+VARCHAR(100)
+UNIQUE, NULLABLE
+Stock Keeping Unit
+weight
+DECIMAL(8,2)
+NULLABLE
+Product weight (kg)
+is_active
+BOOLEAN
+DEFAULT true
+Product live hai?
+is_featured
+BOOLEAN
+DEFAULT false
+Featured product?
+avg_rating
+DECIMAL(3,2)
+DEFAULT 0.00
+Average customer rating
+total_reviews
+INTEGER
+DEFAULT 0
+Total reviews count
+total_sold
+INTEGER
+DEFAULT 0
+Total units sold
+deleted_at
+TIMESTAMP
+NULLABLE
+Soft delete
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+updated_at
+TIMESTAMP
+DEFAULT NOW()
+Last update
+🔗 Relations: products.seller_id → sellers.id | products.category_id → categories.id | products.brand_id → brands.id
+
+
+4.2 product_variants
+Product ke alag alag variants (Color, Size, etc.) yahan hain.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Variant ID
+🔗 product_id
+UUID
+FK → products.id
+Parent product
+name
+VARCHAR(100)
+NOT NULL
+Variant naam (Red-XL)
+options
+JSONB
+NOT NULL
+{color: 'Red', size: 'XL'}
+price
+DECIMAL(12,2)
+NULLABLE
+Variant specific price
+stock
+INTEGER
+NOT NULL, DEFAULT 0
+Variant stock
+sku
+VARCHAR(100)
+UNIQUE, NULLABLE
+Variant SKU
+is_active
+BOOLEAN
+DEFAULT true
+Active hai?
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+🔗 Relations: product_variants.product_id → products.id (ManyToOne)
+
+
+4.3 product_images
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Image ID
+🔗 product_id
+UUID
+FK → products.id
+Product ID
+url
+VARCHAR(500)
+NOT NULL
+S3 image URL
+alt_text
+VARCHAR(200)
+NULLABLE
+Alt text for SEO
+is_primary
+BOOLEAN
+DEFAULT false
+Main image hai?
+sort_order
+INTEGER
+DEFAULT 0
+Display sequence
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Upload date
+🔗 Relations: product_images.product_id → products.id (ManyToOne)
+
+
+
+🛒 MODULE 5 – CART
+
+
+5.1 carts
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Cart ID
+🔗 user_id
+UUID
+FK → users.id, UNIQUE
+Cart owner
+🔗 voucher_id
+UUID
+FK → vouchers.id, NULLABLE
+Applied voucher
+discount_amount
+DECIMAL(12,2)
+DEFAULT 0.00
+Voucher discount
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+updated_at
+TIMESTAMP
+DEFAULT NOW()
+Last update
+
+
+5.2 cart_items
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Cart Item ID
+🔗 cart_id
+UUID
+FK → carts.id
+Cart ID
+🔗 product_id
+UUID
+FK → products.id
+Product ID
+🔗 variant_id
+UUID
+FK → product_variants.id, NULLABLE
+Selected variant
+quantity
+INTEGER
+NOT NULL, DEFAULT 1
+Quantity
+price_at_add
+DECIMAL(12,2)
+NOT NULL
+Add karte waqt price (locked)
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Added date
+🔗 Relations: cart_items.cart_id → carts.id | cart_items.product_id → products.id | cart_items.variant_id → product_variants.id
+
+
+5.3 wishlists
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Wishlist Item ID
+🔗 user_id
+UUID
+FK → users.id
+User ID
+🔗 product_id
+UUID
+FK → products.id
+Product ID
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Added date
+
+📝 UNIQUE constraint on (user_id, product_id) – ek user ek product sirf ek baar add kar sakta
+
+
+📋 MODULE 6 – ORDERS
+
+
+6.1 orders
+Customer ke placed orders ki main table.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Order ID
+🔗 user_id
+UUID
+FK → users.id
+Customer ID
+🔗 address_id
+UUID
+FK → addresses.id
+Delivery address
+🔗 voucher_id
+UUID
+FK → vouchers.id, NULLABLE
+Applied voucher
+order_number
+VARCHAR(50)
+NOT NULL, UNIQUE
+ORD-20240221-001
+status
+ENUM
+DEFAULT 'pending'
+pending|confirmed|processing|shipped|delivered|completed|cancelled
+subtotal
+DECIMAL(12,2)
+NOT NULL
+Items ka total
+discount_amount
+DECIMAL(12,2)
+DEFAULT 0.00
+Voucher discount
+delivery_charges
+DECIMAL(12,2)
+DEFAULT 0.00
+Shipping cost
+total_amount
+DECIMAL(12,2)
+NOT NULL
+Final payable amount
+payment_method
+ENUM
+NOT NULL
+cod | card | jazzcash | easypaisa
+notes
+TEXT
+NULLABLE
+Customer notes
+cancelled_at
+TIMESTAMP
+NULLABLE
+Cancel time
+cancellation_reason
+TEXT
+NULLABLE
+Cancel reason
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Order placement time
+updated_at
+TIMESTAMP
+DEFAULT NOW()
+Last update
+🔗 Relations: orders.user_id → users.id | orders.address_id → addresses.id | orders.voucher_id → vouchers.id
+
+
+6.2 order_items
+Har order ke andar products ki detail.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Order Item ID
+🔗 order_id
+UUID
+FK → orders.id
+Order ID
+🔗 product_id
+UUID
+FK → products.id
+Product ID
+🔗 seller_id
+UUID
+FK → sellers.id
+Seller ID
+🔗 variant_id
+UUID
+FK → product_variants.id, NULLABLE
+Variant
+product_name
+VARCHAR(300)
+NOT NULL
+Snapshot (delete protection)
+variant_name
+VARCHAR(100)
+NULLABLE
+Variant snapshot
+quantity
+INTEGER
+NOT NULL
+Quantity ordered
+unit_price
+DECIMAL(12,2)
+NOT NULL
+Price per unit at order time
+total_price
+DECIMAL(12,2)
+NOT NULL
+quantity × unit_price
+commission_rate
+DECIMAL(5,2)
+NOT NULL
+Commission % at order time
+commission_amount
+DECIMAL(12,2)
+NOT NULL
+Commission amount
+seller_amount
+DECIMAL(12,2)
+NOT NULL
+Seller ko milne wali raqam
+status
+ENUM
+DEFAULT 'pending'
+Per-item status
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+🔗 Relations: order_items.order_id → orders.id | order_items.product_id → products.id | order_items.seller_id → sellers.id
+
+
+6.3 shipments
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Shipment ID
+🔗 order_id
+UUID
+FK → orders.id, UNIQUE
+Order ID
+courier_name
+VARCHAR(100)
+NULLABLE
+TCS, Leopards, etc.
+tracking_number
+VARCHAR(100)
+NULLABLE
+Tracking number
+tracking_url
+VARCHAR(500)
+NULLABLE
+Track karne ki URL
+status
+ENUM
+DEFAULT 'pending'
+pending|dispatched|in_transit|delivered
+estimated_delivery
+DATE
+NULLABLE
+Expected delivery date
+delivered_at
+TIMESTAMP
+NULLABLE
+Actual delivery time
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Shipment record date
+updated_at
+TIMESTAMP
+DEFAULT NOW()
+Last status update
+🔗 Relations: shipments.order_id → orders.id (OneToOne)
+
+
+
+💳 MODULE 7 – PAYMENTS & REFUNDS
+
+
+7.1 payments
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Payment ID
+🔗 order_id
+UUID
+FK → orders.id, UNIQUE
+Order ID
+transaction_id
+VARCHAR(200)
+UNIQUE, NULLABLE
+Gateway transaction ID
+method
+ENUM
+NOT NULL
+cod | card | jazzcash | easypaisa
+amount
+DECIMAL(12,2)
+NOT NULL
+Payment amount
+status
+ENUM
+DEFAULT 'pending'
+pending | paid | failed | refunded
+gateway_response
+JSONB
+NULLABLE
+Raw gateway response
+paid_at
+TIMESTAMP
+NULLABLE
+Payment success time
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+
+
+7.2 refunds
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Refund ID
+🔗 order_id
+UUID
+FK → orders.id
+Order ID
+🔗 order_item_id
+UUID
+FK → order_items.id, NULLABLE
+Specific item
+🔗 payment_id
+UUID
+FK → payments.id
+Payment ID
+🔗 user_id
+UUID
+FK → users.id
+Customer ID
+reason
+TEXT
+NOT NULL
+Refund reason
+evidence_images
+JSONB
+NULLABLE
+Array of image URLs
+amount
+DECIMAL(12,2)
+NOT NULL
+Refund amount
+status
+ENUM
+DEFAULT 'requested'
+requested | approved | rejected | processed
+admin_note
+TEXT
+NULLABLE
+Admin ka comment
+processed_at
+TIMESTAMP
+NULLABLE
+Refund process time
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Request date
+🔗 Relations: refunds.order_id → orders.id | refunds.payment_id → payments.id | refunds.user_id → users.id
+
+
+
+⭐ MODULE 8 – REVIEWS & RATINGS
+
+
+8.1 reviews
+Sirf delivered order ke baad review submit ho sakti hai.
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Review ID
+🔗 product_id
+UUID
+FK → products.id
+Product ID
+🔗 user_id
+UUID
+FK → users.id
+Customer ID
+🔗 order_item_id
+UUID
+FK → order_items.id
+Verify purchase
+rating
+SMALLINT
+NOT NULL, CHECK (1-5)
+Star rating
+title
+VARCHAR(200)
+NULLABLE
+Review heading
+body
+TEXT
+NOT NULL
+Review text
+images
+JSONB
+NULLABLE
+Array of image URLs
+helpful_count
+INTEGER
+DEFAULT 0
+Helpful votes
+is_verified_purchase
+BOOLEAN
+DEFAULT true
+Purchase verified
+seller_reply
+TEXT
+NULLABLE
+Seller ka jawab
+seller_replied_at
+TIMESTAMP
+NULLABLE
+Reply time
+is_active
+BOOLEAN
+DEFAULT true
+Visible hai?
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Review date
+
+📝 UNIQUE constraint on (user_id, order_item_id) – ek purchase par sirf ek review
+🔗 Relations: reviews.product_id → products.id | reviews.user_id → users.id | reviews.order_item_id → order_items.id
+
+
+
+🎯 MODULE 9 – MARKETING (Vouchers, Campaigns, Flash Sales)
+
+
+9.1 vouchers
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Voucher ID
+code
+VARCHAR(50)
+NOT NULL, UNIQUE
+Coupon code e.g. EID20
+type
+ENUM
+NOT NULL
+percentage | fixed | free_shipping
+discount_value
+DECIMAL(12,2)
+NOT NULL
+% ya fixed amount
+min_order_amount
+DECIMAL(12,2)
+DEFAULT 0.00
+Minimum order required
+max_discount
+DECIMAL(12,2)
+NULLABLE
+Max discount cap
+total_limit
+INTEGER
+NULLABLE
+Total uses allowed
+per_user_limit
+INTEGER
+DEFAULT 1
+Per user use limit
+used_count
+INTEGER
+DEFAULT 0
+Total times used
+applicable_to
+ENUM
+DEFAULT 'all'
+all | category | product
+applicable_ids
+JSONB
+NULLABLE
+Category/product IDs array
+starts_at
+TIMESTAMP
+NOT NULL
+Validity start
+expires_at
+TIMESTAMP
+NOT NULL
+Validity end
+is_active
+BOOLEAN
+DEFAULT true
+Active hai?
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+
+
+9.2 voucher_usages
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Usage ID
+🔗 voucher_id
+UUID
+FK → vouchers.id
+Voucher ID
+🔗 user_id
+UUID
+FK → users.id
+User ID
+🔗 order_id
+UUID
+FK → orders.id
+Order ID
+discount_applied
+DECIMAL(12,2)
+NOT NULL
+Applied discount
+used_at
+TIMESTAMP
+DEFAULT NOW()
+Usage time
+
+
+9.3 campaigns
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Campaign ID
+name
+VARCHAR(200)
+NOT NULL
+Campaign naam
+description
+TEXT
+NULLABLE
+Description
+banner_url
+VARCHAR(500)
+NULLABLE
+Banner image
+discount_percentage
+DECIMAL(5,2)
+NULLABLE
+Campaign discount %
+starts_at
+TIMESTAMP
+NOT NULL
+Start time
+ends_at
+TIMESTAMP
+NOT NULL
+End time
+is_active
+BOOLEAN
+DEFAULT true
+Active hai?
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+
+
+9.4 campaign_products
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+ID
+🔗 campaign_id
+UUID
+FK → campaigns.id
+Campaign ID
+🔗 product_id
+UUID
+FK → products.id
+Product ID
+sale_price
+DECIMAL(12,2)
+NULLABLE
+Campaign specific price
+
+📝 UNIQUE on (campaign_id, product_id)
+
+9.5 flash_sales
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Flash Sale ID
+🔗 product_id
+UUID
+FK → products.id
+Product ID
+sale_price
+DECIMAL(12,2)
+NOT NULL
+Flash sale price
+stock_limit
+INTEGER
+NOT NULL
+Limited stock
+sold_count
+INTEGER
+DEFAULT 0
+Kitne bik gaye
+starts_at
+TIMESTAMP
+NOT NULL
+Sale start time
+ends_at
+TIMESTAMP
+NOT NULL
+Sale end time
+is_active
+BOOLEAN
+DEFAULT true
+Active hai?
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Creation date
+
+
+
+🔔 MODULE 10 – NOTIFICATIONS
+
+
+10.1 notifications
+
+Column
+Data Type
+Constraints
+Description
+🔑 id
+UUID
+PK
+Notification ID
+🔗 user_id
+UUID
+FK → users.id
+Target user
+type
+VARCHAR(50)
+NOT NULL
+order_placed | shipped | review | etc.
+title
+VARCHAR(200)
+NOT NULL
+Notification heading
+message
+TEXT
+NOT NULL
+Full message
+data
+JSONB
+NULLABLE
+Extra data {order_id, etc.}
+is_read
+BOOLEAN
+DEFAULT false
+Read hua ya nahi
+read_at
+TIMESTAMP
+NULLABLE
+Read time
+created_at
+TIMESTAMP
+DEFAULT NOW()
+Send time
+
+
+
+⚡ DATABASE INDEXES – Performance Optimization
+
+
+Yeh indexes search performance improve karne ke liye lagane hain:
+
+Table
+Column(s)
+Reason
+users
+email
+Fast login lookup
+users
+role
+Role filter ke liye
+products
+name (FULLTEXT)
+Search performance
+products
+category_id
+Category filter
+products
+seller_id
+Seller products fetch
+products
+price
+Price range filter
+orders
+user_id
+Customer orders history
+orders
+status
+Status filter
+orders
+order_number
+Order lookup
+order_items
+order_id
+Order items fetch
+order_items
+seller_id
+Seller orders
+sessions
+refresh_token
+Token validation
+reviews
+product_id
+Product reviews
+vouchers
+code
+Coupon validation
+
+
+
+🔗 ENTITY RELATIONSHIPS SUMMARY
+
+
+Relation
+Type
+Description
+users → seller
+OneToOne
+Har user sirf ek seller account rakh sakta
+sellers → store
+OneToOne
+Har seller ka ek store
+sellers → products
+OneToMany
+Seller ke multiple products
+categories → categories
+Self ManyToOne
+Parent/child hierarchy
+categories → products
+OneToMany
+Category mein multiple products
+products → variants
+OneToMany
+Product ke multiple variants
+products → images
+OneToMany
+Product ki multiple images
+users → carts
+OneToOne
+Har user ka ek active cart
+carts → cart_items
+OneToMany
+Cart mein multiple items
+users → orders
+OneToMany
+User ke multiple orders
+orders → order_items
+OneToMany
+Order mein multiple products
+orders → payment
+OneToOne
+Har order ka ek payment
+orders → shipment
+OneToOne
+Har order ki ek shipment
+products → reviews
+OneToMany
+Product ki multiple reviews
+sellers → wallet
+OneToOne
+Har seller ka ek wallet
+wallet → transactions
+OneToMany
+Wallet ki multiple transactions
+
+
