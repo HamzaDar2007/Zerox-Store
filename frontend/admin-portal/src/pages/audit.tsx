@@ -7,19 +7,40 @@ import { DataTable, SortHeader } from '@/components/shared/data-table'
 import { PageHeader } from '@/components/shared/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Eye } from 'lucide-react'
+import { MoreHorizontal, Eye, Filter, X } from 'lucide-react'
 import { formatDateTime } from '@/lib/utils'
 
 export default function AuditPage() {
   const [page, setPage] = useState(1)
   const [detail, setDetail] = useState<AuditLog | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
+  const [actionFilter, setActionFilter] = useState('')
+  const [tableFilter, setTableFilter] = useState('')
+  const [actorFilter, setActorFilter] = useState('')
+
+  const params: Record<string, unknown> = { page, limit: 20 }
+  if (actionFilter) params.action = actionFilter
+  if (tableFilter) params.tableName = tableFilter
+  if (actorFilter) params.actorId = actorFilter
 
   const { data, isLoading } = useQuery({
-    queryKey: ['audit-logs', { page, limit: 20 }],
-    queryFn: () => auditApi.list({ page, limit: 20 }),
+    queryKey: ['audit-logs', params],
+    queryFn: () => auditApi.list(params as { page?: number; limit?: number; action?: string; tableName?: string; actorId?: string }),
   })
+
+  const clearFilters = () => {
+    setActionFilter('')
+    setTableFilter('')
+    setActorFilter('')
+    setPage(1)
+  }
+
+  const hasFilters = actionFilter || tableFilter || actorFilter
 
   const columns: ColumnDef<AuditLog>[] = [
     { accessorKey: 'action', header: ({ column }) => <SortHeader column={column}>Action</SortHeader>, cell: ({ row }) => <Badge variant="outline">{row.original.action}</Badge> },
@@ -40,8 +61,41 @@ export default function AuditPage() {
   ]
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Audit Logs" description="Track all system changes" />
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader title="Audit Logs" description="Track all system changes">
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+          <Filter className="mr-2 h-4 w-4" />
+          Filters
+          {hasFilters && <Badge variant="default" className="ml-2 text-[10px]">Active</Badge>}
+        </Button>
+      </PageHeader>
+
+      {showFilters && (
+        <Card className="animate-slide-in-down">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Action</Label>
+                <Input value={actionFilter} onChange={(e) => { setActionFilter(e.target.value); setPage(1) }} placeholder="e.g., CREATE, UPDATE, DELETE" />
+              </div>
+              <div className="space-y-2">
+                <Label>Table Name</Label>
+                <Input value={tableFilter} onChange={(e) => { setTableFilter(e.target.value); setPage(1) }} placeholder="e.g., users, orders" />
+              </div>
+              <div className="space-y-2">
+                <Label>Actor ID</Label>
+                <Input value={actorFilter} onChange={(e) => { setActorFilter(e.target.value); setPage(1) }} placeholder="User UUID" />
+              </div>
+            </div>
+            {hasFilters && (
+              <Button variant="ghost" size="sm" className="mt-3" onClick={clearFilters}>
+                <X className="mr-1 h-3 w-3" />Clear Filters
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} manualPagination page={page} pageCount={data?.totalPages ?? 1} onPageChange={setPage} searchPlaceholder="Search logs..."
         enableRowSelection
         exportFilename="audit-logs"

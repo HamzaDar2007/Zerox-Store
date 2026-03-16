@@ -69,6 +69,11 @@ export default function LoginPage() {
               {loading ? <LoadingSpinner className="mr-2 h-4 w-4" /> : null}
               Sign In
             </Button>
+            <div className="text-center">
+              <a href="/forgot-password" className="text-sm text-primary hover:underline transition-colors">
+                Forgot your password?
+              </a>
+            </div>
           </form>
         </CardContent>
       </Card>

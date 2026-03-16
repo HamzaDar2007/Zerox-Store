@@ -22,6 +22,8 @@ const routeLabels: Record<string, string> = {
   reviews: 'Reviews',
   notifications: 'Notifications',
   chat: 'Chat',
+  'role-permissions': 'Role Permissions',
+  'search-analytics': 'Search Analytics',
   audit: 'Audit Logs',
   settings: 'Settings',
 }

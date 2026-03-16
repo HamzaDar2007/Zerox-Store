@@ -32,11 +32,12 @@ import {
   ChevronRight,
   Crown,
   Menu,
+  Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-const ADMIN_ROLES = ['super-admin', 'admin']
-const MANAGEMENT_ROLES = ['super-admin', 'admin', 'support_agent']
+const ADMIN_ROLES = ['super_admin', 'admin']
+const MANAGEMENT_ROLES = ['super_admin', 'admin', 'support_agent']
 
 interface NavItem {
   label: string
@@ -68,6 +69,7 @@ const navItems: NavItem[] = [
   { label: 'Notifications', icon: Bell, path: '/notifications' },
   { label: 'Chat', icon: MessageSquare, path: '/chat' },
   { label: 'Audit Logs', icon: FileText, path: '/audit', roles: ADMIN_ROLES },
+  { label: 'Search Analytics', icon: Search, path: '/search-analytics', roles: ADMIN_ROLES },
   { label: 'Settings', icon: Settings, path: '/settings' },
 ]
 

@@ -1,14 +1,24 @@
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useAuthStore } from '@/store/auth.store'
 import { useThemeStore, type ThemeColor } from '@/store/theme.store'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { PageHeader } from '@/components/shared/page-header'
 import { Badge } from '@/components/ui/badge'
-import { authApi } from '@/services/api'
+import { authApi, usersApi } from '@/services/api'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
+import { profileSchema, changePasswordSchema } from '@/lib/validation'
+
+type ProfileForm = z.infer<typeof profileSchema>
+type PasswordForm = z.infer<typeof changePasswordSchema>
 
 const THEME_COLORS: { name: ThemeColor; label: string; swatch: string }[] = [
   { name: 'blue', label: 'Blue', swatch: 'bg-blue-500' },
@@ -20,11 +30,53 @@ const THEME_COLORS: { name: ThemeColor; label: string; swatch: string }[] = [
 
 export default function SettingsPage() {
   const user = useAuthStore((s) => s.user)
+  const setUser = useAuthStore((s) => s.setUser)
   const logout = useAuthStore((s) => s.logout)
   const { theme, color, toggleTheme, setColor } = useThemeStore()
+  const [editingProfile, setEditingProfile] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [passwordLoading, setPasswordLoading] = useState(false)
+
+  const profileForm = useForm<ProfileForm>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { firstName: user?.firstName ?? '', lastName: user?.lastName ?? '', phone: user?.phone ?? '' },
+  })
+
+  const passwordForm = useForm<PasswordForm>({
+    resolver: zodResolver(changePasswordSchema),
+  })
+
+  const onProfileSubmit = async (data: ProfileForm) => {
+    if (!user) return
+    setProfileLoading(true)
+    try {
+      const updated = await usersApi.update(user.id, data)
+      setUser({ ...user, ...updated })
+      toast.success('Profile updated')
+      setEditingProfile(false)
+    } catch {
+      toast.error('Failed to update profile')
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
+  const onPasswordSubmit = async (data: PasswordForm) => {
+    setPasswordLoading(true)
+    try {
+      await authApi.changePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword })
+      toast.success('Password changed successfully')
+      passwordForm.reset()
+    } catch {
+      toast.error('Failed to change password. Check your current password.')
+    } finally {
+      setPasswordLoading(false)
+    }
+  }
 
   const handleLogout = async () => {
-    try { await authApi.logout() } catch { /* ignore */ }
+    const refreshToken = useAuthStore.getState().refreshToken
+    try { if (refreshToken) await authApi.logout(refreshToken) } catch { /* ignore */ }
     logout()
     window.location.href = '/login'
   }
@@ -35,14 +87,70 @@ export default function SettingsPage() {
 
       <div className="grid gap-6 max-w-2xl">
         <Card className="transition-shadow hover:shadow-md">
-          <CardHeader><CardTitle>Profile</CardTitle></CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Profile</CardTitle>
+            {!editingProfile && (
+              <Button variant="outline" size="sm" onClick={() => setEditingProfile(true)}>Edit</Button>
+            )}
+          </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><Label className="text-muted-foreground">Name</Label><p className="font-medium">{user?.firstName} {user?.lastName}</p></div>
-              <div><Label className="text-muted-foreground">Email</Label><p className="font-medium">{user?.email}</p></div>
-              <div><Label className="text-muted-foreground">Role</Label><p><Badge variant="outline">{user?.role || 'N/A'}</Badge></p></div>
-              <div><Label className="text-muted-foreground">Status</Label><p><Badge variant={user?.isActive ? 'success' : 'destructive'}>{user?.isActive ? 'Active' : 'Inactive'}</Badge></p></div>
-            </div>
+            {editingProfile ? (
+              <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4 animate-fade-in">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input id="firstName" {...profileForm.register('firstName')} />
+                    {profileForm.formState.errors.firstName && <p className="text-sm text-destructive">{profileForm.formState.errors.firstName.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input id="lastName" {...profileForm.register('lastName')} />
+                    {profileForm.formState.errors.lastName && <p className="text-sm text-destructive">{profileForm.formState.errors.lastName.message}</p>}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone (optional)</Label>
+                  <Input id="phone" {...profileForm.register('phone')} placeholder="+1234567890" />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" loading={profileLoading}>Save Changes</Button>
+                  <Button type="button" variant="outline" onClick={() => setEditingProfile(false)}>Cancel</Button>
+                </div>
+              </form>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><Label className="text-muted-foreground">Name</Label><p className="font-medium">{user?.firstName} {user?.lastName}</p></div>
+                <div><Label className="text-muted-foreground">Email</Label><p className="font-medium">{user?.email}</p></div>
+                <div><Label className="text-muted-foreground">Role</Label><p><Badge variant="outline">{user?.role || 'N/A'}</Badge></p></div>
+                <div><Label className="text-muted-foreground">Status</Label><p><Badge variant={user?.isActive ? 'success' : 'destructive'}>{user?.isActive ? 'Active' : 'Inactive'}</Badge></p></div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="transition-shadow hover:shadow-md">
+          <CardHeader><CardTitle>Change Password</CardTitle></CardHeader>
+          <CardContent>
+            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">Current Password</Label>
+                <Input id="currentPassword" type="password" {...passwordForm.register('currentPassword')} />
+                {passwordForm.formState.errors.currentPassword && <p className="text-sm text-destructive">{passwordForm.formState.errors.currentPassword.message}</p>}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input id="newPassword" type="password" {...passwordForm.register('newPassword')} />
+                  {passwordForm.formState.errors.newPassword && <p className="text-sm text-destructive">{passwordForm.formState.errors.newPassword.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input id="confirmPassword" type="password" {...passwordForm.register('confirmPassword')} />
+                  {passwordForm.formState.errors.confirmPassword && <p className="text-sm text-destructive">{passwordForm.formState.errors.confirmPassword.message}</p>}
+                </div>
+              </div>
+              <Button type="submit" loading={passwordLoading}>Change Password</Button>
+            </form>
           </CardContent>
         </Card>
 

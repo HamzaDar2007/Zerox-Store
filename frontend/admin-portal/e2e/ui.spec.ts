@@ -35,7 +35,7 @@ test.describe('Breadcrumb on Subpages', () => {
 })
 
 test.describe('Error Pages', () => {
-  test('unauthorized page renders', async ({ page }) => {
+  test('unauthorized page renders', async ({ authedPage: page }) => {
     await page.goto('/unauthorized')
     await expect(page.getByRole('heading', { name: '401' })).toBeVisible()
   })

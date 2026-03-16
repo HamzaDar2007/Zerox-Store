@@ -9,13 +9,6 @@ const ALLOWED_ORIGINS = new Set(parseOrigins(process.env.FRONTEND_URLS));
 const localhostPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
 
 export const SecurityConfig = {
-  rateLimit: {
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    legacyHeaders: false,
-    standardHeaders: true,
-  },
-
   cors: {
     credentials: true,
     origin: (

@@ -46,8 +46,8 @@ export class PermissionsGuard implements CanActivate {
       }
     }
 
-    // Super Admin and Admin have full access - bypass permission checks
-    if (userRole === 'super_admin' || userRole === 'admin') {
+    // Super Admin has full access - bypass permission checks
+    if (userRole === 'super_admin') {
       return true;
     }
 

@@ -56,9 +56,7 @@ import { StripeModule } from './modules/stripe/stripe.module';
 
     // Database Configuration
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
       useFactory: databaseConfig,
-      inject: [ConfigService],
     }),
 
     // Rate Limiting

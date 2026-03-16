@@ -300,6 +300,7 @@ export const subscriptionsApi = {
   updatePlan: (id: string, data: Partial<SubscriptionPlan>) =>
     api.put<SubscriptionPlan>(`/subscriptions/plans/${id}`, data).then((r) => r.data),
   deletePlan: (id: string) => api.delete(`/subscriptions/plans/${id}`),
+  list: () => api.get<Subscription[]>('/subscriptions/mine').then((r) => r.data),
   get: (id: string) => api.get<Subscription>(`/subscriptions/${id}`).then((r) => r.data),
   update: (id: string, data: Partial<Subscription>) =>
     api.put<Subscription>(`/subscriptions/${id}`, data).then((r) => r.data),

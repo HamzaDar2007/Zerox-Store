@@ -28,7 +28,6 @@ describe('Admin Flow (e2e)', () => {
   let createdPermissionId: string;
   let createdCategoryId: string;
   let createdBrandId: string;
-  let createdWarehouseId: string;
   // Super admin credentials (from seeds)
   const superAdminEmail =
     process.env.SUPER_ADMIN_EMAIL || 'husnainramzan7194@gmail.com';
@@ -486,7 +485,8 @@ describe('Admin Flow (e2e)', () => {
           expect([200, 201]).toContain(r.status);
         });
 
-      createdWarehouseId = res.body?.data?.id || res.body?.id;
+      // warehouse ID stored in response for potential future use
+      expect(res.body?.data?.id || res.body?.id).toBeDefined();
     });
 
     it('GET /warehouses - should list warehouses', async () => {

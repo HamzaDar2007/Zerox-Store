@@ -5,7 +5,6 @@ import { GlobalValidationPipe } from './common/pipes/global-validation.pipe';
 import { SecurityConfig } from './config/security.config';
 import helmet from 'helmet';
 import * as compression from 'compression';
-import * as express from 'express';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 
@@ -34,21 +33,11 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule, {
     logger: winstonLogger,
+    rawBody: true,
   });
 
   // Enable graceful shutdown hooks (SIGTERM, SIGINT)
   app.enableShutdownHooks();
-
-  // Raw body middleware for Stripe webhooks (must be before any body parser)
-  app.use('/stripe/webhook', express.raw({ type: 'application/json' }));
-  // Attach rawBody on all JSON requests so the webhook controller can read it
-  app.use(
-    express.json({
-      verify: (req: any, _res, buf) => {
-        req.rawBody = buf;
-      },
-    }),
-  );
 
   if (process.env.TRUST_PROXY === 'true') {
     app.getHttpAdapter().getInstance().set('trust proxy', 1);

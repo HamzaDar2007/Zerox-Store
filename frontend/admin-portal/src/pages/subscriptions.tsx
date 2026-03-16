@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { subscriptionsApi } from '@/services/api'
-import type { SubscriptionPlan } from '@/types'
+import type { SubscriptionPlan, Subscription } from '@/types'
 import { DataTable, SortHeader } from '@/components/shared/data-table'
 import { PageHeader } from '@/components/shared/page-header'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
@@ -11,11 +11,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, Search, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -38,7 +40,7 @@ export default function SubscriptionsPage() {
   const qc = useQueryClient()
 
   const { data, isLoading } = useQuery({ queryKey: ['subscription-plans'], queryFn: subscriptionsApi.listPlans })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
 
   const createM = useMutation({ mutationFn: subscriptionsApi.createPlan, onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription-plans'] }); setDialogOpen(false); reset(); toast.success('Plan created') }, onError: () => toast.error('Failed') })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => subscriptionsApi.updatePlan(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription-plans'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: () => toast.error('Failed') })
@@ -69,13 +71,32 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Subscriptions" description="Manage subscription plans" action={{ label: 'Add Plan', onClick: openCreate }} />
-      <DataTable columns={columns} data={data ?? []} isLoading={isLoading} searchColumn="name" searchPlaceholder="Search plans..."
+      <PageHeader title="Subscriptions" description="Manage subscription plans and active subscriptions" action={{ label: 'Add Plan', onClick: openCreate }} />
+
+      <Tabs defaultValue="plans">
+        <TabsList>
+          <TabsTrigger value="plans">Plans</TabsTrigger>
+          <TabsTrigger value="subscriptions">Active Subscriptions</TabsTrigger>
+          <TabsTrigger value="lookup">Lookup</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="plans">
+          <DataTable columns={columns} data={data ?? []} isLoading={isLoading} searchColumn="name" searchPlaceholder="Search plans..."
         enableRowSelection
         onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} plans?`)) rows.forEach((r) => deleteM.mutate(r.id)) }}
         exportFilename="subscription-plans"
         getExportRow={(r) => ({ Name: r.name, Price: r.price, Currency: r.currency, Interval: r.interval, TrialDays: r.trialDays, Active: r.isActive })}
       />
+        </TabsContent>
+
+        <TabsContent value="subscriptions">
+          <SubscriptionsList />
+        </TabsContent>
+
+        <TabsContent value="lookup">
+          <SubscriptionLookup />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -99,5 +120,99 @@ export default function SubscriptionsPage() {
 
       <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Delete Plan" description={`Delete plan "${deleteTarget?.name}"?`} confirmLabel="Delete" onConfirm={() => deleteTarget && deleteM.mutate(deleteTarget.id)} loading={deleteM.isPending} />
     </div>
+  )
+}
+
+/* ── Subscriptions List (Active) ── */
+function SubscriptionsList() {
+  const qc = useQueryClient()
+  const { data: subs, isLoading } = useQuery({
+    queryKey: ['subscriptions-list'],
+    queryFn: subscriptionsApi.list,
+  })
+
+  const cancelM = useMutation({
+    mutationFn: (id: string) => subscriptionsApi.cancel(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscriptions-list'] }); toast.success('Subscription cancelled') },
+    onError: () => toast.error('Failed to cancel'),
+  })
+
+  const subColumns: ColumnDef<Subscription>[] = [
+    { accessorKey: 'id', header: 'ID', cell: ({ row }) => <span className="font-mono text-xs">{row.original.id.slice(0, 8)}</span> },
+    { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
+    { accessorKey: 'planId', header: 'Plan', cell: ({ row }) => row.original.plan?.name ?? row.original.planId.slice(0, 8) },
+    { accessorKey: 'gateway', header: 'Gateway', cell: ({ row }) => row.original.gateway ?? '—' },
+    { accessorKey: 'currentPeriodStart', header: 'Period Start', cell: ({ row }) => formatDate(row.original.currentPeriodStart) },
+    { accessorKey: 'currentPeriodEnd', header: 'Period End', cell: ({ row }) => formatDate(row.original.currentPeriodEnd) },
+    {
+      id: 'actions', cell: ({ row }) => row.original.status !== 'cancelled' ? (
+        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => cancelM.mutate(row.original.id)} disabled={cancelM.isPending}>
+          <XCircle className="mr-1 h-4 w-4" />Cancel
+        </Button>
+      ) : null,
+    },
+  ]
+
+  return (
+    <DataTable
+      columns={subColumns}
+      data={Array.isArray(subs) ? subs : []}
+      isLoading={isLoading}
+      searchPlaceholder="Search subscriptions..."
+      enableRowSelection
+      exportFilename="subscriptions"
+      getExportRow={(r) => ({ ID: r.id, Status: r.status, Plan: r.plan?.name ?? r.planId, Gateway: r.gateway ?? '', PeriodStart: r.currentPeriodStart, PeriodEnd: r.currentPeriodEnd })}
+    />
+  )
+}
+
+/* ── Subscription Lookup & Management ── */
+function SubscriptionLookup() {
+  const [subId, setSubId] = useState('')
+  const [queriedId, setQueriedId] = useState('')
+  const qc = useQueryClient()
+
+  const { data: sub, isLoading, isError } = useQuery({
+    queryKey: ['subscription', queriedId],
+    queryFn: () => subscriptionsApi.get(queriedId),
+    enabled: !!queriedId,
+  })
+
+  const cancelM = useMutation({
+    mutationFn: (id: string) => subscriptionsApi.cancel(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription', queriedId] }); toast.success('Subscription cancelled') },
+    onError: () => toast.error('Failed to cancel'),
+  })
+
+  const handleSearch = () => { if (subId.trim()) setQueriedId(subId.trim()) }
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="flex items-center gap-2"><Search className="h-4 w-4" />Subscription Lookup</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <Input placeholder="Enter subscription ID…" value={subId} onChange={(e) => setSubId(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} />
+          <Button onClick={handleSearch} disabled={!subId.trim()}>Lookup</Button>
+        </div>
+        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {isError && queriedId && <p className="text-sm text-destructive">Subscription not found.</p>}
+        {sub && (
+          <div className="rounded-lg border p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <div><span className="text-muted-foreground">ID:</span> <span className="font-mono text-xs">{sub.id}</span></div>
+              <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={sub.status} /></div>
+              <div><span className="text-muted-foreground">Plan:</span> {sub.plan?.name ?? sub.planId}</div>
+              <div><span className="text-muted-foreground">Gateway:</span> {sub.gateway ?? '—'}</div>
+              <div><span className="text-muted-foreground">Period:</span> {new Date(sub.currentPeriodStart).toLocaleDateString()} — {new Date(sub.currentPeriodEnd).toLocaleDateString()}</div>
+              {sub.trialEnd && <div><span className="text-muted-foreground">Trial End:</span> {new Date(sub.trialEnd).toLocaleDateString()}</div>}
+              {sub.cancelledAt && <div><span className="text-muted-foreground">Cancelled:</span> {new Date(sub.cancelledAt).toLocaleDateString()}</div>}
+            </div>
+            {sub.status !== 'cancelled' && (
+              <Button variant="destructive" size="sm" onClick={() => cancelM.mutate(sub.id)} disabled={cancelM.isPending}><XCircle className="mr-1 h-4 w-4" />Cancel Subscription</Button>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }

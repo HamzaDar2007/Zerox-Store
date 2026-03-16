@@ -1,0 +1,541 @@
+
+Running 301 tests using 6 workers
+
+[1A[2K[1/301] [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:96:3 ΓÇ║ Unauthenticated Redirect ΓÇ║ accessing protected route without auth redirects to login
+[1A[2K[2/301] [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:44:3 ΓÇ║ Login Success Flow ΓÇ║ login with bad credentials shows error
+[1A[2K[3/301] [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:84:3 ΓÇ║ Forgot Password Flow ΓÇ║ forgot password back to login link works
+[1A[2K[4/301] [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:4:3 ΓÇ║ Login Success Flow ΓÇ║ successful login with valid credentials redirects to dashboard
+[1A[2K[5/301] [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:75:3 ΓÇ║ Forgot Password Flow ΓÇ║ submit forgot password shows success
+[1A[2K[6/301] [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:112:3 ΓÇ║ DataTable Interactions ΓÇ║ products table column sorting
+[1A[2K[7/301] [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:126:3 ΓÇ║ DataTable Interactions ΓÇ║ users table shows row selection checkboxes
+[1A[2K[8/301] [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:136:3 ΓÇ║ DataTable Interactions ΓÇ║ categories table export to CSV
+[1A[2K[9/301] [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:150:3 ΓÇ║ DataTable Interactions ΓÇ║ orders table search works
+[1A[2K[10/301] [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:157:3 ΓÇ║ DataTable Interactions ΓÇ║ reviews table search works
+[1A[2K[11/301] [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:166:3 ΓÇ║ Bulk Operations ΓÇ║ select all checkbox toggles all rows
+[1A[2K[12/301] [chromium] ΓÇ║ e2e\auth.spec.ts:11:3 ΓÇ║ Forgot Password Page ΓÇ║ renders forgot password form
+[1A[2K[13/301] [chromium] ΓÇ║ e2e\auth.spec.ts:18:3 ΓÇ║ Forgot Password Page ΓÇ║ shows validation error for empty email
+[1A[2K[14/301] [chromium] ΓÇ║ e2e\auth.spec.ts:23:3 ΓÇ║ Forgot Password Page ΓÇ║ shows success state after submitting email
+[1A[2K[15/301] [chromium] ΓÇ║ e2e\auth.spec.ts:29:3 ΓÇ║ Forgot Password Page ΓÇ║ has back to login link
+[1A[2K[16/301] [chromium] ΓÇ║ e2e\auth.spec.ts:43:3 ΓÇ║ Reset Password Page ΓÇ║ shows invalid token message without token
+[1A[2K[17/301] [chromium] ΓÇ║ e2e\auth.spec.ts:48:3 ΓÇ║ Reset Password Page ΓÇ║ renders reset form with valid token
+[1A[2K[18/301] [chromium] ΓÇ║ e2e\auth.spec.ts:56:3 ΓÇ║ Reset Password Page ΓÇ║ shows validation errors for empty fields
+[1A[2K[19/301] [chromium] ΓÇ║ e2e\auth.spec.ts:62:3 ΓÇ║ Reset Password Page ΓÇ║ shows mismatch error when passwords differ
+[1A[2K[20/301] [chromium] ΓÇ║ e2e\auth.spec.ts:70:3 ΓÇ║ Reset Password Page ΓÇ║ has back to login link
+[1A[2K[21/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:4:3 ΓÇ║ Orders ΓÇ║ displays order data in table
+[1A[2K[22/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:9:3 ΓÇ║ Orders ΓÇ║ search filters orders
+[1A[2K[23/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:16:3 ΓÇ║ Orders ΓÇ║ has export functionality
+[1A[2K[24/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:25:3 ΓÇ║ Orders ΓÇ║ opens order detail via actions
+[1A[2K[25/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:42:3 ΓÇ║ Payments ΓÇ║ displays payment data
+[1A[2K[26/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:48:3 ΓÇ║ Payments ΓÇ║ search filters payments
+[1A[2K[27/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:57:3 ΓÇ║ Returns ΓÇ║ displays return data
+[1A[2K[28/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:63:3 ΓÇ║ Returns ΓÇ║ has export button
+[1A[2K[29/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:72:3 ΓÇ║ Returns ΓÇ║ opens return detail via actions
+[1A[2K[30/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:87:3 ΓÇ║ Reviews ΓÇ║ displays review data
+[1A[2K[31/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:92:3 ΓÇ║ Reviews ΓÇ║ search filters reviews
+[1A[2K[32/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:99:3 ΓÇ║ Reviews ΓÇ║ has export button
+[1A[2K[33/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:110:3 ΓÇ║ Shipping Interactions ΓÇ║ create zone via dialog
+[1A[2K[34/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:121:3 ΓÇ║ Shipping Interactions ΓÇ║ create method via dialog
+[1A[2K[35/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:134:3 ΓÇ║ Shipping Interactions ΓÇ║ shipments tab has lookup and create
+[1A[2K[36/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:140:3 ΓÇ║ Shipping Interactions ΓÇ║ zone edit dialog opens via actions menu
+[1A[2K[37/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:157:3 ΓÇ║ Inventory Interactions ΓÇ║ create warehouse via dialog
+[1A[2K[38/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:169:3 ΓÇ║ Inventory Interactions ΓÇ║ set stock dialog opens and has required fields
+[1A[2K[39/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:178:3 ΓÇ║ Inventory Interactions ΓÇ║ adjust stock dialog opens
+[1A[2K[40/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:185:3 ΓÇ║ Inventory Interactions ΓÇ║ low stock tab shows data
+[1A[2K[41/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:195:3 ΓÇ║ Subscriptions Interactions ΓÇ║ create plan via dialog
+[1A[2K[42/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:207:3 ΓÇ║ Subscriptions Interactions ΓÇ║ active subscriptions tab renders
+[1A[2K[43/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:213:3 ΓÇ║ Subscriptions Interactions ΓÇ║ lookup tab has input
+[1A[2K[44/301] [chromium] ΓÇ║ e2e\commerce-workflows.spec.ts:219:3 ΓÇ║ Subscriptions Interactions ΓÇ║ plan data displayed in table
+[1A[2K[45/301] [chromium] ΓÇ║ e2e\crud.spec.ts:4:3 ΓÇ║ Products CRUD ΓÇ║ renders products page with table
+[1A[2K[46/301] [chromium] ΓÇ║ e2e\crud.spec.ts:10:3 ΓÇ║ Products CRUD ΓÇ║ opens create product dialog
+[1A[2K[47/301] [chromium] ΓÇ║ e2e\crud.spec.ts:19:3 ΓÇ║ Products CRUD ΓÇ║ validates required fields on create
+[1A[2K[48/301] [chromium] ΓÇ║ e2e\crud.spec.ts:33:3 ΓÇ║ Products CRUD ΓÇ║ can close create dialog with cancel
+[1A[2K[49/301] [chromium] ΓÇ║ e2e\crud.spec.ts:42:3 ΓÇ║ Products CRUD ΓÇ║ shows export dropdown with CSV, Excel, PDF options
+[1A[2K[50/301] [chromium] ΓÇ║ e2e\crud.spec.ts:53:3 ΓÇ║ Products CRUD ΓÇ║ search input filters products
+[1A[2K[51/301] [chromium] ΓÇ║ e2e\crud.spec.ts:63:3 ΓÇ║ Categories Page ΓÇ║ renders categories page
+[1A[2K[52/301] [chromium] ΓÇ║ e2e\crud.spec.ts:70:3 ΓÇ║ Orders Page ΓÇ║ renders orders page
+[1A[2K[53/301] [chromium] ΓÇ║ e2e\crud.spec.ts:77:3 ΓÇ║ Users Page ΓÇ║ renders users page
+[1A[2K[54/301] [chromium] ΓÇ║ e2e\crud.spec.ts:84:3 ΓÇ║ Reviews Page ΓÇ║ renders reviews page
+[1A[2K  1) [chromium] ΓÇ║ e2e\auth-flows-table-interactions.spec.ts:75:3 ΓÇ║ Forgot Password Flow ΓÇ║ submit forgot password shows success 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.fill: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('input[name="email"], input[type="email"]').first()[22m
+
+
+      75 |   test('submit forgot password shows success', async ({ authedPage: page }) => {
+      76 |     await page.goto('/forgot-password')
+    > 77 |     await page.locator('input[name="email"], input[type="email"]').first().fill('admin@test.com')
+         |                                                                            ^
+      78 |     await page.getByRole('button', { name: /send reset link/i }).click()
+      79 |     await page.waitForTimeout(2000)
+      80 |     const successMsg = page.getByText(/reset link|sent|check your email/i)
+        at C:\projects\frontend\admin-portal\e2e\auth-flows-table-interactions.spec.ts:77:76
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\auth-flows-table-interacti-3284a-rgot-password-shows-success-chromium\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\auth-flows-table-interacti-3284a-rgot-password-shows-success-chromium\error-context.md
+
+
+[1A[2K[55/301] [chromium] ΓÇ║ e2e\crud.spec.ts:98:3 ΓÇ║ Settings Page ΓÇ║ renders settings page
+[1A[2K[56/301] [chromium] ΓÇ║ e2e\dashboard.spec.ts:4:3 ΓÇ║ Dashboard ΓÇ║ renders dashboard heading and quick actions
+[1A[2K[57/301] [chromium] ΓÇ║ e2e\dashboard.spec.ts:10:3 ΓÇ║ Dashboard ΓÇ║ displays quick action buttons
+[1A[2K[58/301] [chromium] ΓÇ║ e2e\dashboard.spec.ts:17:3 ΓÇ║ Dashboard ΓÇ║ navigates to products on Add Product click
+[1A[2K[59/301] [chromium] ΓÇ║ e2e\dashboard.spec.ts:23:3 ΓÇ║ Dashboard ΓÇ║ displays stat cards or loading skeletons
+[1A[2K[60/301] [chromium] ΓÇ║ e2e\dashboard.spec.ts:30:3 ΓÇ║ Dashboard ΓÇ║ displays chart sections
+[1A[2K[61/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:4:3 ΓÇ║ Users CRUD ΓÇ║ create user via dialog and verify toast
+[1A[2K[62/301] [chromium] ΓÇ║ e2e\crud.spec.ts:91:3 ΓÇ║ Audit Logs Page ΓÇ║ renders audit page
+[1A[2K[63/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:17:3 ΓÇ║ Users CRUD ΓÇ║ search filters users table
+[1A[2K[64/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:25:3 ΓÇ║ Users CRUD ΓÇ║ export dropdown shows CSV, Excel, PDF options
+[1A[2K[65/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:38:3 ΓÇ║ Categories CRUD ΓÇ║ create category with all fields
+[1A[2K[66/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:49:3 ΓÇ║ Categories CRUD ΓÇ║ cancel create category closes dialog
+[1A[2K[67/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:57:3 ΓÇ║ Categories CRUD ΓÇ║ validates required fields on category create
+[1A[2K[68/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:66:3 ΓÇ║ Brands CRUD ΓÇ║ create brand and verify toast
+[1A[2K[69/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:76:3 ΓÇ║ Brands CRUD ΓÇ║ displays brand data in table
+[1A[2K[70/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:84:3 ΓÇ║ Products CRUD ΓÇ║ create product fills all fields and submits
+[1A[2K[71/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:98:3 ΓÇ║ Products CRUD ΓÇ║ open product detail sheet via View action
+[1A[2K[72/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:112:3 ΓÇ║ Products CRUD ΓÇ║ product detail sheet has tabs for info, variants, images, attributes
+[1A[2K[73/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:128:3 ΓÇ║ Products CRUD ΓÇ║ cancel create product closes dialog
+[1A[2K[74/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:135:3 ΓÇ║ Products CRUD ΓÇ║ search filters products
+[1A[2K  2) [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:76:3 ΓÇ║ Brands CRUD ΓÇ║ displays brand data in table 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('cell', { name: 'TestBrand' })
+    Expected: visible
+    Error: strict mode violation: getByRole('cell', { name: 'TestBrand' }) resolved to 2 elements:
+        1) <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">TestBrand</td> aka getByRole('cell', { name: 'TestBrand', exact: true })
+        2) <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">testbrand</td> aka getByRole('cell', { name: 'testbrand', exact: true })
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('cell', { name: 'TestBrand' })[22m
+
+
+      77 |     await page.goto('/brands')
+      78 |     await page.waitForTimeout(1000)
+    > 79 |     await expect(page.getByRole('cell', { name: 'TestBrand' })).toBeVisible({ timeout: 10000 })
+         |                                                                 ^
+      80 |   })
+      81 | })
+      82 |
+        at C:\projects\frontend\admin-portal\e2e\deep-crud-interactions.spec.ts:79:65
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\deep-crud-interactions-Bra-58496-isplays-brand-data-in-table-chromium\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\deep-crud-interactions-Bra-58496-isplays-brand-data-in-table-chromium\error-context.md
+
+
+[1A[2K[75/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:155:3 ΓÇ║ Coupons CRUD ΓÇ║ displays coupon code in table
+[1A[2K[76/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:160:3 ΓÇ║ Coupons CRUD ΓÇ║ cancel coupon dialog
+[1A[2K[77/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:169:3 ΓÇ║ Flash Sales CRUD ΓÇ║ create flash sale
+[1A[2K[78/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:179:3 ΓÇ║ Flash Sales CRUD ΓÇ║ displays flash sale in table
+[1A[2K[79/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:186:3 ΓÇ║ Roles CRUD ΓÇ║ create role with name
+[1A[2K[80/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:195:3 ΓÇ║ Roles CRUD ΓÇ║ displays existing roles
+[1A[2K[81/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:203:3 ΓÇ║ Permissions CRUD ΓÇ║ create permission
+[1A[2K[82/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:144:3 ΓÇ║ Coupons CRUD ΓÇ║ create coupon with all fields
+[1A[2K[83/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:213:3 ΓÇ║ Permissions CRUD ΓÇ║ displays existing permissions
+[1A[2K[84/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:221:3 ΓÇ║ Sellers & Stores ΓÇ║ sellers page displays seller data
+[1A[2K[85/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:226:3 ΓÇ║ Sellers & Stores ΓÇ║ stores page displays store data
+[1A[2K[86/301] [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:232:3 ΓÇ║ Sellers & Stores ΓÇ║ sellers page has search
+[1A[2K[87/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:45:3 ΓÇ║ Empty States ΓÇ║ products page shows empty table
+[1A[2K[88/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:51:3 ΓÇ║ Empty States ΓÇ║ users page shows empty table
+[1A[2K[89/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:57:3 ΓÇ║ Empty States ΓÇ║ orders page shows empty state
+[1A[2K  3) [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:226:3 ΓÇ║ Sellers & Stores ΓÇ║ stores page displays store data 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('cell', { name: 'TestStore' })
+    Expected: visible
+    Error: strict mode violation: getByRole('cell', { name: 'TestStore' }) resolved to 2 elements:
+        1) <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">TestStore</td> aka getByRole('cell', { name: 'TestStore', exact: true })
+        2) <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0">teststore</td> aka getByRole('cell', { name: 'teststore', exact: true })
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('cell', { name: 'TestStore' })[22m
+
+
+      227 |     await page.goto('/stores')
+      228 |     await page.waitForTimeout(1000)
+    > 229 |     await expect(page.getByRole('cell', { name: 'TestStore' })).toBeVisible({ timeout: 10000 })
+          |                                                                 ^
+      230 |   })
+      231 |
+      232 |   test('sellers page has search', async ({ authedPage: page }) => {
+        at C:\projects\frontend\admin-portal\e2e\deep-crud-interactions.spec.ts:229:65
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\deep-crud-interactions-Sel-743be-es-page-displays-store-data-chromium\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\deep-crud-interactions-Sel-743be-es-page-displays-store-data-chromium\error-context.md
+
+
+[1A[2K[90/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:69:3 ΓÇ║ Empty States ΓÇ║ search analytics shows empty data
+[1A[2K[91/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:63:3 ΓÇ║ Empty States ΓÇ║ notifications page shows empty state
+[1A[2K[92/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:75:3 ΓÇ║ Empty States ΓÇ║ audit logs shows empty table
+[1A[2K[93/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:81:3 ΓÇ║ Empty States ΓÇ║ reviews page shows empty table
+[1A[2K  4) [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:169:3 ΓÇ║ Flash Sales CRUD ΓÇ║ create flash sale ΓöÇΓöÇ
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-sonner-toast]').first()
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for locator('[data-sonner-toast]').first()[22m
+
+
+      174 |     await dialog.locator('input[name="name"]').fill('Winter Clearance')
+      175 |     await dialog.getByRole('button', { name: /^create$/i }).click()
+    > 176 |     await expect(page.locator('[data-sonner-toast]').first()).toBeVisible({ timeout: 10000 })
+          |                                                               ^
+      177 |   })
+      178 |
+      179 |   test('displays flash sale in table', async ({ authedPage: page }) => {
+        at C:\projects\frontend\admin-portal\e2e\deep-crud-interactions.spec.ts:176:63
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\deep-crud-interactions-Flash-Sales-CRUD-create-flash-sale-chromium\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\deep-crud-interactions-Flash-Sales-CRUD-create-flash-sale-chromium\error-context.md
+
+
+[1A[2K[94/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:95:3 ΓÇ║ Error Pages ΓÇ║ 404 page renders for unknown route
+[1A[2K  5) [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:63:3 ΓÇ║ Empty States ΓÇ║ notifications page shows empty state 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('heading', { name: /notifications/i })
+    Expected: visible
+    Error: strict mode violation: getByRole('heading', { name: /notifications/i }) resolved to 2 elements:
+        1) <h1 class="text-2xl font-bold tracking-tight">Notifications</h1> aka getByRole('heading', { name: 'Notifications', exact: true })
+        2) <h3 class="text-lg font-semibold">No notifications</h3> aka getByRole('heading', { name: 'No notifications' })
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for getByRole('heading', { name: /notifications/i })[22m
+
+
+      64 |     await page.goto('/notifications')
+      65 |     await page.waitForTimeout(2000)
+    > 66 |     await expect(page.getByRole('heading', { name: /notifications/i })).toBeVisible({ timeout: 10000 })
+         |                                                                         ^
+      67 |   })
+      68 |
+      69 |   test('search analytics shows empty data', async ({ errorPage: page }) => {
+        at C:\projects\frontend\admin-portal\e2e\error-states-responsive.spec.ts:66:73
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\error-states-responsive-Em-f0ddd-ions-page-shows-empty-state-chromium\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\error-states-responsive-Em-f0ddd-ions-page-shows-empty-state-chromium\error-context.md
+
+
+[1A[2K[95/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:87:3 ΓÇ║ Empty States ΓÇ║ categories page shows empty table
+[1A[2K[96/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:107:3 ΓÇ║ Error Pages ΓÇ║ unauthorized page renders
+[1A[2K[97/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:113:3 ΓÇ║ Error Pages ΓÇ║ forbidden page renders
+[1A[2K  6) [chromium] ΓÇ║ e2e\deep-crud-interactions.spec.ts:144:3 ΓÇ║ Coupons CRUD ΓÇ║ create coupon with all fields 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-sonner-toast]').first()
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for locator('[data-sonner-toast]').first()[22m
+
+
+      150 |     await dialog.locator('input[name="discountValue"]').fill('20')
+      151 |     await dialog.getByRole('button', { name: /^create$/i }).click()
+    > 152 |     await expect(page.locator('[data-sonner-toast]').first()).toBeVisible({ timeout: 10000 })
+          |                                                               ^
+      153 |   })
+      154 |
+      155 |   test('displays coupon code in table', async ({ authedPage: page }) => {
+        at C:\projects\frontend\admin-portal\e2e\deep-crud-interactions.spec.ts:152:63
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\deep-crud-interactions-Cou-7d1ae-eate-coupon-with-all-fields-chromium\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\deep-crud-interactions-Cou-7d1ae-eate-coupon-with-all-fields-chromium\error-context.md
+
+
+[1A[2K[98/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:129:3 ΓÇ║ Responsive Layout ΓÇ║ mobile layout adjusts content width
+[1A[2K[99/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:100:3 ΓÇ║ Error Pages ΓÇ║ 404 page has go home action
+[1A[2K[100/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:142:3 ΓÇ║ Responsive Layout ΓÇ║ tablet layout works
+[1A[2K[101/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:15:3 ΓÇ║ Shipping Page ΓÇ║ zones tab shows table and add button
+[1A[2K[102/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:8:3 ΓÇ║ Shipping Page ΓÇ║ renders shipping page with tabs
+[1A[2K[103/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:21:3 ΓÇ║ Shipping Page ΓÇ║ opens create zone dialog
+[1A[2K[104/301] [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:121:3 ΓÇ║ Responsive Layout ΓÇ║ desktop layout shows sidebar
+[1A[2K[105/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:29:3 ΓÇ║ Shipping Page ΓÇ║ methods tab shows table and add button
+[1A[2K[106/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:35:3 ΓÇ║ Shipping Page ΓÇ║ opens create method dialog
+[1A[2K[107/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:41:3 ΓÇ║ Shipping Page ΓÇ║ shipments tab has order lookup
+[1A[2K[108/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:46:3 ΓÇ║ Shipping Page ΓÇ║ shipments tab has create shipment button
+[1A[2K[109/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:51:3 ΓÇ║ Shipping Page ΓÇ║ opens create shipment dialog
+[1A[2K[110/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:65:3 ΓÇ║ Inventory Page ΓÇ║ renders inventory page with tabs
+[1A[2K[111/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:72:3 ΓÇ║ Inventory Page ΓÇ║ warehouses tab shows table and add button
+[1A[2K[112/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:78:3 ΓÇ║ Inventory Page ΓÇ║ opens create warehouse dialog
+[1A[2K[113/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:86:3 ΓÇ║ Inventory Page ΓÇ║ stock tab shows set stock and adjust stock buttons
+[1A[2K[114/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:92:3 ΓÇ║ Inventory Page ΓÇ║ opens set stock dialog
+[1A[2K[115/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:100:3 ΓÇ║ Inventory Page ΓÇ║ opens adjust stock dialog
+[1A[2K[116/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:106:3 ΓÇ║ Inventory Page ΓÇ║ low stock tab shows data
+[1A[2K[117/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:117:3 ΓÇ║ Subscriptions Page ΓÇ║ renders subscriptions page with tabs
+[1A[2K[118/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:124:3 ΓÇ║ Subscriptions Page ΓÇ║ plans tab shows table and add button
+[1A[2K  7) [chromium] ΓÇ║ e2e\error-states-responsive.spec.ts:121:3 ΓÇ║ Responsive Layout ΓÇ║ desktop layout shows sidebar 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator:  locator('nav').first()
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('nav').first()[22m
+    [2m    8 ├ù locator resolved to <nav class="flex flex-col gap-1 px-2">ΓÇª</nav>[22m
+    [2m      - unexpected value "hidden"[22m
+
+
+      124 |     await page.waitForTimeout(500)
+      125 |     const sidebar = page.locator('nav').first()
+    > 126 |     await expect(sidebar).toBeVisible()
+          |                           ^
+      127 |   })
+      128 |
+      129 |   test('mobile layout adjusts content width', async ({ errorPage: page }) => {
+        at C:\projects\frontend\admin-portal\e2e\error-states-responsive.spec.ts:126:27
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\error-states-responsive-Re-dfc58-esktop-layout-shows-sidebar-chromium\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\error-states-responsive-Re-dfc58-esktop-layout-shows-sidebar-chromium\error-context.md
+
+
+[1A[2K[119/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:138:3 ΓÇ║ Subscriptions Page ΓÇ║ validates required plan fields
+[1A[2K[120/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:146:3 ΓÇ║ Subscriptions Page ΓÇ║ active subscriptions tab renders
+[1A[2K[121/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:151:3 ΓÇ║ Subscriptions Page ΓÇ║ lookup tab has input
+[1A[2K[122/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:162:3 ΓÇ║ Chat Page ΓÇ║ renders chat page
+[1A[2K[123/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:167:3 ΓÇ║ Chat Page ΓÇ║ shows thread list
+[1A[2K[124/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:175:3 ΓÇ║ Chat Page ΓÇ║ shows select thread prompt when no thread selected
+[1A[2K[125/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:179:3 ΓÇ║ Chat Page ΓÇ║ has message input when thread is selected
+[1A[2K[126/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:130:3 ΓÇ║ Subscriptions Page ΓÇ║ opens create plan dialog
+[1A[2K[127/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:194:3 ΓÇ║ Notifications Page ΓÇ║ renders notifications page
+[1A[2K[128/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:198:3 ΓÇ║ Notifications Page ΓÇ║ shows filter buttons
+[1A[2K[129/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:204:3 ΓÇ║ Notifications Page ΓÇ║ shows mark all read button
+[1A[2K[130/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:208:3 ΓÇ║ Notifications Page ΓÇ║ displays notification items
+[1A[2K[131/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:212:3 ΓÇ║ Notifications Page ΓÇ║ filter buttons toggle active state
+[1A[2K[132/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:226:3 ΓÇ║ Audit Logs Page ΓÇ║ renders audit logs page
+[1A[2K[133/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:231:3 ΓÇ║ Audit Logs Page ΓÇ║ displays audit log entries
+[1A[2K[134/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:235:3 ΓÇ║ Audit Logs Page ΓÇ║ has filters button
+[1A[2K[135/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:239:3 ΓÇ║ Audit Logs Page ΓÇ║ opens filter panel
+[1A[2K[136/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:244:3 ΓÇ║ Audit Logs Page ΓÇ║ filter inputs accept values
+[1A[2K[137/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:250:3 ΓÇ║ Audit Logs Page ΓÇ║ clear filters button works
+[1A[2K[138/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:257:3 ΓÇ║ Audit Logs Page ΓÇ║ has export button
+[1A[2K[139/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:267:3 ΓÇ║ Search Analytics Page ΓÇ║ renders search analytics page
+[1A[2K[140/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:272:3 ΓÇ║ Search Analytics Page ΓÇ║ shows popular searches section
+[1A[2K[141/301] [chromium] ΓÇ║ e2e\feature-pages.spec.ts:279:3 ΓÇ║ Search Analytics Page ΓÇ║ shows recent search history
+[1A[2K[142/301] [chromium] ΓÇ║ e2e\login.spec.ts:11:3 ΓÇ║ Login Page ΓÇ║ renders login form correctly
+[1A[2K[143/301] [chromium] ΓÇ║ e2e\login.spec.ts:19:3 ΓÇ║ Login Page ΓÇ║ shows validation errors for empty fields
+[1A[2K[144/301] [chromium] ΓÇ║ e2e\login.spec.ts:25:3 ΓÇ║ Login Page ΓÇ║ shows validation error for invalid email
+[1A[2K[145/301] [chromium] ΓÇ║ e2e\login.spec.ts:36:3 ΓÇ║ Login Page ΓÇ║ shows validation error for short password
+[1A[2K[146/301] [chromium] ΓÇ║ e2e\login.spec.ts:43:3 ΓÇ║ Login Page ΓÇ║ redirects authenticated user away from login
+[1A[2K[147/301] [chromium] ΓÇ║ e2e\navigation.spec.ts:4:3 ΓÇ║ Sidebar Navigation ΓÇ║ renders sidebar with main navigation items
+[1A[2K[148/301] [chromium] ΓÇ║ e2e\navigation.spec.ts:20:3 ΓÇ║ Sidebar Navigation ΓÇ║ navigates to Users page
+[1A[2K[149/301] [chromium] ΓÇ║ e2e\navigation.spec.ts:27:3 ΓÇ║ Sidebar Navigation ΓÇ║ navigates to Products page
+[1A[2K[150/301] [chromium] ΓÇ║ e2e\navigation.spec.ts:34:3 ΓÇ║ Sidebar Navigation ΓÇ║ navigates to Orders page
+[1A[2K[151/301] [chromium] ΓÇ║ e2e\navigation.spec.ts:41:3 ΓÇ║ Sidebar Navigation ΓÇ║ navigates to Categories page
+[1A[2K[152/301] [chromium] ΓÇ║ e2e\navigation.spec.ts:55:3 ΓÇ║ Sidebar Navigation ΓÇ║ toggles sidebar collapse
+[1A[2K[153/301] [chromium] ΓÇ║ e2e\navigation.spec.ts:48:3 ΓÇ║ Sidebar Navigation ΓÇ║ navigates to Audit Logs page
+[1A[2K[154/301] [chromium] ΓÇ║ e2e\navigation.spec.ts:74:3 ΓÇ║ Sidebar Navigation ΓÇ║ highlights active navigation item
+[1A[2K[155/301] [chromium] ΓÇ║ e2e\navigation.spec.ts:83:3 ΓÇ║ Protected Routes ΓÇ║ redirects unauthenticated user to login
+[1A[2K[156/301] [chromium] ΓÇ║ e2e\navigation.spec.ts:91:3 ΓÇ║ Protected Routes ΓÇ║ shows 404 page for unknown route
+[1A[2K[157/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:8:3 ΓÇ║ Products Page ΓÇ║ renders products page with heading and search
+[1A[2K[158/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:13:3 ΓÇ║ Products Page ΓÇ║ displays products in table
+[1A[2K[159/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:17:3 ΓÇ║ Products Page ΓÇ║ opens create product dialog with all fields
+[1A[2K[160/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:24:3 ΓÇ║ Products Page ΓÇ║ validates required product fields
+[1A[2K[161/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:31:3 ΓÇ║ Products Page ΓÇ║ can cancel create product dialog
+[1A[2K[162/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:37:3 ΓÇ║ Products Page ΓÇ║ shows export dropdown
+[1A[2K[163/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:47:3 ΓÇ║ Products Page ΓÇ║ search input works
+[1A[2K[164/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:59:3 ΓÇ║ Orders Page ΓÇ║ renders orders page
+[1A[2K[165/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:64:3 ΓÇ║ Orders Page ΓÇ║ displays orders in table
+[1A[2K[166/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:68:3 ΓÇ║ Orders Page ΓÇ║ has export button
+[1A[2K[167/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:76:3 ΓÇ║ Orders Page ΓÇ║ search input works
+[1A[2K[168/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:88:3 ΓÇ║ Payments Page ΓÇ║ renders payments page
+[1A[2K[169/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:93:3 ΓÇ║ Payments Page ΓÇ║ displays payments in table
+[1A[2K[170/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:97:3 ΓÇ║ Payments Page ΓÇ║ has export button
+[1A[2K[171/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:111:3 ΓÇ║ Coupons Page ΓÇ║ renders coupons page
+[1A[2K[172/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:116:3 ΓÇ║ Coupons Page ΓÇ║ displays coupons in table
+[1A[2K[173/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:120:3 ΓÇ║ Coupons Page ΓÇ║ opens create coupon dialog
+[1A[2K[174/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:127:3 ΓÇ║ Coupons Page ΓÇ║ validates required coupon fields
+[1A[2K[175/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:140:3 ΓÇ║ Flash Sales Page ΓÇ║ renders flash sales page
+[1A[2K[176/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:145:3 ΓÇ║ Flash Sales Page ΓÇ║ displays flash sales in table
+[1A[2K[177/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:149:3 ΓÇ║ Flash Sales Page ΓÇ║ opens create flash sale dialog
+[1A[2K[178/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:156:3 ΓÇ║ Flash Sales Page ΓÇ║ validates required flash sale fields
+[1A[2K[179/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:169:3 ΓÇ║ Returns Page ΓÇ║ renders returns page
+[1A[2K[180/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:174:3 ΓÇ║ Returns Page ΓÇ║ displays returns in table
+[1A[2K[181/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:178:3 ΓÇ║ Returns Page ΓÇ║ has export button
+[1A[2K[182/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:192:3 ΓÇ║ Reviews Page ΓÇ║ renders reviews page
+[1A[2K[183/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:197:3 ΓÇ║ Reviews Page ΓÇ║ displays reviews in table
+[1A[2K[184/301] [chromium] ΓÇ║ e2e\products-orders-commerce.spec.ts:201:3 ΓÇ║ Reviews Page ΓÇ║ has export button
+[1A[2K[185/301] [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:4:3 ΓÇ║ Role Permissions Workflow ΓÇ║ page renders with heading and role selector
+[1A[2K[186/301] [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:10:3 ΓÇ║ Role Permissions Workflow ΓÇ║ role selector dropdown shows available roles
+[1A[2K[187/301] [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:22:3 ΓÇ║ Role Permissions Workflow ΓÇ║ selecting a role shows permission matrix
+[1A[2K[188/301] [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:42:3 ΓÇ║ Dashboard Interactions ΓÇ║ displays stat cards
+[1A[2K[189/301] [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:49:3 ΓÇ║ Dashboard Interactions ΓÇ║ quick action navigates to products
+[1A[2K[190/301] [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:58:3 ΓÇ║ Dashboard Interactions ΓÇ║ quick action navigates to categories
+[1A[2K[191/301] [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:67:3 ΓÇ║ Dashboard Interactions ΓÇ║ quick action navigates to orders
+[1A[2K[192/301] [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:76:3 ΓÇ║ Dashboard Interactions ΓÇ║ chart sections are visible
+[1A[2K  8) [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:4:3 ΓÇ║ Role Permissions Workflow ΓÇ║ page renders with heading and role selector 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByText(/select a role/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/select a role/i) resolved to 2 elements:
+        1) <span>Select a role</span> aka getByRole('combobox')
+        2) <h3 class="text-lg font-semibold">Select a role</h3> aka getByRole('heading', { name: 'Select a role' })
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByText(/select a role/i)[22m
+
+
+       5 |     await page.goto('/role-permissions')
+       6 |     await expect(page.getByRole('heading', { name: /role permissions/i })).toBeVisible()
+    >  7 |     await expect(page.getByText(/select a role/i)).toBeVisible()
+         |                                                    ^
+       8 |   })
+       9 |
+      10 |   test('role selector dropdown shows available roles', async ({ authedPage: page }) => {
+        at C:\projects\frontend\admin-portal\e2e\role-permissions-dashboard.spec.ts:7:52
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\role-permissions-dashboard-87bb7-h-heading-and-role-selector-chromium\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\role-permissions-dashboard-87bb7-h-heading-and-role-selector-chromium\error-context.md
+
+
+[1A[2K[193/301] [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:103:3 ΓÇ║ Sidebar Navigation Depth ΓÇ║ sidebar collapse hides labels and shows icons
+[1A[2K[194/301] [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:115:3 ΓÇ║ Sidebar Navigation Depth ΓÇ║ active nav item is highlighted
+[1A[2K[195/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:4:3 ΓÇ║ Settings - Profile ΓÇ║ edit profile form saves successfully
+[1A[2K[196/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:18:3 ΓÇ║ Settings - Profile ΓÇ║ cancel profile edit discards changes
+[1A[2K[197/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:30:3 ΓÇ║ Settings - Password ΓÇ║ change password validates empty fields
+[1A[2K[198/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:36:3 ΓÇ║ Settings - Password ΓÇ║ change password submits successfully
+[1A[2K[199/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:47:3 ΓÇ║ Settings - Theme ΓÇ║ toggle dark mode
+[1A[2K[200/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:58:3 ΓÇ║ Settings - Theme ΓÇ║ select each accent color
+[1A[2K[201/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:69:3 ΓÇ║ Settings - Theme ΓÇ║ theme color persists on navigation
+[1A[2K[202/301] [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:83:3 ΓÇ║ Sidebar Navigation Depth ΓÇ║ navigate to each major section
+[1A[2K[203/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:83:3 ΓÇ║ Settings - Logout ΓÇ║ logout button is in danger zone
+[1A[2K[204/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:89:3 ΓÇ║ Settings - Logout ΓÇ║ clicking logout redirects to login
+[1A[2K[205/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:98:3 ΓÇ║ Notifications Interactions ΓÇ║ displays notification cards
+[1A[2K[206/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:104:3 ΓÇ║ Notifications Interactions ΓÇ║ filter buttons switch between all/unread/read
+[1A[2K[207/301] [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:114:3 ΓÇ║ Notifications Interactions ΓÇ║ mark all read button triggers action
+[1A[2K  9) [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:89:3 ΓÇ║ Settings - Logout ΓÇ║ clicking logout redirects to login 
+
+    Test was interrupted.
+
+    Error: page.reload: Target page, context or browser has been closed
+    Call log:
+    [2m  - waiting for navigation until "load"[22m
+    [2m    - navigated to "http://localhost:3000/login"[22m
+
+
+       at fixtures.ts:129
+
+      127 |     localStorage.setItem('admin-auth', JSON.stringify(state))
+      128 |   })
+    > 129 |   await page.reload()
+          |              ^
+      130 | }
+      131 |
+      132 | export const test = base.extend<{ authedPage: Page }>({
+        at seedAuth (C:\projects\frontend\admin-portal\e2e\fixtures.ts:129:14)
+        at Object.authedPage (C:\projects\frontend\admin-portal\e2e\fixtures.ts:134:5)
+
+
+[1A[2K  10) [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:104:3 ΓÇ║ Notifications Interactions ΓÇ║ filter buttons switch between all/unread/read 
+
+    Test was interrupted.
+
+    Error: page.goto: Target page, context or browser has been closed
+    Call log:
+    [2m  - navigating to "http://localhost:3000/", waiting until "load"[22m
+
+
+       at fixtures.ts:116
+
+      114 | async function seedAuth(page: Page) {
+      115 |   await mockApi(page)
+    > 116 |   await page.goto('/')
+          |              ^
+      117 |   await page.evaluate(() => {
+      118 |     const state = {
+      119 |       state: {
+        at seedAuth (C:\projects\frontend\admin-portal\e2e\fixtures.ts:116:14)
+        at Object.authedPage (C:\projects\frontend\admin-portal\e2e\fixtures.ts:134:5)
+
+
+[1A[2K  11) [chromium] ΓÇ║ e2e\role-permissions-dashboard.spec.ts:83:3 ΓÇ║ Sidebar Navigation Depth ΓÇ║ navigate to each major section 
+
+    Test was interrupted.
+
+    Error: page.goto: Target page, context or browser has been closed
+    Call log:
+    [2m  - navigating to "http://localhost:3000/", waiting until "load"[22m
+
+
+      91 |     ]
+      92 |     for (const route of routes) {
+    > 93 |       await page.goto('/')
+         |                  ^
+      94 |       const link = page.locator('nav a, nav button').filter({ hasText: route.name }).first()
+      95 |       if (await link.isVisible()) {
+      96 |         await link.click()
+        at C:\projects\frontend\admin-portal\e2e\role-permissions-dashboard.spec.ts:93:18
+
+    Error: browserContext.close: Target page, context or browser has been closed
+
+
+[1A[2K  12) [chromium] ΓÇ║ e2e\settings-notifications-chat.spec.ts:98:3 ΓÇ║ Notifications Interactions ΓÇ║ displays notification cards 
+
+    Test was interrupted.
+
+    Error: page.reload: net::ERR_ABORTED; maybe frame was detached?
+    Call log:
+    [2m  - waiting for navigation until "load"[22m
+
+
+       at fixtures.ts:129
+
+      127 |     localStorage.setItem('admin-auth', JSON.stringify(state))
+      128 |   })
+    > 129 |   await page.reload()
+          |              ^
+      130 | }
+      131 |
+      132 | export const test = base.extend<{ authedPage: Page }>({
+        at seedAuth (C:\projects\frontend\admin-portal\e2e\fixtures.ts:129:14)
+        at Object.authedPage (C:\projects\frontend\admin-portal\e2e\fixtures.ts:134:5)
+
+    Error: browserContext.close: Target page, context or browser has been closed
+
+

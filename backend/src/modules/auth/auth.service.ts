@@ -12,6 +12,7 @@ import * as bcrypt from 'bcryptjs';
 import { AuthSession } from './entities/auth-session.entity';
 import { AuthToken } from './entities/auth-token.entity';
 import { User } from '../users/entities/user.entity';
+import { UserRole } from '../users/entities/user-role.entity';
 import * as crypto from 'crypto';
 import { NotificationHelperService } from '../notifications/notification-helper.service';
 import { MailService } from '../../common/modules/mail/mail.service';
@@ -26,6 +27,7 @@ export class AuthService {
     @InjectRepository(AuthSession) private sessionRepo: Repository<AuthSession>,
     @InjectRepository(AuthToken) private tokenRepo: Repository<AuthToken>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(UserRole) private userRoleRepo: Repository<UserRole>,
     private jwtService: JwtService,
     private dataSource: DataSource,
     private notificationHelper: NotificationHelperService,
@@ -139,10 +141,42 @@ export class AuthService {
     });
     await this.sessionRepo.save(session);
 
+    // Load user roles to include in response
+    const userRoles = await this.userRoleRepo.find({
+      where: { userId: user.id },
+      relations: ['role'],
+    });
+
+    const ROLE_PRIORITY: Record<string, number> = {
+      super_admin: 4,
+      admin: 3,
+      seller: 2,
+      customer: 1,
+    };
+    const topRole =
+      userRoles
+        .map((ur) => ur.role?.name)
+        .filter(Boolean)
+        .sort((a, b) => (ROLE_PRIORITY[b!] ?? 0) - (ROLE_PRIORITY[a!] ?? 0))[0] ?? null;
+
     return {
       accessToken,
       refreshToken,
-      user: { id: user.id, email: user.email },
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isActive: user.isActive,
+        isEmailVerified: user.isEmailVerified,
+        role: topRole,
+        roles: userRoles.map((ur) => ({
+          id: ur.roleId,
+          roleId: ur.roleId,
+          role: ur.role ? { id: ur.role.id, name: ur.role.name } : undefined,
+          grantedAt: ur.grantedAt,
+        })),
+      },
     };
   }
 

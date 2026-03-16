@@ -5,12 +5,12 @@ import type { Role, Permission, RolePermission } from '@/types'
 import { PageHeader } from '@/components/shared/page-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@radix-ui/react-checkbox'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { EmptyState } from '@/components/shared/empty-state'
-import { Shield, Save, Check } from 'lucide-react'
+import { Shield, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -37,7 +37,7 @@ export default function RolePermissionsPage() {
 
   const assignM = useMutation({
     mutationFn: (permissionIds: string[]) =>
-      rolePermissionsApi.assign({ roleId: selectedRoleId, permissionIds }),
+      rolePermissionsApi.assign(selectedRoleId, permissionIds),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['role-permissions', selectedRoleId] })
       toast.success('Permissions updated')
@@ -95,14 +95,14 @@ export default function RolePermissionsPage() {
 
   // Group permissions by module
   const permsByModule: Record<string, Permission[]> = {}
-  const perms = Array.isArray(allPermissions) ? allPermissions : (allPermissions as { data?: Permission[] })?.data ?? []
+  const perms = Array.isArray(allPermissions) ? allPermissions : (allPermissions as unknown as { data?: Permission[] })?.data ?? []
   for (const p of perms as Permission[]) {
     const mod = p.module || 'general'
     if (!permsByModule[mod]) permsByModule[mod] = []
     permsByModule[mod].push(p)
   }
 
-  const rolesList = Array.isArray(roles) ? roles : (roles as { data?: Role[] })?.data ?? []
+  const rolesList = Array.isArray(roles) ? roles : (roles as unknown as { data?: Role[] })?.data ?? []
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -167,10 +167,7 @@ export default function RolePermissionsPage() {
                       <Checkbox
                         checked={checked}
                         onCheckedChange={() => togglePermission(perm.id)}
-                        className="flex h-4 w-4 items-center justify-center rounded border border-input data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                      >
-                        {checked && <Check className="h-3 w-3" />}
-                      </Checkbox>
+                      />
                       <span>{perm.code}</span>
                       {perm.description && (
                         <span className="text-xs text-muted-foreground ml-auto truncate max-w-32">{perm.description}</span>

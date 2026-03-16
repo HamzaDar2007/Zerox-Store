@@ -12,10 +12,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Pencil, Trash2, AlertTriangle } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, AlertTriangle, PackagePlus, ArrowUpDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
@@ -24,10 +25,15 @@ import { zodResolver } from '@hookform/resolvers/zod'
 const whSchema = z.object({ code: z.string().min(1), name: z.string().min(1), address: z.string().optional(), city: z.string().optional(), country: z.string().optional(), isActive: z.boolean().default(true) })
 type WHFormData = z.infer<typeof whSchema>
 
+const setStockSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), qtyOnHand: z.coerce.number().int().min(0), lowStockThreshold: z.coerce.number().int().min(0).optional() })
+const adjustStockSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), adjustment: z.coerce.number().int(), reason: z.string().optional() })
+
 export default function InventoryPage() {
   const [whDialog, setWhDialog] = useState(false)
   const [editing, setEditing] = useState<Warehouse | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Warehouse | null>(null)
+  const [setStockDialog, setSetStockDialog] = useState(false)
+  const [adjustStockDialog, setAdjustStockDialog] = useState(false)
   const qc = useQueryClient()
 
   const { data: warehouses, isLoading: loadingWH } = useQuery({ queryKey: ['warehouses'], queryFn: warehousesApi.list })
@@ -39,6 +45,21 @@ export default function InventoryPage() {
   const createM = useMutation({ mutationFn: warehousesApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setWhDialog(false); reset(); toast.success('Warehouse created') }, onError: () => toast.error('Failed') })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: WHFormData & { id: string }) => warehousesApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setWhDialog(false); setEditing(null); toast.success('Updated') }, onError: () => toast.error('Failed') })
   const deleteM = useMutation({ mutationFn: (id: string) => warehousesApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: () => toast.error('Failed') })
+
+  const setStockForm = useForm<z.infer<typeof setStockSchema>>({ resolver: zodResolver(setStockSchema) })
+  const adjustStockForm = useForm<z.infer<typeof adjustStockSchema>>({ resolver: zodResolver(adjustStockSchema) })
+
+  const setStockM = useMutation({
+    mutationFn: inventoryApi.set,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['inventory'] }); qc.invalidateQueries({ queryKey: ['inventory', 'low-stock'] }); setSetStockDialog(false); setStockForm.reset(); toast.success('Stock set') },
+    onError: () => toast.error('Failed to set stock'),
+  })
+
+  const adjustStockM = useMutation({
+    mutationFn: inventoryApi.adjust,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['inventory'] }); qc.invalidateQueries({ queryKey: ['inventory', 'low-stock'] }); setAdjustStockDialog(false); adjustStockForm.reset(); toast.success('Stock adjusted') },
+    onError: () => toast.error('Failed to adjust stock'),
+  })
 
   const openCreate = () => { setEditing(null); reset({ code: '', name: '', address: '', city: '', country: '', isActive: true }); setWhDialog(true) }
   const openEdit = (w: Warehouse) => { setEditing(w); reset({ code: w.code, name: w.name, address: w.address ?? '', city: w.city ?? '', country: w.country ?? '', isActive: w.isActive }); setWhDialog(true) }
@@ -96,6 +117,14 @@ export default function InventoryPage() {
           />
         </TabsContent>
         <TabsContent value="stock">
+          <div className="mb-4 flex gap-2">
+            <Button variant="outline" onClick={() => { setStockForm.reset({ warehouseId: '', variantId: '', qtyOnHand: 0, lowStockThreshold: 10 }); setSetStockDialog(true) }}>
+              <PackagePlus className="mr-2 h-4 w-4" />Set Stock
+            </Button>
+            <Button variant="outline" onClick={() => { adjustStockForm.reset({ warehouseId: '', variantId: '', adjustment: 0, reason: '' }); setAdjustStockDialog(true) }}>
+              <ArrowUpDown className="mr-2 h-4 w-4" />Adjust Stock
+            </Button>
+          </div>
           <DataTable columns={invColumns} data={inventory ?? []} isLoading={loadingInv} searchPlaceholder="Search inventory..."
             enableRowSelection
             exportFilename="inventory"
@@ -131,6 +160,36 @@ export default function InventoryPage() {
       </Dialog>
 
       <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Delete Warehouse" description={`Delete "${deleteTarget?.name}"?`} confirmLabel="Delete" onConfirm={() => deleteTarget && deleteM.mutate(deleteTarget.id)} loading={deleteM.isPending} />
+
+      {/* Set Stock Dialog */}
+      <Dialog open={setStockDialog} onOpenChange={setSetStockDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Set Stock</DialogTitle><DialogDescription>Set the stock level for a variant in a warehouse</DialogDescription></DialogHeader>
+          <form onSubmit={setStockForm.handleSubmit((d) => setStockM.mutate(d))} className="space-y-4">
+            <div className="space-y-2"><Label>Warehouse ID</Label><Input {...setStockForm.register('warehouseId')} />{setStockForm.formState.errors.warehouseId && <p className="text-xs text-destructive">{setStockForm.formState.errors.warehouseId.message}</p>}</div>
+            <div className="space-y-2"><Label>Variant ID</Label><Input {...setStockForm.register('variantId')} />{setStockForm.formState.errors.variantId && <p className="text-xs text-destructive">{setStockForm.formState.errors.variantId.message}</p>}</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Quantity on Hand</Label><Input type="number" {...setStockForm.register('qtyOnHand')} /></div>
+              <div className="space-y-2"><Label>Low Stock Threshold</Label><Input type="number" {...setStockForm.register('lowStockThreshold')} /></div>
+            </div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setSetStockDialog(false)}>Cancel</Button><Button type="submit" loading={setStockM.isPending}>Set Stock</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Adjust Stock Dialog */}
+      <Dialog open={adjustStockDialog} onOpenChange={setAdjustStockDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Adjust Stock</DialogTitle><DialogDescription>Increase or decrease stock by a delta amount</DialogDescription></DialogHeader>
+          <form onSubmit={adjustStockForm.handleSubmit((d) => adjustStockM.mutate(d))} className="space-y-4">
+            <div className="space-y-2"><Label>Warehouse ID</Label><Input {...adjustStockForm.register('warehouseId')} />{adjustStockForm.formState.errors.warehouseId && <p className="text-xs text-destructive">{adjustStockForm.formState.errors.warehouseId.message}</p>}</div>
+            <div className="space-y-2"><Label>Variant ID</Label><Input {...adjustStockForm.register('variantId')} />{adjustStockForm.formState.errors.variantId && <p className="text-xs text-destructive">{adjustStockForm.formState.errors.variantId.message}</p>}</div>
+            <div className="space-y-2"><Label>Adjustment (positive to add, negative to remove)</Label><Input type="number" {...adjustStockForm.register('adjustment')} /></div>
+            <div className="space-y-2"><Label>Reason (optional)</Label><Textarea {...adjustStockForm.register('reason')} placeholder="e.g., Damaged goods, Restock" /></div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setAdjustStockDialog(false)}>Cancel</Button><Button type="submit" loading={adjustStockM.isPending}>Adjust</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

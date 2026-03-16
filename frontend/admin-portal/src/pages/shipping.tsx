@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { shippingApi } from '@/services/api'
-import type { ShippingZone, ShippingMethod } from '@/types'
+import type { ShippingZone, ShippingMethod, Shipment, ShipmentEvent } from '@/types'
 import { DataTable, SortHeader } from '@/components/shared/data-table'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatusBadge } from '@/components/shared/status-badge'
@@ -10,11 +10,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Pencil } from 'lucide-react'
+import { MoreHorizontal, Pencil, Eye, Plus, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -33,7 +34,7 @@ export default function ShippingPage() {
   const { data: methods, isLoading: loadingMethods } = useQuery({ queryKey: ['shipping-methods'], queryFn: shippingApi.listMethods })
 
   const zoneForm = useForm<z.infer<typeof zoneSchema>>({ resolver: zodResolver(zoneSchema) })
-  const methodForm = useForm<z.infer<typeof methodSchema>>({ resolver: zodResolver(methodSchema) })
+  const methodForm = useForm<z.infer<typeof methodSchema>>({ resolver: zodResolver(methodSchema) as any })
 
   const createZoneM = useMutation({ mutationFn: shippingApi.createZone, onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-zones'] }); setZoneDialog(false); setEditingZone(null); zoneForm.reset(); toast.success('Zone created') }, onError: () => toast.error('Failed') })
   const updateZoneM = useMutation({ mutationFn: ({ id, ...d }: { id: string; name: string }) => shippingApi.updateZone(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-zones'] }); setZoneDialog(false); setEditingZone(null); zoneForm.reset(); toast.success('Zone updated') }, onError: () => toast.error('Failed') })
@@ -103,6 +104,7 @@ export default function ShippingPage() {
         <TabsList>
           <TabsTrigger value="zones">Zones</TabsTrigger>
           <TabsTrigger value="methods">Methods</TabsTrigger>
+          <TabsTrigger value="shipments">Shipments</TabsTrigger>
         </TabsList>
         <TabsContent value="zones">
           <div className="mb-4"><Button onClick={() => { setEditingZone(null); zoneForm.reset({ name: '' }); setZoneDialog(true) }}>Add Zone</Button></div>
@@ -119,6 +121,9 @@ export default function ShippingPage() {
             exportFilename="shipping-methods"
             getExportRow={(r) => ({ Name: r.name, Price: r.price, MinDays: r.minDeliveryDays ?? '', MaxDays: r.maxDeliveryDays ?? '', Active: r.isActive })}
           />
+        </TabsContent>
+        <TabsContent value="shipments">
+          <ShipmentsTab />
         </TabsContent>
       </Tabs>
 
@@ -144,6 +149,183 @@ export default function ShippingPage() {
               <div className="space-y-2"><Label>Max Days</Label><Input type="number" {...methodForm.register('maxDeliveryDays')} /></div>
             </div>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setMethodDialog(false)}>Cancel</Button><Button type="submit" disabled={createMethodM.isPending || updateMethodM.isPending}>{editingMethod ? 'Update' : 'Create'}</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+/* ── Shipments Tab ── */
+const shipmentSchema = z.object({
+  orderId: z.string().min(1, 'Order ID required'),
+  warehouseId: z.string().optional(),
+  shippingMethodId: z.string().optional(),
+  trackingNumber: z.string().optional(),
+  carrier: z.string().optional(),
+})
+
+const eventSchema = z.object({
+  status: z.string().min(1, 'Status required'),
+  location: z.string().optional(),
+  description: z.string().optional(),
+})
+
+function ShipmentsTab() {
+  const [orderId, setOrderId] = useState('')
+  const [queriedOrderId, setQueriedOrderId] = useState('')
+  const [createDialog, setCreateDialog] = useState(false)
+  const [detailShipment, setDetailShipment] = useState<Shipment | null>(null)
+  const [eventDialog, setEventDialog] = useState(false)
+  const qc = useQueryClient()
+
+  const { data: shipments, isLoading } = useQuery({
+    queryKey: ['shipments', queriedOrderId],
+    queryFn: () => shippingApi.getOrderShipments(queriedOrderId),
+    enabled: !!queriedOrderId,
+  })
+
+  const { data: events } = useQuery({
+    queryKey: ['shipment-events', detailShipment?.id],
+    queryFn: () => shippingApi.getShipmentEvents(detailShipment!.id),
+    enabled: !!detailShipment,
+  })
+
+  const createForm = useForm<z.infer<typeof shipmentSchema>>({ resolver: zodResolver(shipmentSchema) })
+  const eventForm = useForm<z.infer<typeof eventSchema>>({ resolver: zodResolver(eventSchema) })
+
+  const createM = useMutation({
+    mutationFn: shippingApi.createShipment,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipments'] }); setCreateDialog(false); createForm.reset(); toast.success('Shipment created') },
+    onError: () => toast.error('Failed to create shipment'),
+  })
+
+  const addEventM = useMutation({
+    mutationFn: (data: z.infer<typeof eventSchema>) => shippingApi.createShipmentEvent(detailShipment!.id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipment-events'] }); setEventDialog(false); eventForm.reset(); toast.success('Event added') },
+    onError: () => toast.error('Failed to add event'),
+  })
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 items-end">
+        <div className="flex-1">
+          <Label>Lookup by Order ID</Label>
+          <Input placeholder="Enter order ID..." value={orderId} onChange={(e) => setOrderId(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && setQueriedOrderId(orderId.trim())} />
+        </div>
+        <Button onClick={() => setQueriedOrderId(orderId.trim())} disabled={!orderId.trim()}>Search</Button>
+        <Button variant="outline" onClick={() => { createForm.reset({ orderId: '', warehouseId: '', shippingMethodId: '', trackingNumber: '', carrier: '' }); setCreateDialog(true) }}>
+          <Plus className="mr-2 h-4 w-4" />Create Shipment
+        </Button>
+      </div>
+
+      {queriedOrderId && (
+        <div className="space-y-3 animate-fade-in">
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading shipments...</p>
+          ) : !shipments?.length ? (
+            <p className="text-sm text-muted-foreground">No shipments found for this order.</p>
+          ) : (
+            shipments.map((s: Shipment) => (
+              <Card key={s.id} className="transition-shadow hover:shadow-md cursor-pointer" onClick={() => setDetailShipment(s)}>
+                <CardContent className="flex items-center justify-between p-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm">#{s.id.slice(0, 8)}</span>
+                      <StatusBadge status={s.status} />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {s.carrier && `${s.carrier} • `}
+                      {s.trackingNumber && `Tracking: ${s.trackingNumber} • `}
+                      Created: {formatDateTime(s.createdAt)}
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Create Shipment Dialog */}
+      <Dialog open={createDialog} onOpenChange={setCreateDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Create Shipment</DialogTitle><DialogDescription>Create a new shipment for an order</DialogDescription></DialogHeader>
+          <form onSubmit={createForm.handleSubmit((d) => createM.mutate(d))} className="space-y-4">
+            <div className="space-y-2"><Label>Order ID</Label><Input {...createForm.register('orderId')} />{createForm.formState.errors.orderId && <p className="text-xs text-destructive">{createForm.formState.errors.orderId.message}</p>}</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Warehouse ID</Label><Input {...createForm.register('warehouseId')} /></div>
+              <div className="space-y-2"><Label>Shipping Method ID</Label><Input {...createForm.register('shippingMethodId')} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Carrier</Label><Input {...createForm.register('carrier')} placeholder="e.g., UPS, FedEx" /></div>
+              <div className="space-y-2"><Label>Tracking Number</Label><Input {...createForm.register('trackingNumber')} /></div>
+            </div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setCreateDialog(false)}>Cancel</Button><Button type="submit" loading={createM.isPending}>Create</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Shipment Detail Dialog with Events Timeline */}
+      <Dialog open={!!detailShipment} onOpenChange={() => setDetailShipment(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Shipment #{detailShipment?.id.slice(0, 8)}</DialogTitle>
+            <DialogDescription>Shipment details and tracking events</DialogDescription>
+          </DialogHeader>
+          {detailShipment && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={detailShipment.status} /></div>
+                <div><span className="text-muted-foreground">Carrier:</span> {detailShipment.carrier || '—'}</div>
+                <div><span className="text-muted-foreground">Tracking:</span> {detailShipment.trackingNumber || '—'}</div>
+                <div><span className="text-muted-foreground">Created:</span> {formatDateTime(detailShipment.createdAt)}</div>
+                {detailShipment.shippedAt && <div><span className="text-muted-foreground">Shipped:</span> {formatDateTime(detailShipment.shippedAt)}</div>}
+                {detailShipment.deliveredAt && <div><span className="text-muted-foreground">Delivered:</span> {formatDateTime(detailShipment.deliveredAt)}</div>}
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-sm">Tracking Events</h4>
+                  <Button size="sm" variant="outline" onClick={() => { eventForm.reset({ status: '', location: '', description: '' }); setEventDialog(true) }}>
+                    <Plus className="mr-1 h-3 w-3" />Add Event
+                  </Button>
+                </div>
+                {(events ?? []).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No tracking events yet.</p>
+                ) : (
+                  <div className="space-y-3 border-l-2 border-primary/20 pl-4">
+                    {(events ?? []).map((e: ShipmentEvent) => (
+                      <div key={e.id} className="relative animate-fade-in">
+                        <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-primary" />
+                        <div className="text-sm">
+                          <div className="flex items-center gap-2">
+                            <StatusBadge status={e.status} />
+                            {e.location && <span className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />{e.location}</span>}
+                          </div>
+                          {e.description && <p className="text-muted-foreground mt-0.5">{e.description}</p>}
+                          <p className="text-xs text-muted-foreground">{formatDateTime(e.occurredAt)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Shipment Event Dialog */}
+      <Dialog open={eventDialog} onOpenChange={setEventDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add Tracking Event</DialogTitle><DialogDescription>Record a new shipment tracking event</DialogDescription></DialogHeader>
+          <form onSubmit={eventForm.handleSubmit((d) => addEventM.mutate(d))} className="space-y-4">
+            <div className="space-y-2"><Label>Status</Label><Input {...eventForm.register('status')} placeholder="e.g., in_transit, delivered" /></div>
+            <div className="space-y-2"><Label>Location</Label><Input {...eventForm.register('location')} placeholder="e.g., New York, NY" /></div>
+            <div className="space-y-2"><Label>Description</Label><Input {...eventForm.register('description')} placeholder="Package arrived at sorting facility" /></div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setEventDialog(false)}>Cancel</Button><Button type="submit" loading={addEventM.isPending}>Add Event</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

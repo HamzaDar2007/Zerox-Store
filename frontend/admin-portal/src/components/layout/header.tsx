@@ -28,7 +28,8 @@ export function Header() {
   })
 
   const handleLogout = async () => {
-    try { await authApi.logout() } catch { /* ignore */ }
+    const refreshToken = useAuthStore.getState().refreshToken
+    try { if (refreshToken) await authApi.logout(refreshToken) } catch { /* ignore */ }
     logout()
     navigate('/login')
   }

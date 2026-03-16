@@ -34,11 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Checkbox } from '@radix-ui/react-checkbox'
-import { utils, writeFileXLSX } from 'xlsx'
-import { saveAs } from 'file-saver'
-import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -98,7 +94,7 @@ export function DataTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [searchInput, setSearchInput] = useState('')
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleSearchChange = useCallback(
     (value: string) => {
@@ -128,7 +124,6 @@ export function DataTable<TData, TValue>({
         checked={t.getIsAllPageRowsSelected()}
         onCheckedChange={(val) => t.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
-        className="flex h-4 w-4 items-center justify-center rounded border border-input data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
       />
     ),
     cell: ({ row }) => (
@@ -136,7 +131,6 @@ export function DataTable<TData, TValue>({
         checked={row.getIsSelected()}
         onCheckedChange={(val) => row.toggleSelected(!!val)}
         aria-label="Select row"
-        className="flex h-4 w-4 items-center justify-center rounded border border-input data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
       />
     ),
     enableSorting: false,
@@ -163,8 +157,12 @@ export function DataTable<TData, TValue>({
 
   const selectedRows = table.getFilteredSelectedRowModel().rows.map((r) => r.original)
 
-  const exportToCSV = () => {
-    const rows = data.map((row) => getExportRow ? getExportRow(row) : (row as Record<string, unknown>))
+  const getExportRows = () => data.map((row) => getExportRow ? getExportRow(row) : (row as Record<string, unknown>))
+
+  const exportToCSV = async () => {
+    const { utils, writeFileXLSX } = await import('xlsx')
+    const { saveAs } = await import('file-saver')
+    const rows = getExportRows()
     const ws = utils.json_to_sheet(rows)
     const wb = utils.book_new()
     utils.book_append_sheet(wb, ws, 'Data')
@@ -172,17 +170,20 @@ export function DataTable<TData, TValue>({
     saveAs(new Blob([buf as BlobPart], { type: 'text/csv;charset=utf-8' }), `${exportFilename}.csv`)
   }
 
-  const exportToExcel = () => {
-    const rows = data.map((row) => getExportRow ? getExportRow(row) : (row as Record<string, unknown>))
+  const exportToExcel = async () => {
+    const { utils, writeFileXLSX } = await import('xlsx')
+    const rows = getExportRows()
     const ws = utils.json_to_sheet(rows)
     const wb = utils.book_new()
     utils.book_append_sheet(wb, ws, 'Data')
     writeFileXLSX(wb, `${exportFilename}.xlsx`)
   }
 
-  const exportToPDF = () => {
-    const rows = data.map((row) => getExportRow ? getExportRow(row) : (row as Record<string, unknown>))
+  const exportToPDF = async () => {
+    const rows = getExportRows()
     if (rows.length === 0) return
+    const { default: jsPDF } = await import('jspdf')
+    const { default: autoTable } = await import('jspdf-autotable')
     const headers = Object.keys(rows[0])
     const doc = new jsPDF()
     autoTable(doc, {

@@ -7,13 +7,15 @@ import { DataTable, SortHeader } from '@/components/shared/data-table'
 import { PageHeader } from '@/components/shared/page-header'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import { StatusBadge } from '@/components/shared/status-badge'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDate } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
@@ -27,6 +29,7 @@ export default function FlashSalesPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<FlashSale | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<FlashSale | null>(null)
+  const [detailSale, setDetailSale] = useState<FlashSale | null>(null)
   const qc = useQueryClient()
 
   const { data, isLoading } = useQuery({ queryKey: ['flash-sales'], queryFn: flashSalesApi.list })
@@ -50,6 +53,7 @@ export default function FlashSalesPage() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setDetailSale(row.original)}><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
             <DropdownMenuItem onClick={() => openEdit(row.original)}><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
           </DropdownMenuContent>
@@ -84,6 +88,49 @@ export default function FlashSalesPage() {
       </Dialog>
 
       <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Delete Flash Sale" description={`Delete "${deleteTarget?.name}"?`} confirmLabel="Delete" onConfirm={() => deleteTarget && deleteM.mutate(deleteTarget.id)} loading={deleteM.isPending} />
+
+      {/* Flash Sale Detail Dialog */}
+      <Dialog open={!!detailSale} onOpenChange={() => setDetailSale(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{detailSale?.name}</DialogTitle>
+            <DialogDescription>{detailSale?.description || 'Flash sale details'}</DialogDescription>
+          </DialogHeader>
+          {detailSale && (
+            <div className="space-y-4">
+              <Card>
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                    <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={detailSale.isActive ? 'active' : 'inactive'} /></div>
+                    <div><span className="text-muted-foreground">Starts:</span> {formatDate(detailSale.startsAt)}</div>
+                    <div><span className="text-muted-foreground">Ends:</span> {formatDate(detailSale.endsAt)}</div>
+                    <div><span className="text-muted-foreground">Items:</span> {detailSale.items?.length ?? 0}</div>
+                  </div>
+                </CardContent>
+              </Card>
+              {detailSale.items?.length ? (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold">Sale Items</h3>
+                  {detailSale.items.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between rounded-lg border p-3">
+                      <div>
+                        <p className="text-sm font-medium font-mono">{item.variantId.slice(0, 8)}…</p>
+                        <p className="text-xs text-muted-foreground">Sale Price: ${item.salePrice.toFixed(2)}</p>
+                      </div>
+                      <div className="text-right text-sm">
+                        <p>Sold: {item.qtySold}{item.qtyLimit ? ` / ${item.qtyLimit}` : ''}</p>
+                        {item.qtyLimit && <Badge variant={item.qtySold >= item.qtyLimit ? 'destructive' : 'secondary'} className="text-xs">{item.qtySold >= item.qtyLimit ? 'Sold Out' : 'Available'}</Badge>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">No items in this flash sale.</p>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
