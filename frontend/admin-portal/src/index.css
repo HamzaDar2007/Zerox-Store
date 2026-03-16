@@ -23,13 +23,31 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
   --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
   --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-info: hsl(var(--info));
+  --color-info-foreground: hsl(var(--info-foreground));
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-fade-out: fade-out 0.15s ease-in;
+  --animate-slide-in-up: slide-in-up 0.25s cubic-bezier(0.16,1,0.3,1);
+  --animate-slide-in-down: slide-in-down 0.25s cubic-bezier(0.16,1,0.3,1);
+  --animate-slide-in-left: slide-in-left 0.25s cubic-bezier(0.16,1,0.3,1);
+  --animate-slide-in-right: slide-in-right 0.25s cubic-bezier(0.16,1,0.3,1);
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0.16,1,0.3,1);
+  --animate-spin-slow: spin 3s linear infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
 }
 
+/* ─── Default (Blue) Theme ─── */
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
@@ -52,7 +70,14 @@
   --ring: 221.2 83.2% 53.3%;
   --radius: 0.5rem;
   --success: 142.1 76.2% 36.3%;
+  --success-foreground: 0 0% 100%;
   --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 0%;
+  --info: 199 89% 48%;
+  --info-foreground: 0 0% 100%;
+  --sidebar: 0 0% 98%;
+  --sidebar-foreground: 222.2 84% 4.9%;
+  --sidebar-accent: 210 40% 96.1%;
 }
 
 .dark {
@@ -76,9 +101,99 @@
   --input: 217.2 32.6% 17.5%;
   --ring: 224.3 76.3% 48%;
   --success: 142.1 70.6% 45.3%;
+  --success-foreground: 0 0% 100%;
   --warning: 48 96% 89%;
+  --warning-foreground: 0 0% 0%;
+  --info: 199 89% 48%;
+  --info-foreground: 0 0% 100%;
+  --sidebar: 222.2 84% 6%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-accent: 217.2 32.6% 17.5%;
 }
 
+/* ─── Emerald Theme ─── */
+.theme-emerald {
+  --primary: 160 84% 39%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 160 84% 39%;
+}
+.theme-emerald.dark {
+  --primary: 160 70% 50%;
+  --primary-foreground: 0 0% 0%;
+  --ring: 160 70% 50%;
+}
+
+/* ─── Rose Theme ─── */
+.theme-rose {
+  --primary: 346.8 77.2% 49.8%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 346.8 77.2% 49.8%;
+}
+.theme-rose.dark {
+  --primary: 346.8 77.2% 49.8%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 346.8 77.2% 49.8%;
+}
+
+/* ─── Orange Theme ─── */
+.theme-orange {
+  --primary: 24.6 95% 53.1%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 24.6 95% 53.1%;
+}
+.theme-orange.dark {
+  --primary: 20.5 90.2% 48.2%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 20.5 90.2% 48.2%;
+}
+
+/* ─── Violet Theme ─── */
+.theme-violet {
+  --primary: 263.4 70% 50.4%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 263.4 70% 50.4%;
+}
+.theme-violet.dark {
+  --primary: 263.4 70% 50.4%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 263.4 70% 50.4%;
+}
+
+/* ─── Animations (Keyframes) ─── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ─── Base Styles ─── */
 * {
   border-color: hsl(var(--border));
 }
@@ -86,11 +201,19 @@
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* ─── Scroll Styles ─── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+
+/* ─── Transition Utilities ─── */
+.transition-theme {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

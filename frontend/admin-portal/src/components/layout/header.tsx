@@ -14,7 +14,7 @@ import {
 import { Bell, LogOut, Moon, Sun, User } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
-import { notificationsApi } from '@/services/api'
+import { notificationsApi, authApi } from '@/services/api'
 
 export function Header() {
   const { user, logout } = useAuthStore()
@@ -27,7 +27,8 @@ export function Header() {
     refetchInterval: 30000,
   })
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await authApi.logout() } catch { /* ignore */ }
     logout()
     navigate('/login')
   }

@@ -101,6 +101,30 @@ export class SellersService {
     await this.sellerRepo.remove(s);
   }
 
+  async approveSeller(id: string, approvedBy: string): Promise<Seller> {
+    const s = await this.findSellerEntity(id);
+    s.status = 'approved';
+    s.approvedBy = approvedBy;
+    const saved = await this.sellerRepo.save(s);
+
+    if (s.userId) {
+      this.notificationHelper
+        .notify(s.userId, 'SELLER_APPROVED', {})
+        .catch(() => {});
+      if (s.user?.email) {
+        this.mailService
+          .sendSellerVerificationEmail(
+            s.user.email,
+            s.user.firstName || s.displayName || 'Seller',
+            'approved',
+          )
+          .catch(() => {});
+      }
+    }
+
+    return saved;
+  }
+
   async createStore(dto: Partial<Store>): Promise<Store> {
     const store = this.storeRepo.create(dto);
     return this.storeRepo.save(store);

@@ -45,8 +45,11 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md animate-scale-in shadow-lg">
         <CardHeader className="text-center">
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <span className="text-xl font-bold text-primary">AP</span>
+          </div>
           <CardTitle className="text-2xl">Admin Portal</CardTitle>
           <CardDescription>Sign in to your admin account</CardDescription>
         </CardHeader>

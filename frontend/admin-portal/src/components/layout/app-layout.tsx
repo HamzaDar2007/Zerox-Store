@@ -11,9 +11,14 @@ export function AppLayout() {
   return (
     <div className="min-h-screen">
       <Sidebar />
-      <div className={cn('transition-all duration-300', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
+      <div className={cn(
+        'transition-all duration-300',
+        /* Mobile: no left margin (sidebar is overlay). Desktop: margin based on collapse state */
+        'ml-0 md:ml-16',
+        !sidebarCollapsed && 'md:ml-64',
+      )}>
         <Header />
-        <main className="p-6">
+        <main className="p-4 md:p-6 animate-fade-in">
           <Breadcrumbs />
           <Outlet />
         </main>

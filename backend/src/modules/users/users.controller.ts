@@ -151,8 +151,12 @@ export class UsersController {
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 201, description: 'Role assigned successfully' })
   @Auditable({ action: 'ASSIGN_ROLE', tableName: 'user_roles' })
-  assignRole(@Param('id') id: string, @Body() dto: AssignUserRoleDto) {
-    return this.usersService.assignRole(id, dto.roleId, dto.grantedBy);
+  assignRole(
+    @Param('id') id: string,
+    @Body() dto: AssignUserRoleDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.usersService.assignRole(id, dto.roleId, user.id);
   }
 
   @Delete(':userId/roles/:roleId')

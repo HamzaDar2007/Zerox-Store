@@ -10,7 +10,7 @@ import {
   type ColumnFiltersState,
   type RowSelectionState,
 } from '@tanstack/react-table'
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, memo } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +25,8 @@ import {
   ArrowDown,
   Download,
   Trash2,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -35,6 +37,8 @@ import {
 import { Checkbox } from '@radix-ui/react-checkbox'
 import { utils, writeFileXLSX } from 'xlsx'
 import { saveAs } from 'file-saver'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -46,6 +50,8 @@ interface DataTableProps<TData, TValue> {
   onPageChange?: (page: number) => void
   onSearch?: (value: string) => void
   isLoading?: boolean
+  isError?: boolean
+  onRetry?: () => void
   manualPagination?: boolean
   enableRowSelection?: boolean
   onBulkDelete?: (rows: TData[]) => void
@@ -55,7 +61,7 @@ interface DataTableProps<TData, TValue> {
   getExportRow?: (row: TData) => Record<string, unknown>
 }
 
-function SortHeader({ column, children }: { column: { getIsSorted: () => false | 'asc' | 'desc'; toggleSorting: (desc?: boolean) => void }; children: React.ReactNode }) {
+const MemoizedSortHeader = memo(function SortHeader({ column, children }: { column: { getIsSorted: () => false | 'asc' | 'desc'; toggleSorting: (desc?: boolean) => void }; children: React.ReactNode }) {
   const sorted = column.getIsSorted()
   return (
     <Button variant="ghost" size="sm" className="-ml-3 h-8" onClick={() => column.toggleSorting(sorted === 'asc')}>
@@ -63,9 +69,9 @@ function SortHeader({ column, children }: { column: { getIsSorted: () => false |
       {sorted === 'asc' ? <ArrowUp className="ml-1 h-3.5 w-3.5" /> : sorted === 'desc' ? <ArrowDown className="ml-1 h-3.5 w-3.5" /> : <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-muted-foreground/50" />}
     </Button>
   )
-}
+})
 
-export { SortHeader }
+export { MemoizedSortHeader as SortHeader }
 
 export function DataTable<TData, TValue>({
   columns: userColumns,
@@ -77,6 +83,8 @@ export function DataTable<TData, TValue>({
   onPageChange,
   onSearch,
   isLoading = false,
+  isError = false,
+  onRetry,
   manualPagination = false,
   enableRowSelection = false,
   onBulkDelete,
@@ -160,7 +168,7 @@ export function DataTable<TData, TValue>({
     const ws = utils.json_to_sheet(rows)
     const wb = utils.book_new()
     utils.book_append_sheet(wb, ws, 'Data')
-    const buf = writeFileXLSX(wb, undefined, { type: 'array', bookType: 'csv' })
+    const buf = writeFileXLSX(wb, `${exportFilename}.csv`, { type: 'array', bookType: 'csv' })
     saveAs(new Blob([buf as BlobPart], { type: 'text/csv;charset=utf-8' }), `${exportFilename}.csv`)
   }
 
@@ -170,6 +178,18 @@ export function DataTable<TData, TValue>({
     const wb = utils.book_new()
     utils.book_append_sheet(wb, ws, 'Data')
     writeFileXLSX(wb, `${exportFilename}.xlsx`)
+  }
+
+  const exportToPDF = () => {
+    const rows = data.map((row) => getExportRow ? getExportRow(row) : (row as Record<string, unknown>))
+    if (rows.length === 0) return
+    const headers = Object.keys(rows[0])
+    const doc = new jsPDF()
+    autoTable(doc, {
+      head: [headers],
+      body: rows.map((r) => headers.map((h) => String(r[h] ?? ''))),
+    })
+    doc.save(`${exportFilename}.pdf`)
   }
 
   return (
@@ -225,6 +245,7 @@ export function DataTable<TData, TValue>({
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={exportToCSV}>Export CSV</DropdownMenuItem>
                 <DropdownMenuItem onClick={exportToExcel}>Export Excel</DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToPDF}>Export PDF</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -255,6 +276,20 @@ export function DataTable<TData, TValue>({
                   ))}
                 </TableRow>
               ))
+            ) : isError ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <div className="flex flex-col items-center gap-2 text-destructive">
+                    <AlertCircle className="h-6 w-6" />
+                    <p className="text-sm font-medium">Failed to load data</p>
+                    {onRetry && (
+                      <Button variant="outline" size="sm" onClick={onRetry}>
+                        <RefreshCw className="mr-1 h-4 w-4" />Retry
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
             ) : table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>

@@ -51,8 +51,8 @@ export class SellersController {
   @ApiOperation({ summary: 'Register as a seller' })
   @ApiResponse({ status: 201, description: 'Seller profile created' })
   @Auditable({ action: 'CREATE', tableName: 'sellers' })
-  create(@Body() dto: CreateSellerDto, @Req() req: any) {
-    return this.svc.createSeller({ ...dto, userId: req.user.id });
+  create(@Body() dto: CreateSellerDto) {
+    return this.svc.createSeller(dto);
   }
 
   @Get()
@@ -89,6 +89,18 @@ export class SellersController {
     @Req() req: any,
   ) {
     return this.svc.updateSeller(id, dto, req.user.id, req.user.role);
+  }
+
+  @Patch(':id/approve')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Approve a seller (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Seller UUID' })
+  @ApiResponse({ status: 200, description: 'Seller approved' })
+  @Auditable({ action: 'UPDATE', tableName: 'sellers' })
+  approve(@Param('id') id: string, @Req() req: any) {
+    return this.svc.approveSeller(id, req.user.id);
   }
 
   @Delete(':id')

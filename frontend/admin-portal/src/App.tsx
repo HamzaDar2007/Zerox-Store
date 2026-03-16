@@ -14,6 +14,7 @@ const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const UsersPage = lazy(() => import('@/pages/users'))
 const RolesPage = lazy(() => import('@/pages/roles'))
 const PermissionsPage = lazy(() => import('@/pages/permissions'))
+const RolePermissionsPage = lazy(() => import('@/pages/role-permissions'))
 const CategoriesPage = lazy(() => import('@/pages/categories'))
 const BrandsPage = lazy(() => import('@/pages/brands'))
 const SellersPage = lazy(() => import('@/pages/sellers'))
@@ -88,8 +89,7 @@ export default function App() {
                   <Route path="forbidden" element={<ForbiddenPage />} />
                   <Route path="users" element={<RbacRoute allowedRoles={ADMIN_ROLES}><UsersPage /></RbacRoute>} />
                   <Route path="roles" element={<RbacRoute allowedRoles={ADMIN_ROLES}><RolesPage /></RbacRoute>} />
-                  <Route path="permissions" element={<RbacRoute allowedRoles={ADMIN_ROLES}><PermissionsPage /></RbacRoute>} />
-                  <Route path="categories" element={<CategoriesPage />} />
+                  <Route path="permissions" element={<RbacRoute allowedRoles={ADMIN_ROLES}><PermissionsPage /></RbacRoute>} />                      <Route path="role-permissions" element={<RbacRoute allowedRoles={ADMIN_ROLES}><RolePermissionsPage /></RbacRoute>} />                  <Route path="categories" element={<CategoriesPage />} />
                   <Route path="brands" element={<BrandsPage />} />
                   <Route path="sellers" element={<SellersPage />} />
                   <Route path="stores" element={<StoresPage />} />

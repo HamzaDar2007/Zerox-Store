@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useThemeStore } from '@/store/theme.store'
@@ -8,6 +9,7 @@ import {
   LayoutDashboard,
   Users,
   Shield,
+  ShieldCheck,
   Key,
   FolderTree,
   Tags,
@@ -29,6 +31,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Crown,
+  Menu,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -47,6 +50,7 @@ const navItems: NavItem[] = [
   { label: 'Users', icon: Users, path: '/users', roles: ADMIN_ROLES },
   { label: 'Roles', icon: Shield, path: '/roles', roles: ADMIN_ROLES },
   { label: 'Permissions', icon: Key, path: '/permissions', roles: ADMIN_ROLES },
+  { label: 'Role Permissions', icon: ShieldCheck, path: '/role-permissions', roles: ADMIN_ROLES },
   { label: 'Categories', icon: FolderTree, path: '/categories' },
   { label: 'Brands', icon: Tags, path: '/brands' },
   { label: 'Sellers', icon: UserCheck, path: '/sellers' },
@@ -72,24 +76,20 @@ export function Sidebar() {
   const location = useLocation()
   const user = useAuthStore((s) => s.user)
   const userRole = user?.role ?? user?.roles?.[0]?.role?.name ?? ''
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const visibleItems = navItems.filter((item) => {
     if (!item.roles) return true
     return item.roles.includes(userRole)
   })
 
-  return (
-    <aside
-      className={cn(
-        'fixed left-0 top-0 z-40 flex h-screen flex-col border-r bg-card transition-all duration-300',
-        sidebarCollapsed ? 'w-16' : 'w-64',
-      )}
-    >
+  const sidebarContent = (
+    <>
       <div className="flex h-16 items-center justify-between border-b px-4">
         {!sidebarCollapsed && (
           <span className="text-lg font-bold text-primary">Admin Portal</span>
         )}
-        <Button variant="ghost" size="icon" onClick={toggleSidebar} className="ml-auto">
+        <Button variant="ghost" size="icon" onClick={() => { toggleSidebar(); setMobileOpen(false) }} className="ml-auto">
           {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
@@ -102,15 +102,16 @@ export function Sidebar() {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={() => setMobileOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200',
                   isActive
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
                   sidebarCollapsed && 'justify-center px-2',
                 )}
               >
-                <item.icon className="h-5 w-5 shrink-0" />
+                <item.icon className={cn('h-5 w-5 shrink-0 transition-transform duration-200', isActive && 'scale-110')} />
                 {!sidebarCollapsed && <span>{item.label}</span>}
               </NavLink>
             )
@@ -127,6 +128,45 @@ export function Sidebar() {
           })}
         </nav>
       </ScrollArea>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* Mobile hamburger button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed left-3 top-3.5 z-50 md:hidden"
+        onClick={() => setMobileOpen(true)}
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-black/50 md:hidden animate-fade-in" onClick={() => setMobileOpen(false)} />
+      )}
+
+      {/* Mobile sidebar */}
+      <aside
+        className={cn(
+          'fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r bg-card transition-transform duration-300 md:hidden',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
+        {sidebarContent}
+      </aside>
+
+      {/* Desktop sidebar */}
+      <aside
+        className={cn(
+          'fixed left-0 top-0 z-40 hidden h-screen flex-col border-r bg-card transition-all duration-300 md:flex',
+          sidebarCollapsed ? 'w-16' : 'w-64',
+        )}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   )
 }

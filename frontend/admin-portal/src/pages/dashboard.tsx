@@ -1,9 +1,11 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { usersApi, ordersApi, productsApi, reviewsApi } from '@/services/api'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Users, Package, ShoppingCart, Star, TrendingUp, DollarSign, Activity, BarChart3 } from 'lucide-react'
+import { StatCard } from '@/components/shared/stat-card'
+import { Users, Package, ShoppingCart, Star, DollarSign, Plus, FileText, FolderTree } from 'lucide-react'
 import {
   BarChart,
   Bar,
@@ -22,6 +24,7 @@ import {
 const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
 export default function DashboardPage() {
+  const navigate = useNavigate()
   const { data: usersData, isLoading: loadingUsers } = useQuery({
     queryKey: ['users', { page: 1, limit: 1 }],
     queryFn: () => usersApi.list({ page: 1, limit: 1 }),
@@ -80,75 +83,27 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome to the Admin Portal</p>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome to the Admin Portal</p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => navigate('/products')}><Plus className="mr-1 h-4 w-4" />Add Product</Button>
+          <Button size="sm" variant="outline" onClick={() => navigate('/categories')}><FolderTree className="mr-1 h-4 w-4" />Categories</Button>
+          <Button size="sm" variant="outline" onClick={() => navigate('/orders')}><FileText className="mr-1 h-4 w-4" />Orders</Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {isLoading
-          ? Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-5 w-5 rounded" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-8 w-20" />
-                </CardContent>
-              </Card>
-            ))
-          : stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
-              <stat.icon className={`h-5 w-5 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value.toLocaleString()}</div>
-            </CardContent>
-          </Card>
+        {stats.map((stat) => (
+          <StatCard key={stat.label} label={stat.label} value={stat.value} icon={stat.icon} iconColor={stat.color} isLoading={isLoading} />
         ))}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Revenue</CardTitle>
-            <DollarSign className="h-5 w-5 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Growth</CardTitle>
-            <TrendingUp className="h-5 w-5 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+12.5%</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Sessions</CardTitle>
-            <Activity className="h-5 w-5 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">573</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Conversion Rate</CardTitle>
-            <BarChart3 className="h-5 w-5 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3.2%</div>
-          </CardContent>
-        </Card>
+        <StatCard label="Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} iconColor="text-green-500" isLoading={isLoading} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
