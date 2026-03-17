@@ -14,13 +14,19 @@ import type {
   ProductVariant,
   ProductImage,
   AttributeKey,
+  AttributeValue,
+  VariantAttributeValue,
+  ProductCategory,
   Order,
   Payment,
   Coupon,
+  CouponScope,
   FlashSale,
+  FlashSaleItem,
   Warehouse,
   Inventory,
   ShippingZone,
+  ShippingZoneCountry,
   ShippingMethod,
   Shipment,
   ShipmentEvent,
@@ -31,8 +37,10 @@ import type {
   Notification,
   AuditLog,
   ChatThread,
+  ChatThreadParticipant,
   ChatMessage,
   Address,
+  SearchQuery,
   PaginatedResponse,
 } from '@/types'
 
@@ -93,6 +101,10 @@ export const usersApi = {
   updateAddress: (addressId: string, data: Partial<Address>) =>
     api.put(`/users/addresses/${addressId}`, data).then((r) => r.data),
   deleteAddress: (addressId: string) => api.delete(`/users/addresses/${addressId}`),
+  uploadAvatar: (id: string, formData: FormData) =>
+    api.patch(`/users/${id}/avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data),
 }
 
 // ─── Roles ─────────────────────
@@ -138,6 +150,10 @@ export const categoriesApi = {
   update: (id: string, data: Partial<Category>) =>
     api.put<Category>(`/categories/${id}`, data).then((r) => r.data),
   delete: (id: string) => api.delete(`/categories/${id}`),
+  uploadImage: (id: string, formData: FormData) =>
+    api.patch(`/categories/${id}/image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data),
 }
 
 // ─── Brands ────────────────────
@@ -148,14 +164,22 @@ export const brandsApi = {
   update: (id: string, data: Partial<Brand>) =>
     api.put<Brand>(`/brands/${id}`, data).then((r) => r.data),
   delete: (id: string) => api.delete(`/brands/${id}`),
+  uploadLogo: (id: string, formData: FormData) =>
+    api.patch(`/brands/${id}/logo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data),
 }
 
 // ─── Sellers ───────────────────
 export const sellersApi = {
   list: () => api.get<Seller[]>('/sellers').then((r) => r.data),
   get: (id: string) => api.get<Seller>(`/sellers/${id}`).then((r) => r.data),
+  create: (data: Partial<Seller>) =>
+    api.post<Seller>('/sellers', data).then((r) => r.data),
   update: (id: string, data: Partial<Seller>) =>
     api.put<Seller>(`/sellers/${id}`, data).then((r) => r.data),
+  approve: (id: string) =>
+    api.patch<Seller>(`/sellers/${id}/approve`).then((r) => r.data),
   delete: (id: string) => api.delete(`/sellers/${id}`),
 }
 
@@ -163,9 +187,19 @@ export const sellersApi = {
 export const storesApi = {
   list: () => api.get<Store[]>('/stores').then((r) => r.data),
   get: (id: string) => api.get<Store>(`/stores/${id}`).then((r) => r.data),
+  create: (data: Partial<Store>) =>
+    api.post<Store>('/stores', data).then((r) => r.data),
   update: (id: string, data: Partial<Store>) =>
     api.put<Store>(`/stores/${id}`, data).then((r) => r.data),
   delete: (id: string) => api.delete(`/stores/${id}`),
+  uploadLogo: (id: string, formData: FormData) =>
+    api.patch(`/stores/${id}/logo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data),
+  uploadBanner: (id: string, formData: FormData) =>
+    api.patch(`/stores/${id}/banner`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data),
 }
 
 // ─── Products ──────────────────
@@ -195,9 +229,32 @@ export const productsApi = {
   deleteImage: (id: string) => api.delete(`/products/images/${id}`),
   // Attribute Keys
   getAttributeKeys: () => api.get<AttributeKey[]>('/products/attributes/keys').then((r) => r.data),
+  getAttributeKey: (id: string) => api.get<AttributeKey>(`/products/attributes/keys/${id}`).then((r) => r.data),
   createAttributeKey: (data: { name: string; inputType: string }) =>
     api.post<AttributeKey>('/products/attributes/keys', data).then((r) => r.data),
+  updateAttributeKey: (id: string, data: { name?: string; inputType?: string }) =>
+    api.put<AttributeKey>(`/products/attributes/keys/${id}`, data).then((r) => r.data),
   deleteAttributeKey: (id: string) => api.delete(`/products/attributes/keys/${id}`),
+  // Attribute Values
+  getAttributeValues: (keyId: string) =>
+    api.get<AttributeValue[]>(`/products/attributes/keys/${keyId}/values`).then((r) => r.data),
+  createAttributeValue: (keyId: string, data: { value: string }) =>
+    api.post<AttributeValue>(`/products/attributes/keys/${keyId}/values`, data).then((r) => r.data),
+  deleteAttributeValue: (id: string) => api.delete(`/products/attributes/values/${id}`),
+  // Variant Attributes
+  getVariantAttributes: (variantId: string) =>
+    api.get<VariantAttributeValue[]>(`/products/variants/${variantId}/attributes`).then((r) => r.data),
+  assignVariantAttribute: (variantId: string, data: { attributeKeyId: string; attributeValueId: string }) =>
+    api.post<VariantAttributeValue>(`/products/variants/${variantId}/attributes`, data).then((r) => r.data),
+  removeVariantAttribute: (variantId: string, keyId: string) =>
+    api.delete(`/products/variants/${variantId}/attributes/${keyId}`),
+  // Product Categories
+  getProductCategories: (productId: string) =>
+    api.get<ProductCategory[]>(`/products/${productId}/categories`).then((r) => r.data),
+  addProductCategory: (productId: string, categoryId: string) =>
+    api.post<ProductCategory>(`/products/${productId}/categories/${categoryId}`).then((r) => r.data),
+  removeProductCategory: (productId: string, categoryId: string) =>
+    api.delete(`/products/${productId}/categories/${categoryId}`),
 }
 
 // ─── Orders ────────────────────
@@ -224,10 +281,16 @@ export const paymentsApi = {
 export const couponsApi = {
   list: () => api.get<Coupon[]>('/coupons').then((r) => r.data),
   get: (id: string) => api.get<Coupon>(`/coupons/${id}`).then((r) => r.data),
+  findByCode: (code: string) => api.get<Coupon>(`/coupons/code/${code}`).then((r) => r.data),
   create: (data: Partial<Coupon>) => api.post<Coupon>('/coupons', data).then((r) => r.data),
   update: (id: string, data: Partial<Coupon>) =>
     api.put<Coupon>(`/coupons/${id}`, data).then((r) => r.data),
   delete: (id: string) => api.delete(`/coupons/${id}`),
+  // Coupon Scopes
+  getScopes: (id: string) => api.get<CouponScope[]>(`/coupons/${id}/scopes`).then((r) => r.data),
+  addScope: (id: string, data: { scopeType: string; scopeId: string }) =>
+    api.post<CouponScope>(`/coupons/${id}/scopes`, data).then((r) => r.data),
+  removeScope: (scopeId: string) => api.delete(`/coupons/scopes/${scopeId}`),
 }
 
 // ─── Flash Sales ───────────────
@@ -239,6 +302,11 @@ export const flashSalesApi = {
   update: (id: string, data: Partial<FlashSale>) =>
     api.put<FlashSale>(`/flash-sales/${id}`, data).then((r) => r.data),
   delete: (id: string) => api.delete(`/flash-sales/${id}`),
+  // Flash Sale Items
+  getItems: (id: string) => api.get<FlashSaleItem[]>(`/flash-sales/${id}/items`).then((r) => r.data),
+  addItem: (id: string, data: { variantId: string; salePrice: number; qtyLimit?: number }) =>
+    api.post<FlashSaleItem>(`/flash-sales/${id}/items`, data).then((r) => r.data),
+  removeItem: (itemId: string) => api.delete(`/flash-sales/items/${itemId}`),
 }
 
 // ─── Inventory ─────────────────
@@ -259,6 +327,10 @@ export const inventoryApi = {
     api.post('/inventory/set', data).then((r) => r.data),
   adjust: (data: { warehouseId: string; variantId: string; adjustment: number; reason?: string }) =>
     api.post('/inventory/adjust', data).then((r) => r.data),
+  reserve: (data: { warehouseId: string; variantId: string; quantity: number }) =>
+    api.post('/inventory/reserve', data).then((r) => r.data),
+  release: (data: { warehouseId: string; variantId: string; quantity: number }) =>
+    api.post('/inventory/release', data).then((r) => r.data),
 }
 
 // ─── Shipping ──────────────────
@@ -270,6 +342,11 @@ export const shippingApi = {
     api.post<ShippingZone>('/shipping/zones', data).then((r) => r.data),
   updateZone: (id: string, data: Partial<ShippingZone>) =>
     api.put<ShippingZone>(`/shipping/zones/${id}`, data).then((r) => r.data),
+  // Zone Countries
+  getCountries: (zoneId: string) =>
+    api.get<ShippingZoneCountry[]>(`/shipping/zones/${zoneId}/countries`).then((r) => r.data),
+  addCountry: (zoneId: string, data: { countryCode: string }) =>
+    api.post<ShippingZoneCountry>(`/shipping/zones/${zoneId}/countries`, data).then((r) => r.data),
   // Methods
   listMethods: () => api.get<ShippingMethod[]>('/shipping/methods').then((r) => r.data),
   createMethod: (data: Partial<ShippingMethod>) =>
@@ -336,6 +413,8 @@ export const notificationsApi = {
   markRead: (id: string) => api.put(`/notifications/${id}/read`),
   markAllRead: () => api.put('/notifications/mine/read-all'),
   delete: (id: string) => api.delete(`/notifications/${id}`),
+  create: (data: { userId: string; channel: string; type: string; title: string; body: string; actionUrl?: string }) =>
+    api.post<Notification>('/notifications', data).then((r) => r.data),
 }
 
 // ─── Audit Logs ────────────────
@@ -351,12 +430,25 @@ export const auditApi = {
 export const chatApi = {
   listThreads: () => api.get<ChatThread[]>('/chat/mine/threads').then((r) => r.data),
   getThread: (id: string) => api.get<ChatThread>(`/chat/threads/${id}`).then((r) => r.data),
+  createThread: (data: { orderId?: string; productId?: string; participantIds?: string[] }) =>
+    api.post<ChatThread>('/chat/threads', data).then((r) => r.data),
   getMessages: (threadId: string) =>
     api.get<ChatMessage[]>(`/chat/threads/${threadId}/messages`).then((r) => r.data),
   sendMessage: (data: { threadId: string; body: string }) =>
     api.post<ChatMessage>('/chat/messages', data).then((r) => r.data),
   updateThreadStatus: (id: string, status: string) =>
     api.put(`/chat/threads/${id}/status`, { status }).then((r) => r.data),
+  getParticipants: (threadId: string) =>
+    api.get<ChatThreadParticipant[]>(`/chat/threads/${threadId}/participants`).then((r) => r.data),
+  updateLastRead: (threadId: string) =>
+    api.put(`/chat/threads/${threadId}/read`).then((r) => r.data),
+}
+
+// ─── Search ────────────────────
+export const searchApi = {
+  popular: () => api.get<SearchQuery[]>('/search/popular').then((r) => r.data),
+  history: (params?: { page?: number; limit?: number }) =>
+    api.get<SearchQuery[]>('/search/history', { params }).then((r) => r.data),
 }
 
 // ─── Upload ────────────────────

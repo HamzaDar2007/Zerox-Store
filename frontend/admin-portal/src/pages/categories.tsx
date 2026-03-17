@@ -14,12 +14,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDate } from '@/lib/utils'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { FileUploader } from '@/components/shared/file-uploader'
+import { Progress } from '@/components/ui/progress'
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),
@@ -43,6 +45,15 @@ export default function CategoriesPage() {
   const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => categoriesApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['categories'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: () => toast.error('Failed') })
   const deleteM = useMutation({ mutationFn: (id: string) => categoriesApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['categories'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: () => toast.error('Failed') })
 
+  const uploadImageM = useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => {
+      const fd = new FormData(); fd.append('file', file)
+      return categoriesApi.uploadImage(id, fd)
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['categories'] }); toast.success('Image uploaded') },
+    onError: () => toast.error('Image upload failed'),
+  })
+
   const openCreate = () => { setEditing(null); reset({ name: '', slug: '', description: '', sortOrder: 0, isActive: true }); setDialogOpen(true) }
   const openEdit = (c: Category) => { setEditing(c); reset({ name: c.name, slug: c.slug, description: c.description ?? '', sortOrder: c.sortOrder, isActive: c.isActive }); setDialogOpen(true) }
   const onSubmit = (d: FormData) => editing ? updateM.mutate({ ...d, id: editing.id }) : createM.mutate(d)
@@ -60,6 +71,7 @@ export default function CategoriesPage() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => openEdit(row.original)}><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setEditing(row.original); setDialogOpen(false) }}><ImageIcon className="mr-2 h-4 w-4" />Upload Image</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -108,6 +120,20 @@ export default function CategoriesPage() {
       <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Delete Category"
         description={`Delete "${deleteTarget?.name}"?`} confirmLabel="Delete"
         onConfirm={() => deleteTarget && deleteM.mutate(deleteTarget.id)} loading={deleteM.isPending} />
+
+      {/* Image Upload Dialog */}
+      {editing && !dialogOpen && (
+        <Dialog open={!!editing && !dialogOpen} onOpenChange={() => setEditing(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Upload Category Image</DialogTitle><DialogDescription>{editing.name}</DialogDescription></DialogHeader>
+            <div className="space-y-4">
+              {editing.imageUrl && <img src={editing.imageUrl} alt={editing.name} className="h-32 w-full rounded-md object-cover" />}
+              <FileUploader accept="image/*" maxSizeMB={5} preview={editing.imageUrl} onUpload={(files) => { if (files[0]) uploadImageM.mutate({ id: editing.id, file: files[0] }) }} />
+              {uploadImageM.isPending && <Progress value={undefined} className="h-1" />}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

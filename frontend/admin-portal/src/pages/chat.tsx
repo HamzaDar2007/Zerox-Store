@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { chatApi } from '@/services/api'
-import type { ChatThread, ChatMessage } from '@/types'
+import type { ChatThread, ChatMessage, ChatThreadParticipant } from '@/types'
 import { PageHeader } from '@/components/shared/page-header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { LoadingPage } from '@/components/shared/loading'
-import { Send, MessageSquare, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Send, MessageSquare, CheckCircle, XCircle, Clock, Plus, Users } from 'lucide-react'
 import { formatDateTime } from '@/lib/utils'
 import { useAuthStore } from '@/store/auth.store'
 import { toast } from 'sonner'
@@ -17,6 +19,10 @@ import { toast } from 'sonner'
 export default function ChatPage() {
   const [selectedThread, setSelectedThread] = useState<ChatThread | null>(null)
   const [message, setMessage] = useState('')
+  const [createOpen, setCreateOpen] = useState(false)
+  const [newThreadOrderId, setNewThreadOrderId] = useState('')
+  const [newThreadProductId, setNewThreadProductId] = useState('')
+  const [showParticipants, setShowParticipants] = useState(false)
   const user = useAuthStore((s) => s.user)
   const qc = useQueryClient()
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -44,6 +50,23 @@ export default function ChatPage() {
     onError: () => toast.error('Failed to update status'),
   })
 
+  const createThreadM = useMutation({
+    mutationFn: chatApi.createThread,
+    onSuccess: (thread) => { qc.invalidateQueries({ queryKey: ['chat-threads'] }); setCreateOpen(false); setNewThreadOrderId(''); setNewThreadProductId(''); setSelectedThread(thread as ChatThread); toast.success('Thread created') },
+    onError: () => toast.error('Failed to create thread'),
+  })
+
+  const { data: participants } = useQuery({
+    queryKey: ['chat-participants', selectedThread?.id],
+    queryFn: () => chatApi.getParticipants(selectedThread!.id),
+    enabled: !!selectedThread && showParticipants,
+  })
+
+  // Auto-mark last read when selecting a thread
+  useEffect(() => {
+    if (selectedThread) chatApi.updateLastRead(selectedThread.id).catch(() => {})
+  }, [selectedThread])
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -59,7 +82,10 @@ export default function ChatPage() {
         {/* Thread list */}
         <Card className="lg:col-span-1">
           <CardHeader className="py-3">
-            <CardTitle className="text-sm">Threads</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm">Threads</CardTitle>
+              <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}><Plus className="mr-1 h-3 w-3" />New</Button>
+            </div>
           </CardHeader>
           <ScrollArea className="h-[calc(100%-60px)]">
             <div className="space-y-1 p-2">
@@ -100,6 +126,9 @@ export default function ChatPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">{selectedThread.status}</Badge>
+                    <Button size="sm" variant="ghost" onClick={() => setShowParticipants(!showParticipants)} title="Participants">
+                      <Users className="h-3 w-3" />
+                    </Button>
                     {selectedThread.status !== 'resolved' && (
                       <Button size="sm" variant="ghost" className="text-success" onClick={() => updateStatusM.mutate({ id: selectedThread.id, status: 'resolved' })}>
                         <CheckCircle className="mr-1 h-3 w-3" />Resolve
@@ -118,6 +147,17 @@ export default function ChatPage() {
                   </div>
                 </div>
               </CardHeader>
+              {showParticipants && (
+                <div className="border-b px-4 py-2 space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Participants</p>
+                  {(participants as ChatThreadParticipant[] | undefined)?.map((p) => (
+                    <div key={p.id} className="text-xs flex items-center gap-2">
+                      <Badge variant="outline" className="text-[10px]">{p.user?.firstName ?? p.userId.slice(0, 8)}</Badge>
+                      {p.lastReadAt && <span className="text-muted-foreground">read {formatDateTime(p.lastReadAt)}</span>}
+                    </div>
+                  )) ?? <p className="text-xs text-muted-foreground">Loading...</p>}
+                </div>
+              )}
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-3">
                   {(messages ?? []).map((m: ChatMessage) => (
@@ -155,6 +195,21 @@ export default function ChatPage() {
           )}
         </Card>
       </div>
+
+      {/* Create Thread Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>New Thread</DialogTitle><DialogDescription>Start a new support conversation</DialogDescription></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2"><Label>Order ID (optional)</Label><Input value={newThreadOrderId} onChange={(e) => setNewThreadOrderId(e.target.value)} placeholder="Link to an order" /></div>
+            <div className="space-y-2"><Label>Product ID (optional)</Label><Input value={newThreadProductId} onChange={(e) => setNewThreadProductId(e.target.value)} placeholder="Link to a product" /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button onClick={() => createThreadM.mutate({ orderId: newThreadOrderId || undefined, productId: newThreadProductId || undefined })} disabled={createThreadM.isPending}>Create</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

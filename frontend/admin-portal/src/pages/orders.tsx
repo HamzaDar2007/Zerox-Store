@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Eye, RefreshCw } from 'lucide-react'
+import { MoreHorizontal, Eye, RefreshCw, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
@@ -41,6 +41,12 @@ export default function OrdersPage() {
     onError: () => toast.error('Failed'),
   })
 
+  const cancelMutation = useMutation({
+    mutationFn: (id: string) => ordersApi.cancel(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['orders'] }); toast.success('Order cancelled') },
+    onError: () => toast.error('Failed to cancel order'),
+  })
+
   const columns: ColumnDef<Order>[] = [
     { accessorKey: 'id', header: 'Order ID', cell: ({ row }) => `#${row.original.id.slice(0, 8)}` },
     { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
@@ -54,6 +60,9 @@ export default function OrdersPage() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setDetailDialog(row.original)}><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
             <DropdownMenuItem onClick={() => { setStatusDialog(row.original); setNewStatus(row.original.status) }}><RefreshCw className="mr-2 h-4 w-4" />Update Status</DropdownMenuItem>
+            {row.original.status !== 'cancelled' && row.original.status !== 'delivered' && (
+              <DropdownMenuItem onClick={() => cancelMutation.mutate(row.original.id)} className="text-destructive"><XCircle className="mr-2 h-4 w-4" />Cancel Order</DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),

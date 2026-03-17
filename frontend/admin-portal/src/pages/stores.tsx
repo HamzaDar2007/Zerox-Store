@@ -19,6 +19,8 @@ import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { FileUploader } from '@/components/shared/file-uploader'
+import { Progress } from '@/components/ui/progress'
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),
@@ -27,15 +29,31 @@ const schema = z.object({
 })
 type FormData = z.infer<typeof schema>
 
+const createSchema = z.object({
+  sellerId: z.string().min(1, 'Seller ID is required'),
+  name: z.string().min(1, 'Required'),
+  slug: z.string().min(1, 'Required'),
+  description: z.string().optional(),
+})
+type CreateFormData = z.infer<typeof createSchema>
+
 export default function StoresPage() {
   const [editing, setEditing] = useState<Store | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
   const [detail, setDetail] = useState<Store | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Store | null>(null)
   const qc = useQueryClient()
 
   const { data, isLoading } = useQuery({ queryKey: ['stores'], queryFn: storesApi.list })
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const createForm = useForm<CreateFormData>({ resolver: zodResolver(createSchema) })
+
+  const createM = useMutation({
+    mutationFn: storesApi.create,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['stores'] }); setCreateOpen(false); createForm.reset(); toast.success('Store created') },
+    onError: () => toast.error('Failed to create'),
+  })
 
   const updateM = useMutation({
     mutationFn: ({ id, ...d }: FormData & { id: string }) => storesApi.update(id, d),
@@ -47,6 +65,24 @@ export default function StoresPage() {
     mutationFn: (id: string) => storesApi.delete(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['stores'] }); setDeleteTarget(null); toast.success('Store deleted') },
     onError: () => toast.error('Failed to delete'),
+  })
+
+  const uploadLogoM = useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => {
+      const fd = new FormData(); fd.append('file', file)
+      return storesApi.uploadLogo(id, fd)
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['stores'] }); toast.success('Logo uploaded') },
+    onError: () => toast.error('Logo upload failed'),
+  })
+
+  const uploadBannerM = useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => {
+      const fd = new FormData(); fd.append('file', file)
+      return storesApi.uploadBanner(id, fd)
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['stores'] }); toast.success('Banner uploaded') },
+    onError: () => toast.error('Banner upload failed'),
   })
 
   const openEdit = (s: Store) => {
@@ -76,7 +112,7 @@ export default function StoresPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <PageHeader title="Stores" description="View and manage seller stores" />
+      <PageHeader title="Stores" description="View and manage seller stores" action={{ label: 'Add Store', onClick: () => { createForm.reset({ sellerId: '', name: '', slug: '', description: '' }); setCreateOpen(true) } }} />
       <DataTable columns={columns} data={data ?? []} isLoading={isLoading} searchColumn="name" searchPlaceholder="Search stores..."
         enableRowSelection
         exportFilename="stores"
@@ -101,20 +137,50 @@ export default function StoresPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Store Details</DialogTitle><DialogDescription>{detail?.name}</DialogDescription></DialogHeader>
           {detail && (
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div><span className="text-muted-foreground">Name:</span><p className="font-medium">{detail.name}</p></div>
-              <div><span className="text-muted-foreground">Slug:</span><p className="font-medium">{detail.slug}</p></div>
-              <div><span className="text-muted-foreground">Status:</span><p><StatusBadge status={detail.isActive ? 'active' : 'inactive'} /></p></div>
-              <div><span className="text-muted-foreground">Created:</span><p className="font-medium">{formatDate(detail.createdAt)}</p></div>
-              {detail.description && (
-                <div className="col-span-2"><span className="text-muted-foreground">Description:</span><p>{detail.description}</p></div>
-              )}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-muted-foreground">Name:</span><p className="font-medium">{detail.name}</p></div>
+                <div><span className="text-muted-foreground">Slug:</span><p className="font-medium">{detail.slug}</p></div>
+                <div><span className="text-muted-foreground">Status:</span><p><StatusBadge status={detail.isActive ? 'active' : 'inactive'} /></p></div>
+                <div><span className="text-muted-foreground">Created:</span><p className="font-medium">{formatDate(detail.createdAt)}</p></div>
+                {detail.description && (
+                  <div className="col-span-2"><span className="text-muted-foreground">Description:</span><p>{detail.description}</p></div>
+                )}
+              </div>
+              <div className="space-y-3 border-t pt-3">
+                <div>
+                  <Label className="text-sm font-medium">Logo</Label>
+                  {detail.logoUrl && <img src={detail.logoUrl} alt="Logo" className="h-16 w-16 rounded-md object-cover mt-1 mb-2" />}
+                  <FileUploader accept="image/*" maxSizeMB={2} preview={detail.logoUrl} onUpload={(files) => { if (files[0]) uploadLogoM.mutate({ id: detail.id, file: files[0] }) }} />
+                  {uploadLogoM.isPending && <Progress value={undefined} className="h-1 mt-1" />}
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Banner</Label>
+                  {detail.bannerUrl && <img src={detail.bannerUrl} alt="Banner" className="h-20 w-full rounded-md object-cover mt-1 mb-2" />}
+                  <FileUploader accept="image/*" maxSizeMB={5} preview={detail.bannerUrl} onUpload={(files) => { if (files[0]) uploadBannerM.mutate({ id: detail.id, file: files[0] }) }} />
+                  {uploadBannerM.isPending && <Progress value={undefined} className="h-1 mt-1" />}
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
       <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Delete Store" description={`Delete store "${deleteTarget?.name}"?`} confirmLabel="Delete" onConfirm={() => deleteTarget && deleteM.mutate(deleteTarget.id)} loading={deleteM.isPending} />
+
+      {/* Create Store Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Create Store</DialogTitle><DialogDescription>Add a new store for a seller</DialogDescription></DialogHeader>
+          <form onSubmit={createForm.handleSubmit((d) => createM.mutate(d))} className="space-y-4">
+            <div className="space-y-2"><Label>Seller ID</Label><Input {...createForm.register('sellerId')} />{createForm.formState.errors.sellerId && <p className="text-xs text-destructive">{createForm.formState.errors.sellerId.message}</p>}</div>
+            <div className="space-y-2"><Label>Name</Label><Input {...createForm.register('name')} />{createForm.formState.errors.name && <p className="text-xs text-destructive">{createForm.formState.errors.name.message}</p>}</div>
+            <div className="space-y-2"><Label>Slug</Label><Input {...createForm.register('slug')} />{createForm.formState.errors.slug && <p className="text-xs text-destructive">{createForm.formState.errors.slug.message}</p>}</div>
+            <div className="space-y-2"><Label>Description</Label><Textarea {...createForm.register('description')} /></div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button><Button type="submit" disabled={createM.isPending}>Create</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

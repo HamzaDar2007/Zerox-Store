@@ -16,6 +16,8 @@ import { authApi, usersApi } from '@/services/api'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { profileSchema, changePasswordSchema } from '@/lib/validation'
+import { FileUploader } from '@/components/shared/file-uploader'
+import { Progress } from '@/components/ui/progress'
 
 type ProfileForm = z.infer<typeof profileSchema>
 type PasswordForm = z.infer<typeof changePasswordSchema>
@@ -36,6 +38,7 @@ export default function SettingsPage() {
   const [editingProfile, setEditingProfile] = useState(false)
   const [profileLoading, setProfileLoading] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
+  const [avatarLoading, setAvatarLoading] = useState(false)
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -74,6 +77,22 @@ export default function SettingsPage() {
     }
   }
 
+  const handleAvatarUpload = async (files: File[]) => {
+    if (!user || !files[0]) return
+    setAvatarLoading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', files[0])
+      const updated = await usersApi.uploadAvatar(user.id, fd)
+      setUser({ ...user, ...updated })
+      toast.success('Avatar updated')
+    } catch {
+      toast.error('Failed to upload avatar')
+    } finally {
+      setAvatarLoading(false)
+    }
+  }
+
   const handleLogout = async () => {
     const refreshToken = useAuthStore.getState().refreshToken
     try { if (refreshToken) await authApi.logout(refreshToken) } catch { /* ignore */ }
@@ -94,6 +113,22 @@ export default function SettingsPage() {
             )}
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="relative">
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="Avatar" className="h-16 w-16 rounded-full object-cover" />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-lg font-medium">
+                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <Label className="text-sm">Avatar</Label>
+                <FileUploader accept="image/*" maxSizeMB={2} preview={user?.avatarUrl} onUpload={handleAvatarUpload} />
+                {avatarLoading && <Progress value={undefined} className="h-1 mt-1" />}
+              </div>
+            </div>
             {editingProfile ? (
               <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4 animate-fade-in">
                 <div className="grid grid-cols-2 gap-4">

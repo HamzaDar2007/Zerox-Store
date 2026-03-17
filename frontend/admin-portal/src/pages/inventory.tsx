@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Pencil, Trash2, AlertTriangle, PackagePlus, ArrowUpDown } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, AlertTriangle, PackagePlus, ArrowUpDown, Lock, Unlock } from 'lucide-react'
 import { toast } from 'sonner'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
@@ -27,6 +27,8 @@ type WHFormData = z.infer<typeof whSchema>
 
 const setStockSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), qtyOnHand: z.coerce.number().int().min(0), lowStockThreshold: z.coerce.number().int().min(0).optional() })
 const adjustStockSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), adjustment: z.coerce.number().int(), reason: z.string().optional() })
+const reserveSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), quantity: z.coerce.number().int().min(1) })
+const releaseSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), quantity: z.coerce.number().int().min(1) })
 
 export default function InventoryPage() {
   const [whDialog, setWhDialog] = useState(false)
@@ -34,6 +36,8 @@ export default function InventoryPage() {
   const [deleteTarget, setDeleteTarget] = useState<Warehouse | null>(null)
   const [setStockDialog, setSetStockDialog] = useState(false)
   const [adjustStockDialog, setAdjustStockDialog] = useState(false)
+  const [reserveDialog, setReserveDialog] = useState(false)
+  const [releaseDialog, setReleaseDialog] = useState(false)
   const qc = useQueryClient()
 
   const { data: warehouses, isLoading: loadingWH } = useQuery({ queryKey: ['warehouses'], queryFn: warehousesApi.list })
@@ -46,8 +50,10 @@ export default function InventoryPage() {
   const updateM = useMutation({ mutationFn: ({ id, ...d }: WHFormData & { id: string }) => warehousesApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setWhDialog(false); setEditing(null); toast.success('Updated') }, onError: () => toast.error('Failed') })
   const deleteM = useMutation({ mutationFn: (id: string) => warehousesApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: () => toast.error('Failed') })
 
-  const setStockForm = useForm<z.infer<typeof setStockSchema>>({ resolver: zodResolver(setStockSchema) })
-  const adjustStockForm = useForm<z.infer<typeof adjustStockSchema>>({ resolver: zodResolver(adjustStockSchema) })
+  const setStockForm = useForm<z.infer<typeof setStockSchema>>({ resolver: zodResolver(setStockSchema) as any })
+  const adjustStockForm = useForm<z.infer<typeof adjustStockSchema>>({ resolver: zodResolver(adjustStockSchema) as any })
+  const reserveForm = useForm<z.infer<typeof reserveSchema>>({ resolver: zodResolver(reserveSchema) as any })
+  const releaseForm = useForm<z.infer<typeof releaseSchema>>({ resolver: zodResolver(releaseSchema) as any })
 
   const setStockM = useMutation({
     mutationFn: inventoryApi.set,
@@ -59,6 +65,18 @@ export default function InventoryPage() {
     mutationFn: inventoryApi.adjust,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['inventory'] }); qc.invalidateQueries({ queryKey: ['inventory', 'low-stock'] }); setAdjustStockDialog(false); adjustStockForm.reset(); toast.success('Stock adjusted') },
     onError: () => toast.error('Failed to adjust stock'),
+  })
+
+  const reserveM = useMutation({
+    mutationFn: inventoryApi.reserve,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['inventory'] }); qc.invalidateQueries({ queryKey: ['inventory', 'low-stock'] }); setReserveDialog(false); reserveForm.reset(); toast.success('Stock reserved') },
+    onError: () => toast.error('Failed to reserve stock'),
+  })
+
+  const releaseM = useMutation({
+    mutationFn: inventoryApi.release,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['inventory'] }); qc.invalidateQueries({ queryKey: ['inventory', 'low-stock'] }); setReleaseDialog(false); releaseForm.reset(); toast.success('Reservation released') },
+    onError: () => toast.error('Failed to release reservation'),
   })
 
   const openCreate = () => { setEditing(null); reset({ code: '', name: '', address: '', city: '', country: '', isActive: true }); setWhDialog(true) }
@@ -124,6 +142,12 @@ export default function InventoryPage() {
             <Button variant="outline" onClick={() => { adjustStockForm.reset({ warehouseId: '', variantId: '', adjustment: 0, reason: '' }); setAdjustStockDialog(true) }}>
               <ArrowUpDown className="mr-2 h-4 w-4" />Adjust Stock
             </Button>
+            <Button variant="outline" onClick={() => { reserveForm.reset({ warehouseId: '', variantId: '', quantity: 1 }); setReserveDialog(true) }}>
+              <Lock className="mr-2 h-4 w-4" />Reserve Stock
+            </Button>
+            <Button variant="outline" onClick={() => { releaseForm.reset({ warehouseId: '', variantId: '', quantity: 1 }); setReleaseDialog(true) }}>
+              <Unlock className="mr-2 h-4 w-4" />Release Reservation
+            </Button>
           </div>
           <DataTable columns={invColumns} data={inventory ?? []} isLoading={loadingInv} searchPlaceholder="Search inventory..."
             enableRowSelection
@@ -187,6 +211,32 @@ export default function InventoryPage() {
             <div className="space-y-2"><Label>Adjustment (positive to add, negative to remove)</Label><Input type="number" {...adjustStockForm.register('adjustment')} /></div>
             <div className="space-y-2"><Label>Reason (optional)</Label><Textarea {...adjustStockForm.register('reason')} placeholder="e.g., Damaged goods, Restock" /></div>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setAdjustStockDialog(false)}>Cancel</Button><Button type="submit" loading={adjustStockM.isPending}>Adjust</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reserve Stock Dialog */}
+      <Dialog open={reserveDialog} onOpenChange={setReserveDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Reserve Stock</DialogTitle><DialogDescription>Reserve inventory for pending orders</DialogDescription></DialogHeader>
+          <form onSubmit={reserveForm.handleSubmit((d) => reserveM.mutate(d))} className="space-y-4">
+            <div className="space-y-2"><Label>Warehouse ID</Label><Input {...reserveForm.register('warehouseId')} />{reserveForm.formState.errors.warehouseId && <p className="text-xs text-destructive">{reserveForm.formState.errors.warehouseId.message}</p>}</div>
+            <div className="space-y-2"><Label>Variant ID</Label><Input {...reserveForm.register('variantId')} />{reserveForm.formState.errors.variantId && <p className="text-xs text-destructive">{reserveForm.formState.errors.variantId.message}</p>}</div>
+            <div className="space-y-2"><Label>Quantity</Label><Input type="number" {...reserveForm.register('quantity')} /></div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setReserveDialog(false)}>Cancel</Button><Button type="submit" loading={reserveM.isPending}>Reserve</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Release Reservation Dialog */}
+      <Dialog open={releaseDialog} onOpenChange={setReleaseDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Release Reservation</DialogTitle><DialogDescription>Release previously reserved stock</DialogDescription></DialogHeader>
+          <form onSubmit={releaseForm.handleSubmit((d) => releaseM.mutate(d))} className="space-y-4">
+            <div className="space-y-2"><Label>Warehouse ID</Label><Input {...releaseForm.register('warehouseId')} />{releaseForm.formState.errors.warehouseId && <p className="text-xs text-destructive">{releaseForm.formState.errors.warehouseId.message}</p>}</div>
+            <div className="space-y-2"><Label>Variant ID</Label><Input {...releaseForm.register('variantId')} />{releaseForm.formState.errors.variantId && <p className="text-xs text-destructive">{releaseForm.formState.errors.variantId.message}</p>}</div>
+            <div className="space-y-2"><Label>Quantity</Label><Input type="number" {...releaseForm.register('quantity')} /></div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setReleaseDialog(false)}>Cancel</Button><Button type="submit" loading={releaseM.isPending}>Release</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

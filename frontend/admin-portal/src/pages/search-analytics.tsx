@@ -5,7 +5,7 @@ import { LoadingSpinner } from '@/components/shared/loading'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Badge } from '@/components/ui/badge'
 import { Search, TrendingUp, MousePointerClick } from 'lucide-react'
-import api from '@/config/api'
+import { searchApi } from '@/services/api'
 import type { SearchQuery } from '@/types'
 import { formatRelativeTime } from '@/lib/format'
 import { Animated, StaggeredList } from '@/components/shared/animated'
@@ -13,12 +13,12 @@ import { Animated, StaggeredList } from '@/components/shared/animated'
 export default function SearchAnalyticsPage() {
   const { data: popular, isLoading: loadingPopular } = useQuery({
     queryKey: ['search', 'popular'],
-    queryFn: () => api.get('/search/popular').then((r) => r.data as { query: string; count: number }[]),
+    queryFn: () => searchApi.popular() as unknown as Promise<{ query: string; count: number }[]>,
   })
 
   const { data: history, isLoading: loadingHistory } = useQuery({
     queryKey: ['search', 'history'],
-    queryFn: () => api.get('/search/history').then((r) => r.data as SearchQuery[]),
+    queryFn: () => searchApi.history() as Promise<SearchQuery[]>,
   })
 
   return (

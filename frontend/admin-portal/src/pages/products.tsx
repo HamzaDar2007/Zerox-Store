@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { productsApi } from '@/services/api'
-import type { Product, ProductVariant } from '@/types'
+import type { Product, ProductVariant, AttributeValue, ProductCategory } from '@/types'
 import { DataTable, SortHeader } from '@/components/shared/data-table'
 import { PageHeader } from '@/components/shared/page-header'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
@@ -15,7 +15,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Pencil, Trash2, Eye, Plus, X, Image as ImageIcon, Layers, Tag } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, Eye, Plus, X, Image as ImageIcon, Layers, Tag, List, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
@@ -44,6 +44,9 @@ type VariantFormData = z.infer<typeof variantSchema>
 
 const attrKeySchema = z.object({ name: z.string().min(1), inputType: z.string().min(1) })
 type AttrKeyFormData = z.infer<typeof attrKeySchema>
+
+const attrValueSchema = z.object({ value: z.string().min(1) })
+type AttrValueFormData = z.infer<typeof attrValueSchema>
 
 /* ── Variants sub-panel ── */
 function VariantsPanel({ productId }: { productId: string }) {
@@ -141,14 +144,34 @@ function ImagesPanel({ productId }: { productId: string }) {
   )
 }
 
-/* ── Attribute Keys panel (global) ── */
+/* ── Attribute Keys panel (global) with expandable values ── */
 function AttributeKeysPanel() {
   const qc = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [expandedKey, setExpandedKey] = useState<string | null>(null)
+  const [addValueOpen, setAddValueOpen] = useState(false)
   const { data: keys = [], isLoading } = useQuery({ queryKey: ['attribute-keys'], queryFn: productsApi.getAttributeKeys })
   const { register, handleSubmit, reset, formState: { errors } } = useForm<AttrKeyFormData>({ resolver: zodResolver(attrKeySchema) })
+  const valueForm = useForm<AttrValueFormData>({ resolver: zodResolver(attrValueSchema) })
   const createM = useMutation({ mutationFn: productsApi.createAttributeKey, onSuccess: () => { qc.invalidateQueries({ queryKey: ['attribute-keys'] }); setDialogOpen(false); reset(); toast.success('Created') }, onError: () => toast.error('Failed') })
   const deleteM = useMutation({ mutationFn: (id: string) => productsApi.deleteAttributeKey(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['attribute-keys'] }); toast.success('Deleted') }, onError: () => toast.error('Failed') })
+
+  const { data: values = [] } = useQuery({
+    queryKey: ['attribute-values', expandedKey],
+    queryFn: () => productsApi.getAttributeValues(expandedKey!),
+    enabled: !!expandedKey,
+  })
+
+  const createValueM = useMutation({
+    mutationFn: (d: AttrValueFormData) => productsApi.createAttributeValue(expandedKey!, d),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['attribute-values', expandedKey] }); setAddValueOpen(false); valueForm.reset(); toast.success('Value added') },
+    onError: () => toast.error('Failed'),
+  })
+  const deleteValueM = useMutation({
+    mutationFn: (id: string) => productsApi.deleteAttributeValue(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['attribute-values', expandedKey] }); toast.success('Deleted') },
+    onError: () => toast.error('Failed'),
+  })
 
   return (
     <div className="space-y-4">
@@ -157,12 +180,34 @@ function AttributeKeysPanel() {
         <Button size="sm" onClick={() => { reset({ name: '', inputType: 'text' }); setDialogOpen(true) }}><Plus className="mr-1 h-3 w-3" />Add Key</Button>
       </div>
       {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : !(Array.isArray(keys) ? keys : []).length ? <p className="text-sm text-muted-foreground">No attribute keys.</p> : (
-        <div className="flex flex-wrap gap-2">
+        <div className="space-y-2">
           {(Array.isArray(keys) ? keys : []).map((k) => (
-            <Badge key={k.id} variant="outline" className="gap-1.5 pr-1">
-              {k.name} <span className="text-muted-foreground">({k.inputType})</span>
-              <button onClick={() => deleteM.mutate(k.id)} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button>
-            </Badge>
+            <div key={k.id} className="rounded-lg border">
+              <div className="flex items-center justify-between p-3">
+                <button className="flex items-center gap-2 text-sm font-medium" onClick={() => setExpandedKey(expandedKey === k.id ? null : k.id)}>
+                  {k.name} <span className="text-muted-foreground">({k.inputType})</span>
+                </button>
+                <button onClick={() => deleteM.mutate(k.id)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
+              </div>
+              {expandedKey === k.id && (
+                <div className="border-t px-3 pb-3 pt-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Values</span>
+                    <Button size="sm" variant="ghost" onClick={() => { valueForm.reset({ value: '' }); setAddValueOpen(true) }}><Plus className="mr-1 h-3 w-3" />Add Value</Button>
+                  </div>
+                  {(Array.isArray(values) ? values : []).length ? (
+                    <div className="flex flex-wrap gap-1">
+                      {(values as AttributeValue[]).map((v) => (
+                        <Badge key={v.id} variant="secondary" className="gap-1 pr-1">
+                          {v.value}
+                          <button onClick={() => deleteValueM.mutate(v.id)} className="ml-1 hover:text-destructive"><X className="h-2.5 w-2.5" /></button>
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : <p className="text-xs text-muted-foreground">No values yet.</p>}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}
@@ -176,6 +221,68 @@ function AttributeKeysPanel() {
           </form>
         </DialogContent>
       </Dialog>
+      {/* Add Attribute Value Dialog */}
+      <Dialog open={addValueOpen} onOpenChange={setAddValueOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add Attribute Value</DialogTitle><DialogDescription>Add a new value for this attribute key</DialogDescription></DialogHeader>
+          <form onSubmit={valueForm.handleSubmit((d) => createValueM.mutate(d))} className="space-y-4">
+            <div className="space-y-2"><Label>Value</Label><Input {...valueForm.register('value')} />{valueForm.formState.errors.value && <p className="text-xs text-destructive">{valueForm.formState.errors.value.message}</p>}</div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setAddValueOpen(false)}>Cancel</Button><Button type="submit">Add</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+/* ── Product Categories panel ── */
+function CategoriesPanel({ productId }: { productId: string }) {
+  const qc = useQueryClient()
+  const [addOpen, setAddOpen] = useState(false)
+  const [categoryId, setCategoryId] = useState('')
+
+  const { data: productCategories = [], isLoading } = useQuery({
+    queryKey: ['product-categories', productId],
+    queryFn: () => productsApi.getProductCategories(productId),
+  })
+
+  const addM = useMutation({
+    mutationFn: () => productsApi.addProductCategory(productId, categoryId),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['product-categories', productId] }); setAddOpen(false); setCategoryId(''); toast.success('Category assigned') },
+    onError: () => toast.error('Failed to assign category'),
+  })
+
+  const removeM = useMutation({
+    mutationFn: (pcId: string) => productsApi.removeProductCategory(productId, pcId),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['product-categories', productId] }); toast.success('Category removed') },
+    onError: () => toast.error('Failed to remove category'),
+  })
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Categories</h3>
+        <Button size="sm" onClick={() => setAddOpen(true)}><Plus className="mr-1 h-3 w-3" />Assign Category</Button>
+      </div>
+      {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : !(productCategories as ProductCategory[]).length ? <p className="text-sm text-muted-foreground">No categories assigned.</p> : (
+        <div className="space-y-2">
+          {(productCategories as ProductCategory[]).map((pc) => (
+            <div key={pc.id} className="flex items-center justify-between rounded-lg border p-3">
+              <span className="text-sm">{pc.category?.name ?? pc.categoryId}</span>
+              <Button variant="ghost" size="icon" onClick={() => removeM.mutate(pc.categoryId)}><X className="h-3 w-3 text-destructive" /></Button>
+            </div>
+          ))}
+        </div>
+      )}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Assign Category</DialogTitle><DialogDescription>Add a category to this product</DialogDescription></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2"><Label>Category ID</Label><Input value={categoryId} onChange={(e) => setCategoryId(e.target.value)} placeholder="Enter category ID" /></div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button><Button onClick={() => addM.mutate()} disabled={!categoryId || addM.isPending}>Assign</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -187,7 +294,7 @@ export default function ProductsPage() {
   const [editing, setEditing] = useState<Product | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
   const [detailProduct, setDetailProduct] = useState<Product | null>(null)
-  const [detailTab, setDetailTab] = useState<'info' | 'variants' | 'images' | 'attributes'>('info')
+  const [detailTab, setDetailTab] = useState<'info' | 'variants' | 'images' | 'attributes' | 'categories'>('info')
   const qc = useQueryClient()
 
   const { data, isLoading } = useQuery({
@@ -278,7 +385,7 @@ export default function ProductsPage() {
 
           {/* Tab nav */}
           <div className="flex gap-1 border-b mt-4">
-            {([['info', 'Info', Tag], ['variants', 'Variants', Layers], ['images', 'Images', ImageIcon], ['attributes', 'Attributes', Tag]] as const).map(([key, label, Icon]) => (
+            {([['info', 'Info', Tag], ['variants', 'Variants', Layers], ['images', 'Images', ImageIcon], ['attributes', 'Attributes', Settings], ['categories', 'Categories', List]] as const).map(([key, label, Icon]) => (
               <button key={key} onClick={() => setDetailTab(key)} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors ${detailTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
                 <Icon className="h-4 w-4" />{label}
               </button>
@@ -304,6 +411,7 @@ export default function ProductsPage() {
           {detailProduct && detailTab === 'variants' && <VariantsPanel productId={detailProduct.id} />}
           {detailProduct && detailTab === 'images' && <ImagesPanel productId={detailProduct.id} />}
           {detailProduct && detailTab === 'attributes' && <AttributeKeysPanel />}
+          {detailProduct && detailTab === 'categories' && <CategoriesPanel productId={detailProduct.id} />}
           </div>
         </SheetContent>
       </Sheet>

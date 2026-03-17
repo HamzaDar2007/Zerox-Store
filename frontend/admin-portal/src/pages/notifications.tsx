@@ -4,22 +4,43 @@ import { notificationsApi } from '@/services/api'
 import type { Notification } from '@/types'
 import { PageHeader } from '@/components/shared/page-header'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LoadingPage } from '@/components/shared/loading'
 import { EmptyState } from '@/components/shared/empty-state'
-import { Bell, CheckCheck, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Bell, CheckCheck, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDateTime } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
 import { VirtualizedList } from '@/components/shared/virtualized-list'
+import { useForm, Controller } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+const notifySchema = z.object({
+  userId: z.string().min(1, 'User ID required'),
+  channel: z.string().min(1),
+  type: z.string().min(1),
+  title: z.string().min(1, 'Title required'),
+  body: z.string().min(1, 'Body required'),
+  actionUrl: z.string().optional(),
+})
+type NotifyFormData = z.infer<typeof notifySchema>
 
 export default function NotificationsPage() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
+  const [createOpen, setCreateOpen] = useState(false)
   const limit = 20
+
+  const notifyForm = useForm<NotifyFormData>({ resolver: zodResolver(notifySchema) })
 
   const { data, isLoading } = useQuery({
     queryKey: ['notifications', { page, limit }],
@@ -39,6 +60,12 @@ export default function NotificationsPage() {
   const deleteM = useMutation({
     mutationFn: notificationsApi.delete,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['notifications'] }); toast.success('Deleted') },
+  })
+
+  const createM = useMutation({
+    mutationFn: notificationsApi.create,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['notifications'] }); setCreateOpen(false); notifyForm.reset(); toast.success('Notification sent') },
+    onError: () => toast.error('Failed to send notification'),
   })
 
   if (isLoading) return <LoadingPage />
@@ -72,6 +99,9 @@ export default function NotificationsPage() {
           </div>
           <Button variant="outline" onClick={() => markAllReadM.mutate()} disabled={markAllReadM.isPending}>
             <CheckCheck className="mr-2 h-4 w-4" />Mark All Read
+          </Button>
+          <Button onClick={() => { notifyForm.reset({ userId: '', channel: 'in_app', type: 'info', title: '', body: '', actionUrl: '' }); setCreateOpen(true) }}>
+            <Plus className="mr-2 h-4 w-4" />Send Notification
           </Button>
         </div>
       </PageHeader>
@@ -128,6 +158,32 @@ export default function NotificationsPage() {
           </Button>
         </div>
       )}
+
+      {/* Create Notification Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Send Notification</DialogTitle><DialogDescription>Send a notification to a user</DialogDescription></DialogHeader>
+          <form onSubmit={notifyForm.handleSubmit((d) => createM.mutate(d))} className="space-y-4">
+            <div className="space-y-2"><Label>User ID</Label><Input {...notifyForm.register('userId')} placeholder="Target user ID" />{notifyForm.formState.errors.userId && <p className="text-xs text-destructive">{notifyForm.formState.errors.userId.message}</p>}</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Channel</Label>
+                <Controller name="channel" control={notifyForm.control} render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="in_app">In-App</SelectItem><SelectItem value="email">Email</SelectItem><SelectItem value="push">Push</SelectItem></SelectContent></Select>
+                )} />
+              </div>
+              <div className="space-y-2"><Label>Type</Label>
+                <Controller name="type" control={notifyForm.control} render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="info">Info</SelectItem><SelectItem value="warning">Warning</SelectItem><SelectItem value="success">Success</SelectItem><SelectItem value="error">Error</SelectItem></SelectContent></Select>
+                )} />
+              </div>
+            </div>
+            <div className="space-y-2"><Label>Title</Label><Input {...notifyForm.register('title')} />{notifyForm.formState.errors.title && <p className="text-xs text-destructive">{notifyForm.formState.errors.title.message}</p>}</div>
+            <div className="space-y-2"><Label>Body</Label><Textarea {...notifyForm.register('body')} />{notifyForm.formState.errors.body && <p className="text-xs text-destructive">{notifyForm.formState.errors.body.message}</p>}</div>
+            <div className="space-y-2"><Label>Action URL (optional)</Label><Input {...notifyForm.register('actionUrl')} placeholder="/orders/..." /></div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button><Button type="submit" disabled={createM.isPending}>Send</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

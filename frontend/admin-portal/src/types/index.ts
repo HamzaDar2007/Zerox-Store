@@ -212,6 +212,22 @@ export interface AttributeValue {
   value: string
 }
 
+export interface VariantAttributeValue {
+  id: string
+  variantId: string
+  attributeKeyId: string
+  attributeValueId: string
+  attributeKey?: AttributeKey
+  attributeValue?: AttributeValue
+}
+
+export interface ProductCategory {
+  id: string
+  productId: string
+  categoryId: string
+  category?: Category
+}
+
 // Cart & Coupons
 export interface Coupon {
   id: string
@@ -228,6 +244,14 @@ export interface Coupon {
   isActive: boolean
   createdAt: string
   updatedAt: string
+}
+
+export interface CouponScope {
+  id: string
+  couponId: string
+  scopeType: string
+  scopeId: string
+  createdAt: string
 }
 
 export interface FlashSale {
@@ -346,6 +370,13 @@ export interface ShippingMethod {
   minDeliveryDays?: number
   maxDeliveryDays?: number
   isActive: boolean
+  createdAt: string
+}
+
+export interface ShippingZoneCountry {
+  id: string
+  zoneId: string
+  countryCode: string
   createdAt: string
 }
 

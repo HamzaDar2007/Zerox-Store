@@ -13,12 +13,14 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDate } from '@/lib/utils'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { FileUploader } from '@/components/shared/file-uploader'
+import { Progress } from '@/components/ui/progress'
 
 const schema = z.object({ name: z.string().min(1), slug: z.string().min(1), websiteUrl: z.string().optional(), isActive: z.boolean().default(true) })
 type FormData = z.infer<typeof schema>
@@ -27,6 +29,7 @@ export default function BrandsPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Brand | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null)
+  const [uploadTarget, setUploadTarget] = useState<Brand | null>(null)
   const qc = useQueryClient()
 
   const { data, isLoading } = useQuery({ queryKey: ['brands'], queryFn: brandsApi.list })
@@ -35,6 +38,15 @@ export default function BrandsPage() {
   const createM = useMutation({ mutationFn: brandsApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['brands'] }); setDialogOpen(false); reset(); toast.success('Brand created') }, onError: () => toast.error('Failed') })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => brandsApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['brands'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: () => toast.error('Failed') })
   const deleteM = useMutation({ mutationFn: (id: string) => brandsApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['brands'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: () => toast.error('Failed') })
+
+  const uploadLogoM = useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => {
+      const fd = new FormData(); fd.append('file', file)
+      return brandsApi.uploadLogo(id, fd)
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['brands'] }); toast.success('Logo uploaded') },
+    onError: () => toast.error('Logo upload failed'),
+  })
 
   const openCreate = () => { setEditing(null); reset({ name: '', slug: '', websiteUrl: '', isActive: true }); setDialogOpen(true) }
   const openEdit = (b: Brand) => { setEditing(b); reset({ name: b.name, slug: b.slug, websiteUrl: b.websiteUrl ?? '', isActive: b.isActive }); setDialogOpen(true) }
@@ -52,6 +64,7 @@ export default function BrandsPage() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => openEdit(row.original)}><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setUploadTarget(row.original)}><ImageIcon className="mr-2 h-4 w-4" />Upload Logo</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -80,6 +93,18 @@ export default function BrandsPage() {
         </DialogContent>
       </Dialog>
       <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Delete Brand" description={`Delete "${deleteTarget?.name}"?`} confirmLabel="Delete" onConfirm={() => deleteTarget && deleteM.mutate(deleteTarget.id)} loading={deleteM.isPending} />
+
+      {/* Logo Upload Dialog */}
+      <Dialog open={!!uploadTarget} onOpenChange={() => setUploadTarget(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Upload Brand Logo</DialogTitle><DialogDescription>{uploadTarget?.name}</DialogDescription></DialogHeader>
+          <div className="space-y-4">
+            {uploadTarget?.logoUrl && <img src={uploadTarget.logoUrl} alt={uploadTarget.name} className="h-24 w-24 rounded-md object-cover" />}
+            <FileUploader accept="image/*" maxSizeMB={2} preview={uploadTarget?.logoUrl} onUpload={(files) => { if (files[0] && uploadTarget) uploadLogoM.mutate({ id: uploadTarget.id, file: files[0] }) }} />
+            {uploadLogoM.isPending && <Progress value={undefined} className="h-1" />}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

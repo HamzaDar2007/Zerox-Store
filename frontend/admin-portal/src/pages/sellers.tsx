@@ -8,22 +8,44 @@ import { PageHeader } from '@/components/shared/page-header'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, CheckCircle, Trash2, Eye } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+const createSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+  displayName: z.string().min(1, 'Display name is required'),
+  legalName: z.string().optional(),
+  taxId: z.string().optional(),
+  commissionRate: z.coerce.number().min(0).max(100).optional(),
+})
+type CreateFormData = z.infer<typeof createSchema>
 
 export default function SellersPage() {
   const [detail, setDetail] = useState<Seller | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Seller | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
   const qc = useQueryClient()
 
   const { data, isLoading } = useQuery({ queryKey: ['sellers'], queryFn: sellersApi.list })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateFormData>({ resolver: zodResolver(createSchema) as any })
+
+  const createM = useMutation({
+    mutationFn: sellersApi.create,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['sellers'] }); setCreateOpen(false); reset(); toast.success('Seller created') },
+    onError: () => toast.error('Failed to create seller'),
+  })
 
   const approveM = useMutation({
-    mutationFn: (id: string) => sellersApi.update(id, { status: 'active' }),
+    mutationFn: (id: string) => sellersApi.approve(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['sellers'] }); toast.success('Seller approved') },
     onError: () => toast.error('Failed to approve'),
   })
@@ -62,7 +84,7 @@ export default function SellersPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <PageHeader title="Sellers" description="View and manage sellers" />
+      <PageHeader title="Sellers" description="View and manage sellers" action={{ label: 'Add Seller', onClick: () => { reset({ userId: '', displayName: '', legalName: '', taxId: '', commissionRate: undefined }); setCreateOpen(true) } }} />
       <DataTable columns={columns} data={data ?? []} isLoading={isLoading} searchColumn="displayName" searchPlaceholder="Search sellers..."
         enableRowSelection
         onBulkDelete={(rows) => {
@@ -110,6 +132,23 @@ export default function SellersPage() {
       </Dialog>
 
       <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Delete Seller" description={`Delete seller "${deleteTarget?.displayName}"? This action cannot be undone.`} confirmLabel="Delete" onConfirm={() => deleteTarget && deleteM.mutate(deleteTarget.id)} loading={deleteM.isPending} />
+
+      {/* Create Seller Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Create Seller</DialogTitle><DialogDescription>Register a new seller account</DialogDescription></DialogHeader>
+          <form onSubmit={handleSubmit((d) => createM.mutate(d))} className="space-y-4">
+            <div className="space-y-2"><Label>User ID</Label><Input {...register('userId')} placeholder="Existing user ID" />{errors.userId && <p className="text-xs text-destructive">{errors.userId.message}</p>}</div>
+            <div className="space-y-2"><Label>Display Name</Label><Input {...register('displayName')} />{errors.displayName && <p className="text-xs text-destructive">{errors.displayName.message}</p>}</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Legal Name</Label><Input {...register('legalName')} /></div>
+              <div className="space-y-2"><Label>Tax ID</Label><Input {...register('taxId')} /></div>
+            </div>
+            <div className="space-y-2"><Label>Commission Rate (%)</Label><Input type="number" step="0.01" {...register('commissionRate')} /></div>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button><Button type="submit" disabled={createM.isPending}>Create</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

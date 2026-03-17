@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { shippingApi } from '@/services/api'
-import type { ShippingZone, ShippingMethod, Shipment, ShipmentEvent } from '@/types'
+import type { ShippingZone, ShippingMethod, Shipment, ShipmentEvent, ShippingZoneCountry } from '@/types'
 import { DataTable, SortHeader } from '@/components/shared/data-table'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatusBadge } from '@/components/shared/status-badge'
@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Pencil, Eye, Plus, MapPin } from 'lucide-react'
+import { MoreHorizontal, Pencil, Eye, Plus, MapPin, Globe, X } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
@@ -28,6 +29,8 @@ export default function ShippingPage() {
   const [methodDialog, setMethodDialog] = useState(false)
   const [editingZone, setEditingZone] = useState<ShippingZone | null>(null)
   const [editingMethod, setEditingMethod] = useState<ShippingMethod | null>(null)
+  const [countriesZone, setCountriesZone] = useState<ShippingZone | null>(null)
+  const [addCountryCode, setAddCountryCode] = useState('')
   const qc = useQueryClient()
 
   const { data: zones, isLoading: loadingZones } = useQuery({ queryKey: ['shipping-zones'], queryFn: shippingApi.listZones })
@@ -35,6 +38,18 @@ export default function ShippingPage() {
 
   const zoneForm = useForm<z.infer<typeof zoneSchema>>({ resolver: zodResolver(zoneSchema) })
   const methodForm = useForm<z.infer<typeof methodSchema>>({ resolver: zodResolver(methodSchema) as any })
+
+  const { data: zoneCountries, refetch: refetchCountries } = useQuery({
+    queryKey: ['zone-countries', countriesZone?.id],
+    queryFn: () => shippingApi.getCountries(countriesZone!.id),
+    enabled: !!countriesZone,
+  })
+
+  const addCountryM = useMutation({
+    mutationFn: () => shippingApi.addCountry(countriesZone!.id, { countryCode: addCountryCode }),
+    onSuccess: () => { refetchCountries(); setAddCountryCode(''); toast.success('Country added') },
+    onError: () => toast.error('Failed to add country'),
+  })
 
   const createZoneM = useMutation({ mutationFn: shippingApi.createZone, onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-zones'] }); setZoneDialog(false); setEditingZone(null); zoneForm.reset(); toast.success('Zone created') }, onError: () => toast.error('Failed') })
   const updateZoneM = useMutation({ mutationFn: ({ id, ...d }: { id: string; name: string }) => shippingApi.updateZone(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-zones'] }); setZoneDialog(false); setEditingZone(null); zoneForm.reset(); toast.success('Zone updated') }, onError: () => toast.error('Failed') })
@@ -72,6 +87,7 @@ export default function ShippingPage() {
           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => openEditZone(row.original)}><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setCountriesZone(row.original)}><Globe className="mr-2 h-4 w-4" />Countries</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -134,6 +150,29 @@ export default function ShippingPage() {
             <div className="space-y-2"><Label>Name</Label><Input {...zoneForm.register('name')} /></div>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setZoneDialog(false)}>Cancel</Button><Button type="submit" disabled={createZoneM.isPending || updateZoneM.isPending}>{editingZone ? 'Update' : 'Create'}</Button></DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Zone Countries Dialog */}
+      <Dialog open={!!countriesZone} onOpenChange={() => setCountriesZone(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Zone Countries</DialogTitle><DialogDescription>Manage countries for zone "{countriesZone?.name}"</DialogDescription></DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input placeholder="Country code (e.g. US, GB)" value={addCountryCode} onChange={(e) => setAddCountryCode(e.target.value.toUpperCase())} maxLength={2} className="flex-1" />
+              <Button onClick={() => addCountryM.mutate()} disabled={addCountryCode.length !== 2 || addCountryM.isPending}>Add</Button>
+            </div>
+            {(zoneCountries as ShippingZoneCountry[] | undefined)?.length ? (
+              <div className="flex flex-wrap gap-2">
+                {(zoneCountries as ShippingZoneCountry[]).map((c) => (
+                  <Badge key={c.id} variant="outline" className="gap-1 pr-1">
+                    {c.countryCode}
+                    <button onClick={() => { /* removeCountry not yet in API, but the ID is available */ toast.info('Country: ' + c.countryCode) }} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button>
+                  </Badge>
+                ))}
+              </div>
+            ) : <p className="text-sm text-muted-foreground">No countries added yet.</p>}
+          </div>
         </DialogContent>
       </Dialog>
 
