@@ -93,6 +93,7 @@ export class UsersController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
+    @Query('role') role?: string,
   ) {
     const safePage = page ? Math.max(1, +page) : undefined;
     const safeLimit = limit ? Math.min(Math.max(1, +limit), 100) : undefined;
@@ -100,6 +101,7 @@ export class UsersController {
       page: safePage,
       limit: safeLimit,
       search,
+      role,
     });
   }
 

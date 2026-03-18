@@ -37,7 +37,7 @@ export default function SellersPage() {
   const qc = useQueryClient()
 
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['sellers'], queryFn: sellersApi.list })
-  const { data: usersForDropdown } = useQuery({ queryKey: ['users', { page: 1, limit: 200 }], queryFn: () => usersApi.list({ page: 1, limit: 200 }) })
+  const { data: usersForDropdown } = useQuery({ queryKey: ['users', { page: 1, limit: 200, role: 'seller' }], queryFn: () => usersApi.list({ page: 1, limit: 200, role: 'seller' }) })
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<CreateFormData>({ resolver: zodResolver(createSchema) as any })
 
   const createM = useMutation({

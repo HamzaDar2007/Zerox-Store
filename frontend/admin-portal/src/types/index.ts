@@ -51,6 +51,7 @@ export interface User {
   updatedAt: string
   role?: string
   roles?: UserRole[]
+  userRoles?: UserRole[]
 }
 
 export interface UserRole {

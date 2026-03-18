@@ -36,13 +36,19 @@ export class UsersService {
     page?: number;
     limit?: number;
     search?: string;
+    role?: string;
   }): Promise<{ data: User[]; total: number }> {
-    const qb = this.userRepo.createQueryBuilder('u');
+    const qb = this.userRepo.createQueryBuilder('u')
+      .leftJoinAndSelect('u.userRoles', 'ur')
+      .leftJoinAndSelect('ur.role', 'r');
     if (options?.search) {
-      qb.where(
+      qb.andWhere(
         'u.email ILIKE :s OR u.firstName ILIKE :s OR u.lastName ILIKE :s',
         { s: `%${options.search}%` },
       );
+    }
+    if (options?.role) {
+      qb.andWhere('r.name ILIKE :role', { role: options.role });
     }
     const p = options?.page || 1;
     const l = options?.limit || 20;

@@ -205,7 +205,10 @@ export default function UsersPage() {
   const columns: ColumnDef<User>[] = [
     { accessorKey: 'firstName', header: ({ column }) => <SortHeader column={column}>Name</SortHeader>, cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}` },
     { accessorKey: 'email', header: ({ column }) => <SortHeader column={column}>Email</SortHeader> },
-    { accessorKey: 'role', header: 'Role', cell: ({ row }) => <Badge variant="outline">{row.original.role ?? '—'}</Badge> },
+    { accessorKey: 'role', header: 'Role', cell: ({ row }) => {
+      const roles = row.original.userRoles?.map((ur) => ur.role?.name).filter(Boolean)
+      return roles?.length ? <div className="flex flex-wrap gap-1">{roles.map((r, i) => <Badge key={i} variant="outline">{r}</Badge>)}</div> : <Badge variant="outline">—</Badge>
+    } },
     { accessorKey: 'isActive', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.isActive ? 'active' : 'inactive'} /> },
     { accessorKey: 'isEmailVerified', header: 'Verified', cell: ({ row }) => <Badge variant={row.original.isEmailVerified ? 'success' : 'secondary'}>{row.original.isEmailVerified ? 'Yes' : 'No'}</Badge> },
     { accessorKey: 'createdAt', header: ({ column }) => <SortHeader column={column}>Created</SortHeader>, cell: ({ row }) => formatDate(row.original.createdAt) },

@@ -82,7 +82,7 @@ export const authApi = {
 
 // ─── Users ─────────────────────
 export const usersApi = {
-  list: (params?: { page?: number; limit?: number; search?: string }) =>
+  list: (params?: { page?: number; limit?: number; search?: string; role?: string }) =>
     api.get('/users', { params }).then((r) => toPaginated<User>(r.data, params)),
   get: (id: string) => api.get<User>(`/users/${id}`).then((r) => r.data),
   create: (data: Partial<User> & { password: string }) =>
@@ -230,7 +230,7 @@ export const productsApi = {
   // Attribute Keys
   getAttributeKeys: () => api.get<AttributeKey[]>('/products/attributes/keys').then((r) => r.data),
   getAttributeKey: (id: string) => api.get<AttributeKey>(`/products/attributes/keys/${id}`).then((r) => r.data),
-  createAttributeKey: (data: { name: string; inputType: string }) =>
+  createAttributeKey: (data: { name: string; inputType: string; slug?: string }) =>
     api.post<AttributeKey>('/products/attributes/keys', data).then((r) => r.data),
   updateAttributeKey: (id: string, data: { name?: string; inputType?: string }) =>
     api.put<AttributeKey>(`/products/attributes/keys/${id}`, data).then((r) => r.data),

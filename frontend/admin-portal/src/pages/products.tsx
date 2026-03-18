@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
 import { productsApi, storesApi, categoriesApi, brandsApi } from '@/services/api'
-import type { Product, ProductVariant, AttributeValue, ProductCategory, Store, Category, Brand } from '@/types'
+import type { Product, ProductVariant, AttributeValue, Store, Category, Brand } from '@/types'
 import { DataTable, SortHeader } from '@/components/shared/data-table'
 import { PageHeader } from '@/components/shared/page-header'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
@@ -15,7 +15,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Pencil, Trash2, Eye, Plus, X, Image as ImageIcon, Layers, Tag, List, Settings } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, Eye, Plus, X, Image as ImageIcon, Layers, Tag, Settings, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -165,7 +165,7 @@ function AttributeKeysPanel() {
   const { data: keys = [], isLoading } = useQuery({ queryKey: ['attribute-keys'], queryFn: productsApi.getAttributeKeys })
   const { register, handleSubmit, reset, formState: { errors } } = useForm<AttrKeyFormData>({ resolver: zodResolver(attrKeySchema) as any })
   const valueForm = useForm<AttrValueFormData>({ resolver: zodResolver(attrValueSchema) as any })
-  const createM = useMutation({ mutationFn: productsApi.createAttributeKey, onSuccess: () => { qc.invalidateQueries({ queryKey: ['attribute-keys'] }); setDialogOpen(false); reset(); toast.success('Created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const createM = useMutation({ mutationFn: (d: AttrKeyFormData) => productsApi.createAttributeKey({ ...d, slug: d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') }), onSuccess: () => { qc.invalidateQueries({ queryKey: ['attribute-keys'] }); setDialogOpen(false); reset(); toast.success('Created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const deleteM = useMutation({ mutationFn: (id: string) => productsApi.deleteAttributeKey(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['attribute-keys'] }); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
   const { data: values = [] } = useQuery({
@@ -247,66 +247,14 @@ function AttributeKeysPanel() {
   )
 }
 
-/* ── Product Categories panel ── */
-function CategoriesPanel({ productId }: { productId: string }) {
-  const qc = useQueryClient()
-  const [addOpen, setAddOpen] = useState(false)
-  const [categoryId, setCategoryId] = useState('')
-
-  const { data: productCategories = [], isLoading } = useQuery({
-    queryKey: ['product-categories', productId],
-    queryFn: () => productsApi.getProductCategories(productId),
-  })
-
-  const addM = useMutation({
-    mutationFn: () => productsApi.addProductCategory(productId, categoryId),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['product-categories', productId] }); setAddOpen(false); setCategoryId(''); toast.success('Category assigned') },
-    onError: (e) => toast.error(getErrorMessage(e, 'Failed to assign category')),
-  })
-
-  const removeM = useMutation({
-    mutationFn: (pcId: string) => productsApi.removeProductCategory(productId, pcId),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['product-categories', productId] }); toast.success('Category removed') },
-    onError: (e) => toast.error(getErrorMessage(e, 'Failed to remove category')),
-  })
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Categories</h3>
-        <Button size="sm" onClick={() => setAddOpen(true)}><Plus className="mr-1 h-3 w-3" />Assign Category</Button>
-      </div>
-      {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> : !(productCategories as ProductCategory[]).length ? <p className="text-sm text-muted-foreground">No categories assigned.</p> : (
-        <div className="space-y-2">
-          {(productCategories as ProductCategory[]).map((pc) => (
-            <div key={pc.id} className="flex items-center justify-between rounded-lg border p-3">
-              <span className="text-sm">{pc.category?.name ?? pc.categoryId}</span>
-              <Button variant="ghost" size="icon" onClick={() => removeM.mutate(pc.categoryId)}><X className="h-3 w-3 text-destructive" /></Button>
-            </div>
-          ))}
-        </div>
-      )}
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Assign Category</DialogTitle><DialogDescription>Add a category to this product</DialogDescription></DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2"><Label>Category ID</Label><Input value={categoryId} onChange={(e) => setCategoryId(e.target.value)} placeholder="Enter category ID" /></div>
-          </div>
-          <DialogFooter><Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button><Button onClick={() => addM.mutate()} disabled={!categoryId || addM.isPending}>Assign</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  )
-}
-
 export default function ProductsPage() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editing, setEditing] = useState<Product | null>(null)
+  const [editMode, setEditMode] = useState<'list' | 'form'>('list')
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [activeTab, setActiveTab] = useState<'details' | 'variants' | 'images' | 'attributes'>('details')
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
   const [detailProduct, setDetailProduct] = useState<Product | null>(null)
-  const [detailTab, setDetailTab] = useState<'info' | 'variants' | 'images' | 'attributes' | 'categories'>('info')
   const qc = useQueryClient()
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -320,13 +268,39 @@ export default function ProductsPage() {
   const { data: categoriesForDropdown } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list })
   const { data: brandsForDropdown } = useQuery({ queryKey: ['brands'], queryFn: brandsApi.list })
 
-  const createM = useMutation({ mutationFn: productsApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['products'] }); setDialogOpen(false); reset(); toast.success('Product created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
-  const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => productsApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['products'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const isExistingProduct = !!editingProduct
+
+  const createM = useMutation({
+    mutationFn: productsApi.create,
+    onSuccess: (newProduct) => {
+      qc.invalidateQueries({ queryKey: ['products'] })
+      setEditingProduct(newProduct)
+      setActiveTab('variants')
+      toast.success('Product created — now add variants, images & attributes')
+    },
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed')),
+  })
+  const updateM = useMutation({
+    mutationFn: ({ id, ...d }: FormData & { id: string }) => productsApi.update(id, d),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['products'] }); toast.success('Updated') },
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed')),
+  })
   const deleteM = useMutation({ mutationFn: (id: string) => productsApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['products'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
-  const openCreate = () => { setEditing(null); reset({ name: '', slug: '', shortDesc: '', fullDesc: '', basePrice: 0, currency: 'USD', storeId: '', categoryId: '', brandId: '', isActive: true, isDigital: false, taxClass: '', status: 'draft' }); setDialogOpen(true) }
-  const openEdit = (p: Product) => { setEditing(p); reset({ name: p.name, slug: p.slug, shortDesc: p.shortDesc ?? '', fullDesc: p.fullDesc ?? '', basePrice: p.basePrice, currency: p.currency ?? 'USD', storeId: p.storeId, categoryId: p.categoryId ?? '', brandId: p.brandId ?? '', isActive: p.isActive, isDigital: p.isDigital ?? false, taxClass: p.taxClass ?? '', status: p.status }); setDialogOpen(true) }
-  const onSubmit = (d: FormData) => editing ? updateM.mutate({ ...d, id: editing.id }) : createM.mutate(d)
+  const openCreate = () => {
+    setEditingProduct(null)
+    setActiveTab('details')
+    reset({ name: '', slug: '', shortDesc: '', fullDesc: '', basePrice: 0, currency: 'USD', storeId: '', categoryId: '', brandId: '', isActive: true, isDigital: false, taxClass: '', status: 'draft' })
+    setEditMode('form')
+  }
+  const openEdit = (p: Product) => {
+    setEditingProduct(p)
+    setActiveTab('details')
+    reset({ name: p.name, slug: p.slug, shortDesc: p.shortDesc ?? '', fullDesc: p.fullDesc ?? '', basePrice: p.basePrice, currency: p.currency ?? 'USD', storeId: p.storeId, categoryId: p.categoryId ?? '', brandId: p.brandId ?? '', isActive: p.isActive, isDigital: p.isDigital ?? false, taxClass: p.taxClass ?? '', status: p.status })
+    setEditMode('form')
+  }
+  const onSubmit = (d: FormData) => editingProduct ? updateM.mutate({ ...d, id: editingProduct.id }) : createM.mutate(d)
+  const goBack = () => { setEditMode('list'); setEditingProduct(null) }
 
   const columns: ColumnDef<Product>[] = [
     { accessorKey: 'name', header: ({ column }) => <SortHeader column={column}>Name</SortHeader> },
@@ -339,7 +313,7 @@ export default function ProductsPage() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => { setDetailProduct(row.original); setDetailTab('info') }}><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setDetailProduct(row.original) }}><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
             <DropdownMenuItem onClick={() => openEdit(row.original)}><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteTarget(row.original)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
           </DropdownMenuContent>
@@ -348,6 +322,111 @@ export default function ProductsPage() {
     },
   ]
 
+  /* ── Full-page form view ── */
+  if (editMode === 'form') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={goBack}><ArrowLeft className="h-4 w-4" /></Button>
+          <h1 className="text-xl font-semibold">{isExistingProduct ? `Edit: ${editingProduct.name}` : 'Create Product'}</h1>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 border-b">
+          {([
+            ['details', 'Details', Tag, true],
+            ['variants', 'Variants', Layers, isExistingProduct],
+            ['images', 'Images', ImageIcon, isExistingProduct],
+            ['attributes', 'Attributes', Settings, true],
+          ] as const).map(([key, label, Icon, enabled]) => (
+            <button
+              key={key}
+              onClick={() => enabled && setActiveTab(key)}
+              disabled={!enabled}
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === key ? 'border-primary text-primary' : enabled ? 'border-transparent text-muted-foreground hover:text-foreground' : 'border-transparent text-muted-foreground/40 cursor-not-allowed'}`}
+            >
+              <Icon className="h-4 w-4" />{label}
+            </button>
+          ))}
+        </div>
+
+        {/* Details tab */}
+        {activeTab === 'details' && (
+          <Card>
+            <CardContent className="pt-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2"><Label>Name</Label><Input {...register('name')} />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
+                  <div className="space-y-2"><Label>Slug</Label><Input {...register('slug')} />{errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}</div>
+                </div>
+                <div className="space-y-2"><Label>Short Description</Label><Textarea {...register('shortDesc')} /></div>
+                <div className="space-y-2"><Label>Full Description</Label><Textarea {...register('fullDesc')} /></div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2"><Label>Base Price</Label><Input type="number" step="0.01" {...register('basePrice')} />{errors.basePrice && <p className="text-xs text-destructive">{errors.basePrice.message}</p>}</div>
+                  <div className="space-y-2"><Label>Currency</Label><Input {...register('currency')} maxLength={3} placeholder="USD" /></div>
+                  <div className="space-y-2"><Label>Tax Class</Label><Input {...register('taxClass')} placeholder="standard" /></div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2"><Label>Store</Label>
+                    <Controller name="storeId" control={control} render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger><SelectValue placeholder="Select store" /></SelectTrigger>
+                        <SelectContent>{(storesForDropdown ?? []).map((s: Store) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    )} />
+                    {errors.storeId && <p className="text-xs text-destructive">{errors.storeId.message}</p>}
+                  </div>
+                  <div className="space-y-2"><Label>Category</Label>
+                    <Controller name="categoryId" control={control} render={({ field }) => (
+                      <Select value={field.value ?? ''} onValueChange={(v) => field.onChange(v || undefined)}>
+                        <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                        <SelectContent>{(categoriesForDropdown ?? []).map((c: Category) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    )} />
+                  </div>
+                  <div className="space-y-2"><Label>Brand</Label>
+                    <Controller name="brandId" control={control} render={({ field }) => (
+                      <Select value={field.value ?? ''} onValueChange={(v) => field.onChange(v || undefined)}>
+                        <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                        <SelectContent>{(brandsForDropdown ?? []).map((b: Brand) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    )} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2"><Label>Status</Label>
+                    <Controller name="status" control={control} render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="draft">Draft</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="archived">Archived</SelectItem></SelectContent></Select>
+                    )} />
+                  </div>
+                  <div className="flex items-center gap-4 pt-6">
+                    <div className="flex items-center gap-2"><Controller name="isActive" control={control} render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />} /><Label>Active</Label></div>
+                    <div className="flex items-center gap-2"><Controller name="isDigital" control={control} render={({ field }) => <Switch checked={field.value ?? false} onCheckedChange={field.onChange} />} /><Label>Digital</Label></div>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button type="button" variant="outline" onClick={goBack}>Cancel</Button>
+                  <Button type="submit" disabled={createM.isPending || updateM.isPending}>{isExistingProduct ? 'Update' : 'Create'}</Button>
+                </div>
+                {!isExistingProduct && <p className="text-xs text-muted-foreground text-center">Save the product first to unlock Variants &amp; Images tabs</p>}
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Variants tab */}
+        {activeTab === 'variants' && isExistingProduct && <VariantsPanel productId={editingProduct.id} />}
+
+        {/* Images tab */}
+        {activeTab === 'images' && isExistingProduct && <ImagesPanel productId={editingProduct.id} />}
+
+        {/* Attributes tab */}
+        {activeTab === 'attributes' && <AttributeKeysPanel />}
+      </div>
+    )
+  }
+
+  /* ── List view ── */
   return (
     <div className="space-y-6">
       <PageHeader title="Products" description="Manage products" action={{ label: 'Add Product', onClick: openCreate }} />
@@ -376,86 +455,17 @@ export default function ProductsPage() {
         getExportRow={(p) => ({ Name: p.name, Price: p.basePrice, Status: p.status, Active: p.isActive ? 'Yes' : 'No', Created: p.createdAt })}
       />
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>{editing ? 'Edit Product' : 'Create Product'}</DialogTitle><DialogDescription>{editing ? 'Update product' : 'Add new product'}</DialogDescription></DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Name</Label><Input {...register('name')} />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
-              <div className="space-y-2"><Label>Slug</Label><Input {...register('slug')} />{errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}</div>
-            </div>
-            <div className="space-y-2"><Label>Short Description</Label><Textarea {...register('shortDesc')} /></div>
-            <div className="space-y-2"><Label>Full Description</Label><Textarea {...register('fullDesc')} /></div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2"><Label>Base Price</Label><Input type="number" step="0.01" {...register('basePrice')} />{errors.basePrice && <p className="text-xs text-destructive">{errors.basePrice.message}</p>}</div>
-              <div className="space-y-2"><Label>Currency</Label><Input {...register('currency')} maxLength={3} placeholder="USD" /></div>
-              <div className="space-y-2"><Label>Tax Class</Label><Input {...register('taxClass')} placeholder="standard" /></div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2"><Label>Store</Label>
-                <Controller name="storeId" control={control} render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger><SelectValue placeholder="Select store" /></SelectTrigger>
-                    <SelectContent>{(storesForDropdown ?? []).map((s: Store) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                )} />
-                {errors.storeId && <p className="text-xs text-destructive">{errors.storeId.message}</p>}
-              </div>
-              <div className="space-y-2"><Label>Category</Label>
-                <Controller name="categoryId" control={control} render={({ field }) => (
-                  <Select value={field.value ?? ''} onValueChange={(v) => field.onChange(v || undefined)}>
-                    <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-                    <SelectContent>{(categoriesForDropdown ?? []).map((c: Category) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                )} />
-              </div>
-              <div className="space-y-2"><Label>Brand</Label>
-                <Controller name="brandId" control={control} render={({ field }) => (
-                  <Select value={field.value ?? ''} onValueChange={(v) => field.onChange(v || undefined)}>
-                    <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-                    <SelectContent>{(brandsForDropdown ?? []).map((b: Brand) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                )} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Status</Label>
-                <Controller name="status" control={control} render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="draft">Draft</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="archived">Archived</SelectItem></SelectContent></Select>
-                )} />
-              </div>
-              <div className="flex items-center gap-4 pt-6">
-                <div className="flex items-center gap-2"><Controller name="isActive" control={control} render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />} /><Label>Active</Label></div>
-                <div className="flex items-center gap-2"><Controller name="isDigital" control={control} render={({ field }) => <Switch checked={field.value ?? false} onCheckedChange={field.onChange} />} /><Label>Digital</Label></div>
-              </div>
-            </div>
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button><Button type="submit" disabled={createM.isPending || updateM.isPending}>{editing ? 'Update' : 'Create'}</Button></DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
       <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Delete Product" description={`Delete "${deleteTarget?.name}"?`} confirmLabel="Delete" onConfirm={() => deleteTarget && deleteM.mutate(deleteTarget.id)} loading={deleteM.isPending} />
 
-      {/* Product Detail Sheet */}
+      {/* Product Detail Sheet (view only) */}
       <Sheet open={!!detailProduct} onOpenChange={() => setDetailProduct(null)}>
         <SheetContent side="right" className="w-full max-w-2xl overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{detailProduct?.name}</SheetTitle>
-            <SheetDescription>Product details, variants, images &amp; attributes</SheetDescription>
+            <SheetDescription>Product details</SheetDescription>
           </SheetHeader>
-
-          {/* Tab nav */}
-          <div className="flex gap-1 border-b mt-4">
-            {([['info', 'Info', Tag], ['variants', 'Variants', Layers], ['images', 'Images', ImageIcon], ['attributes', 'Attributes', Settings], ['categories', 'Categories', List]] as const).map(([key, label, Icon]) => (
-              <button key={key} onClick={() => setDetailTab(key)} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors ${detailTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
-                <Icon className="h-4 w-4" />{label}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-4">
-          {detailProduct && detailTab === 'info' && (
-            <Card>
+          {detailProduct && (
+            <Card className="mt-4">
               <CardContent className="pt-4 space-y-3">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                   <div><span className="text-muted-foreground">Slug:</span> {detailProduct.slug}</div>
@@ -471,11 +481,6 @@ export default function ProductsPage() {
               </CardContent>
             </Card>
           )}
-          {detailProduct && detailTab === 'variants' && <VariantsPanel productId={detailProduct.id} />}
-          {detailProduct && detailTab === 'images' && <ImagesPanel productId={detailProduct.id} />}
-          {detailProduct && detailTab === 'attributes' && <AttributeKeysPanel />}
-          {detailProduct && detailTab === 'categories' && <CategoriesPanel productId={detailProduct.id} />}
-          </div>
         </SheetContent>
       </Sheet>
     </div>
