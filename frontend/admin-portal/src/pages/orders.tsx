@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Eye, RefreshCw, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']
@@ -24,7 +25,7 @@ export default function OrdersPage() {
   const [detailDialog, setDetailDialog] = useState<Order | null>(null)
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['orders', { page, limit: 10 }],
     queryFn: () => ordersApi.list({ page, limit: 10 }),
   })
@@ -38,13 +39,13 @@ export default function OrdersPage() {
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => ordersApi.updateStatus(id, status),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['orders'] }); setStatusDialog(null); toast.success('Status updated') },
-    onError: () => toast.error('Failed'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed')),
   })
 
   const cancelMutation = useMutation({
     mutationFn: (id: string) => ordersApi.cancel(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['orders'] }); toast.success('Order cancelled') },
-    onError: () => toast.error('Failed to cancel order'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to cancel order')),
   })
 
   const columns: ColumnDef<Order>[] = [
@@ -76,6 +77,8 @@ export default function OrdersPage() {
         columns={columns}
         data={data?.data ?? []}
         isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         manualPagination
         page={page}
         pageCount={data?.totalPages ?? 1}
@@ -83,9 +86,12 @@ export default function OrdersPage() {
         searchPlaceholder="Search orders..."
         enableRowSelection
         onBulkStatusChange={(rows, status) => {
-          Promise.all(rows.map((r) => ordersApi.updateStatus(r.id, status))).then(() => {
-            qc.invalidateQueries({ queryKey: ['orders'] }); toast.success(`${rows.length} order(s) updated`)
-          }).catch(() => toast.error('Failed'))
+          Promise.allSettled(rows.map((r) => ordersApi.updateStatus(r.id, status))).then((results) => {
+            qc.invalidateQueries({ queryKey: ['orders'] })
+            const failed = results.filter((r) => r.status === 'rejected').length
+            if (failed) toast.error(`${failed} of ${rows.length} failed to update`)
+            else toast.success(`${rows.length} order(s) updated`)
+          })
         }}
         bulkStatusOptions={ORDER_STATUSES}
         exportFilename="orders"

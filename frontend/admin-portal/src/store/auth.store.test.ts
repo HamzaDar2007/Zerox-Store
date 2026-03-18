@@ -7,8 +7,9 @@ const mockUser: User = {
   email: 'admin@example.com',
   firstName: 'Admin',
   lastName: 'User',
-  role: { id: '1', name: 'super-admin' },
+  role: 'super-admin',
   isActive: true,
+  isEmailVerified: true,
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z',
 }

@@ -195,9 +195,9 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
           <Input
             placeholder={searchPlaceholder}
             value={!onSearch && searchColumn ? (table.getColumn(searchColumn)?.getFilterValue() as string) ?? '' : searchInput}
@@ -208,17 +208,17 @@ export function DataTable<TData, TValue>({
                 handleSearchChange(e.target.value)
               }
             }}
-            className="pl-9"
+            className="pl-9 h-9 bg-muted/30 border-border/50 focus:bg-background"
           />
         </div>
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-2 sm:ml-auto">
           {enableRowSelection && selectedRows.length > 0 && (
             <>
-              <span className="text-sm text-muted-foreground">{selectedRows.length} selected</span>
+              <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-md">{selectedRows.length} selected</span>
               {onBulkDelete && (
                 <Button variant="destructive" size="sm" onClick={() => onBulkDelete(selectedRows)}>
-                  <Trash2 className="mr-1 h-4 w-4" />Delete
+                  <Trash2 className="mr-1 h-3.5 w-3.5" />Delete
                 </Button>
               )}
               {onBulkStatusChange && bulkStatusOptions && (
@@ -241,7 +241,7 @@ export function DataTable<TData, TValue>({
           {getExportRow && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm"><Download className="mr-1 h-4 w-4" />Export</Button>
+                <Button variant="outline" size="sm"><Download className="mr-1.5 h-3.5 w-3.5" />Export</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={exportToCSV}>Export CSV</DropdownMenuItem>
@@ -253,13 +253,13 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-xl border border-border/50 overflow-hidden bg-card shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-muted/30 hover:bg-muted/30 border-border/50">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 h-10">
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
@@ -269,23 +269,28 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
+                <TableRow key={i} className="border-border/40">
                   {columns.map((_, j) => (
                     <TableCell key={j}>
-                      <div className="h-4 w-full animate-pulse rounded bg-muted" />
+                      <div className="h-4 w-full animate-pulse rounded-md bg-muted/60" />
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : isError ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  <div className="flex flex-col items-center gap-2 text-destructive">
-                    <AlertCircle className="h-6 w-6" />
-                    <p className="text-sm font-medium">Failed to load data</p>
+                <TableCell colSpan={columns.length} className="h-32 text-center">
+                  <div className="flex flex-col items-center gap-3 text-destructive">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                      <AlertCircle className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold">Failed to load data</p>
+                      <p className="text-xs text-muted-foreground">Something went wrong while fetching the data.</p>
+                    </div>
                     {onRetry && (
-                      <Button variant="outline" size="sm" onClick={onRetry}>
-                        <RefreshCw className="mr-1 h-4 w-4" />Retry
+                      <Button variant="outline" size="sm" onClick={onRetry} className="mt-1">
+                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />Try again
                       </Button>
                     )}
                   </div>
@@ -293,16 +298,22 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ) : table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="border-border/30 table-row-hover">
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                    <TableCell key={cell.id} className="py-3 text-[13px]">{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                  No results found.
+                <TableCell colSpan={columns.length} className="h-32 text-center">
+                  <div className="flex flex-col items-center gap-2 py-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
+                      <Search className="h-5 w-5 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">No results found</p>
+                    <p className="text-xs text-muted-foreground/60">Try adjusting your search or filters</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -310,46 +321,55 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between px-1">
+        <p className="text-xs text-muted-foreground">
           {enableRowSelection && selectedRows.length > 0
             ? `${selectedRows.length} of ${data.length} row(s) selected`
             : manualPagination
               ? `Page ${page} of ${pageCount ?? 1}`
               : `${table.getFilteredRowModel().rows.length} row(s)`}
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button
-            variant="outline"
-            size="icon"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => manualPagination ? onPageChange?.(1) : table.setPageIndex(0)}
             disabled={manualPagination ? page <= 1 : !table.getCanPreviousPage()}
+            className="text-muted-foreground hover:text-foreground"
           >
-            <ChevronsLeft className="h-4 w-4" />
+            <ChevronsLeft className="h-3.5 w-3.5" />
           </Button>
           <Button
-            variant="outline"
-            size="icon"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => manualPagination ? onPageChange?.(page - 1) : table.previousPage()}
             disabled={manualPagination ? page <= 1 : !table.getCanPreviousPage()}
+            className="text-muted-foreground hover:text-foreground"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
+          {manualPagination && (
+            <span className="flex h-8 min-w-8 items-center justify-center rounded-md bg-muted/50 px-2 text-xs font-medium">
+              {page}
+            </span>
+          )}
           <Button
-            variant="outline"
-            size="icon"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => manualPagination ? onPageChange?.(page + 1) : table.nextPage()}
             disabled={manualPagination ? page >= (pageCount ?? 1) : !table.getCanNextPage()}
+            className="text-muted-foreground hover:text-foreground"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
           <Button
-            variant="outline"
-            size="icon"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => manualPagination ? onPageChange?.(pageCount ?? 1) : table.setPageIndex(table.getPageCount() - 1)}
             disabled={manualPagination ? page >= (pageCount ?? 1) : !table.getCanNextPage()}
+            className="text-muted-foreground hover:text-foreground"
           >
-            <ChevronsRight className="h-4 w-4" />
+            <ChevronsRight className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>

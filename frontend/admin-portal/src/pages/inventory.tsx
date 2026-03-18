@@ -12,23 +12,23 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Pencil, Trash2, AlertTriangle, PackagePlus, ArrowUpDown, Lock, Unlock } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
-const whSchema = z.object({ code: z.string().min(1), name: z.string().min(1), address: z.string().optional(), city: z.string().optional(), country: z.string().optional(), isActive: z.boolean().default(true) })
+const whSchema = z.object({ code: z.string().min(1), name: z.string().min(1), line1: z.string().optional(), city: z.string().optional(), country: z.string().optional(), isActive: z.boolean().default(true) })
 type WHFormData = z.infer<typeof whSchema>
 
 const setStockSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), qtyOnHand: z.coerce.number().int().min(0), lowStockThreshold: z.coerce.number().int().min(0).optional() })
-const adjustStockSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), adjustment: z.coerce.number().int(), reason: z.string().optional() })
-const reserveSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), quantity: z.coerce.number().int().min(1) })
-const releaseSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), quantity: z.coerce.number().int().min(1) })
+const adjustStockSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), delta: z.coerce.number().int() })
+const reserveSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), delta: z.coerce.number().int().min(1) })
+const releaseSchema = z.object({ warehouseId: z.string().min(1, 'Required'), variantId: z.string().min(1, 'Required'), delta: z.coerce.number().int().min(1) })
 
 export default function InventoryPage() {
   const [whDialog, setWhDialog] = useState(false)
@@ -40,15 +40,15 @@ export default function InventoryPage() {
   const [releaseDialog, setReleaseDialog] = useState(false)
   const qc = useQueryClient()
 
-  const { data: warehouses, isLoading: loadingWH } = useQuery({ queryKey: ['warehouses'], queryFn: warehousesApi.list })
-  const { data: inventory, isLoading: loadingInv } = useQuery({ queryKey: ['inventory'], queryFn: inventoryApi.list })
-  const { data: lowStock, isLoading: loadingLow } = useQuery({ queryKey: ['inventory', 'low-stock'], queryFn: inventoryApi.lowStock })
+  const { data: warehouses, isLoading: loadingWH, isError: errorWH, refetch: refetchWH } = useQuery({ queryKey: ['warehouses'], queryFn: warehousesApi.list })
+  const { data: inventory, isLoading: loadingInv, isError: errorInv, refetch: refetchInv } = useQuery({ queryKey: ['inventory'], queryFn: inventoryApi.list })
+  const { data: lowStock, isLoading: loadingLow, isError: errorLow, refetch: refetchLow } = useQuery({ queryKey: ['inventory', 'low-stock'], queryFn: inventoryApi.lowStock })
 
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<WHFormData>({ resolver: zodResolver(whSchema) })
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<WHFormData>({ resolver: zodResolver(whSchema) as any })
 
-  const createM = useMutation({ mutationFn: warehousesApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setWhDialog(false); reset(); toast.success('Warehouse created') }, onError: () => toast.error('Failed') })
-  const updateM = useMutation({ mutationFn: ({ id, ...d }: WHFormData & { id: string }) => warehousesApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setWhDialog(false); setEditing(null); toast.success('Updated') }, onError: () => toast.error('Failed') })
-  const deleteM = useMutation({ mutationFn: (id: string) => warehousesApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: () => toast.error('Failed') })
+  const createM = useMutation({ mutationFn: warehousesApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setWhDialog(false); reset(); toast.success('Warehouse created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const updateM = useMutation({ mutationFn: ({ id, ...d }: WHFormData & { id: string }) => warehousesApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setWhDialog(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const deleteM = useMutation({ mutationFn: (id: string) => warehousesApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
   const setStockForm = useForm<z.infer<typeof setStockSchema>>({ resolver: zodResolver(setStockSchema) as any })
   const adjustStockForm = useForm<z.infer<typeof adjustStockSchema>>({ resolver: zodResolver(adjustStockSchema) as any })
@@ -58,29 +58,29 @@ export default function InventoryPage() {
   const setStockM = useMutation({
     mutationFn: inventoryApi.set,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['inventory'] }); qc.invalidateQueries({ queryKey: ['inventory', 'low-stock'] }); setSetStockDialog(false); setStockForm.reset(); toast.success('Stock set') },
-    onError: () => toast.error('Failed to set stock'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to set stock')),
   })
 
   const adjustStockM = useMutation({
     mutationFn: inventoryApi.adjust,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['inventory'] }); qc.invalidateQueries({ queryKey: ['inventory', 'low-stock'] }); setAdjustStockDialog(false); adjustStockForm.reset(); toast.success('Stock adjusted') },
-    onError: () => toast.error('Failed to adjust stock'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to adjust stock')),
   })
 
   const reserveM = useMutation({
     mutationFn: inventoryApi.reserve,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['inventory'] }); qc.invalidateQueries({ queryKey: ['inventory', 'low-stock'] }); setReserveDialog(false); reserveForm.reset(); toast.success('Stock reserved') },
-    onError: () => toast.error('Failed to reserve stock'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to reserve stock')),
   })
 
   const releaseM = useMutation({
     mutationFn: inventoryApi.release,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['inventory'] }); qc.invalidateQueries({ queryKey: ['inventory', 'low-stock'] }); setReleaseDialog(false); releaseForm.reset(); toast.success('Reservation released') },
-    onError: () => toast.error('Failed to release reservation'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to release reservation')),
   })
 
-  const openCreate = () => { setEditing(null); reset({ code: '', name: '', address: '', city: '', country: '', isActive: true }); setWhDialog(true) }
-  const openEdit = (w: Warehouse) => { setEditing(w); reset({ code: w.code, name: w.name, address: w.address ?? '', city: w.city ?? '', country: w.country ?? '', isActive: w.isActive }); setWhDialog(true) }
+  const openCreate = () => { setEditing(null); reset({ code: '', name: '', line1: '', city: '', country: '', isActive: true }); setWhDialog(true) }
+  const openEdit = (w: Warehouse) => { setEditing(w); reset({ code: w.code, name: w.name, line1: w.line1 ?? '', city: w.city ?? '', country: w.country ?? '', isActive: w.isActive }); setWhDialog(true) }
   const onSubmit = (d: WHFormData) => editing ? updateM.mutate({ ...d, id: editing.id }) : createM.mutate(d)
 
   const whColumns: ColumnDef<Warehouse>[] = [
@@ -127,9 +127,9 @@ export default function InventoryPage() {
           <TabsTrigger value="low-stock">Low Stock {(lowStock?.length ?? 0) > 0 && <Badge variant="destructive" className="ml-1">{lowStock!.length}</Badge>}</TabsTrigger>
         </TabsList>
         <TabsContent value="warehouses">
-          <DataTable columns={whColumns} data={warehouses ?? []} isLoading={loadingWH} searchColumn="name" searchPlaceholder="Search warehouses..."
+          <DataTable columns={whColumns} data={warehouses ?? []} isLoading={loadingWH} isError={errorWH} onRetry={refetchWH} searchColumn="name" searchPlaceholder="Search warehouses..."
             enableRowSelection
-            onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} warehouses?`)) rows.forEach((r) => deleteM.mutate(r.id)) }}
+            onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} warehouses?`)) Promise.allSettled(rows.map((r) => warehousesApi.delete(r.id))).then((results) => { qc.invalidateQueries({ queryKey: ['warehouses'] }); const failed = results.filter((r) => r.status === 'rejected').length; if (failed) toast.error(`${failed} of ${rows.length} failed`); else toast.success(`${rows.length} warehouse(s) deleted`) }) }}
             exportFilename="warehouses"
             getExportRow={(r) => ({ Code: r.code, Name: r.name, City: r.city ?? '', Country: r.country ?? '', Active: r.isActive })}
           />
@@ -139,24 +139,24 @@ export default function InventoryPage() {
             <Button variant="outline" onClick={() => { setStockForm.reset({ warehouseId: '', variantId: '', qtyOnHand: 0, lowStockThreshold: 10 }); setSetStockDialog(true) }}>
               <PackagePlus className="mr-2 h-4 w-4" />Set Stock
             </Button>
-            <Button variant="outline" onClick={() => { adjustStockForm.reset({ warehouseId: '', variantId: '', adjustment: 0, reason: '' }); setAdjustStockDialog(true) }}>
+            <Button variant="outline" onClick={() => { adjustStockForm.reset({ warehouseId: '', variantId: '', delta: 0 }); setAdjustStockDialog(true) }}>
               <ArrowUpDown className="mr-2 h-4 w-4" />Adjust Stock
             </Button>
-            <Button variant="outline" onClick={() => { reserveForm.reset({ warehouseId: '', variantId: '', quantity: 1 }); setReserveDialog(true) }}>
+            <Button variant="outline" onClick={() => { reserveForm.reset({ warehouseId: '', variantId: '', delta: 1 }); setReserveDialog(true) }}>
               <Lock className="mr-2 h-4 w-4" />Reserve Stock
             </Button>
-            <Button variant="outline" onClick={() => { releaseForm.reset({ warehouseId: '', variantId: '', quantity: 1 }); setReleaseDialog(true) }}>
+            <Button variant="outline" onClick={() => { releaseForm.reset({ warehouseId: '', variantId: '', delta: 1 }); setReleaseDialog(true) }}>
               <Unlock className="mr-2 h-4 w-4" />Release Reservation
             </Button>
           </div>
-          <DataTable columns={invColumns} data={inventory ?? []} isLoading={loadingInv} searchPlaceholder="Search inventory..."
+          <DataTable columns={invColumns} data={inventory ?? []} isLoading={loadingInv} isError={errorInv} onRetry={refetchInv} searchPlaceholder="Search inventory..."
             enableRowSelection
             exportFilename="inventory"
             getExportRow={(r) => ({ VariantID: r.variantId, OnHand: r.qtyOnHand, Reserved: r.qtyReserved, Available: r.qtyAvailable, Threshold: r.lowStockThreshold })}
           />
         </TabsContent>
         <TabsContent value="low-stock">
-          <DataTable columns={invColumns} data={lowStock ?? []} isLoading={loadingLow} searchPlaceholder="Search low stock..."
+          <DataTable columns={invColumns} data={lowStock ?? []} isLoading={loadingLow} isError={errorLow} onRetry={refetchLow} searchPlaceholder="Search low stock..."
             enableRowSelection
             exportFilename="low-stock"
             getExportRow={(r) => ({ VariantID: r.variantId, OnHand: r.qtyOnHand, Reserved: r.qtyReserved, Available: r.qtyAvailable, Threshold: r.lowStockThreshold })}
@@ -172,7 +172,7 @@ export default function InventoryPage() {
               <div className="space-y-2"><Label>Code</Label><Input {...register('code')} />{errors.code && <p className="text-xs text-destructive">{errors.code.message}</p>}</div>
               <div className="space-y-2"><Label>Name</Label><Input {...register('name')} />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
             </div>
-            <div className="space-y-2"><Label>Address</Label><Input {...register('address')} /></div>
+            <div className="space-y-2"><Label>Address</Label><Input {...register('line1')} /></div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>City</Label><Input {...register('city')} /></div>
               <div className="space-y-2"><Label>Country</Label><Input {...register('country')} /></div>
@@ -208,8 +208,7 @@ export default function InventoryPage() {
           <form onSubmit={adjustStockForm.handleSubmit((d) => adjustStockM.mutate(d))} className="space-y-4">
             <div className="space-y-2"><Label>Warehouse ID</Label><Input {...adjustStockForm.register('warehouseId')} />{adjustStockForm.formState.errors.warehouseId && <p className="text-xs text-destructive">{adjustStockForm.formState.errors.warehouseId.message}</p>}</div>
             <div className="space-y-2"><Label>Variant ID</Label><Input {...adjustStockForm.register('variantId')} />{adjustStockForm.formState.errors.variantId && <p className="text-xs text-destructive">{adjustStockForm.formState.errors.variantId.message}</p>}</div>
-            <div className="space-y-2"><Label>Adjustment (positive to add, negative to remove)</Label><Input type="number" {...adjustStockForm.register('adjustment')} /></div>
-            <div className="space-y-2"><Label>Reason (optional)</Label><Textarea {...adjustStockForm.register('reason')} placeholder="e.g., Damaged goods, Restock" /></div>
+            <div className="space-y-2"><Label>Delta (positive to add, negative to remove)</Label><Input type="number" {...adjustStockForm.register('delta')} /></div>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setAdjustStockDialog(false)}>Cancel</Button><Button type="submit" loading={adjustStockM.isPending}>Adjust</Button></DialogFooter>
           </form>
         </DialogContent>
@@ -222,7 +221,7 @@ export default function InventoryPage() {
           <form onSubmit={reserveForm.handleSubmit((d) => reserveM.mutate(d))} className="space-y-4">
             <div className="space-y-2"><Label>Warehouse ID</Label><Input {...reserveForm.register('warehouseId')} />{reserveForm.formState.errors.warehouseId && <p className="text-xs text-destructive">{reserveForm.formState.errors.warehouseId.message}</p>}</div>
             <div className="space-y-2"><Label>Variant ID</Label><Input {...reserveForm.register('variantId')} />{reserveForm.formState.errors.variantId && <p className="text-xs text-destructive">{reserveForm.formState.errors.variantId.message}</p>}</div>
-            <div className="space-y-2"><Label>Quantity</Label><Input type="number" {...reserveForm.register('quantity')} /></div>
+            <div className="space-y-2"><Label>Quantity</Label><Input type="number" {...reserveForm.register('delta')} /></div>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setReserveDialog(false)}>Cancel</Button><Button type="submit" loading={reserveM.isPending}>Reserve</Button></DialogFooter>
           </form>
         </DialogContent>
@@ -235,7 +234,7 @@ export default function InventoryPage() {
           <form onSubmit={releaseForm.handleSubmit((d) => releaseM.mutate(d))} className="space-y-4">
             <div className="space-y-2"><Label>Warehouse ID</Label><Input {...releaseForm.register('warehouseId')} />{releaseForm.formState.errors.warehouseId && <p className="text-xs text-destructive">{releaseForm.formState.errors.warehouseId.message}</p>}</div>
             <div className="space-y-2"><Label>Variant ID</Label><Input {...releaseForm.register('variantId')} />{releaseForm.formState.errors.variantId && <p className="text-xs text-destructive">{releaseForm.formState.errors.variantId.message}</p>}</div>
-            <div className="space-y-2"><Label>Quantity</Label><Input type="number" {...releaseForm.register('quantity')} /></div>
+            <div className="space-y-2"><Label>Quantity</Label><Input type="number" {...releaseForm.register('delta')} /></div>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setReleaseDialog(false)}>Cancel</Button><Button type="submit" loading={releaseM.isPending}>Release</Button></DialogFooter>
           </form>
         </DialogContent>

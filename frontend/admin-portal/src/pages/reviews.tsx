@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, RefreshCw, Trash2, Star } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 
 export default function ReviewsPage() {
@@ -23,7 +24,7 @@ export default function ReviewsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Review | null>(null)
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['reviews', { page, limit: 10 }],
     queryFn: () => reviewsApi.list({ page, limit: 10 }),
   })
@@ -31,13 +32,13 @@ export default function ReviewsPage() {
   const statusM = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => reviewsApi.updateStatus(id, status),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['reviews'] }); setStatusDialog(null); toast.success('Updated') },
-    onError: () => toast.error('Failed'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed')),
   })
 
   const deleteM = useMutation({
     mutationFn: (id: string) => reviewsApi.delete(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['reviews'] }); setDeleteTarget(null); toast.success('Deleted') },
-    onError: () => toast.error('Failed'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed')),
   })
 
   const columns: ColumnDef<Review>[] = [
@@ -70,9 +71,9 @@ export default function ReviewsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Reviews" description="Moderate product reviews" />
-      <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} manualPagination page={page} pageCount={data?.totalPages ?? 1} onPageChange={setPage} searchPlaceholder="Search reviews..."
+      <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} isError={isError} onRetry={refetch} manualPagination page={page} pageCount={data?.totalPages ?? 1} onPageChange={setPage} searchPlaceholder="Search reviews..."
         enableRowSelection
-        onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} reviews?`)) rows.forEach((r) => deleteM.mutate(r.id)) }}
+        onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} reviews?`)) Promise.allSettled(rows.map((r) => reviewsApi.delete(r.id))).then((results) => { qc.invalidateQueries({ queryKey: ['reviews'] }); const failed = results.filter((r) => r.status === 'rejected').length; if (failed) toast.error(`${failed} of ${rows.length} failed`); else toast.success(`${rows.length} review(s) deleted`) }) }}
         exportFilename="reviews"
         getExportRow={(r) => ({ Rating: r.rating, Title: r.title ?? '', Status: r.status, Verified: r.isVerified, Date: r.createdAt })}
       />

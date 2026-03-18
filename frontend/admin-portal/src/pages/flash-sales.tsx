@@ -11,18 +11,18 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Pencil, Trash2, Eye, Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
-const schema = z.object({ name: z.string().min(1), description: z.string().optional(), startsAt: z.string().min(1), endsAt: z.string().min(1) })
+const schema = z.object({ name: z.string().min(1), startsAt: z.string().min(1), endsAt: z.string().min(1) })
 type FormData = z.infer<typeof schema>
 
 const addItemSchema = z.object({ variantId: z.string().min(1, 'Variant ID required'), salePrice: z.coerce.number().min(0), qtyLimit: z.coerce.number().int().optional() })
@@ -36,12 +36,12 @@ export default function FlashSalesPage() {
   const [addItemOpen, setAddItemOpen] = useState(false)
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({ queryKey: ['flash-sales'], queryFn: flashSalesApi.list })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['flash-sales'], queryFn: flashSalesApi.list })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
 
-  const createM = useMutation({ mutationFn: flashSalesApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['flash-sales'] }); setDialogOpen(false); reset(); toast.success('Flash sale created') }, onError: () => toast.error('Failed') })
-  const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => flashSalesApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['flash-sales'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: () => toast.error('Failed') })
-  const deleteM = useMutation({ mutationFn: (id: string) => flashSalesApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['flash-sales'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: () => toast.error('Failed') })
+  const createM = useMutation({ mutationFn: flashSalesApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['flash-sales'] }); setDialogOpen(false); reset(); toast.success('Flash sale created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => flashSalesApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['flash-sales'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const deleteM = useMutation({ mutationFn: (id: string) => flashSalesApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['flash-sales'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
   const addItemForm = useForm<AddItemFormData>({ resolver: zodResolver(addItemSchema) as any })
 
@@ -52,19 +52,22 @@ export default function FlashSalesPage() {
   })
 
   const addItemM = useMutation({
-    mutationFn: (d: AddItemFormData) => flashSalesApi.addItem(detailSale!.id, d),
+    mutationFn: (d: AddItemFormData) => {
+      if (!detailSale) return Promise.reject(new Error('No flash sale selected'))
+      return flashSalesApi.addItem(detailSale.id, d)
+    },
     onSuccess: () => { refetchItems(); setAddItemOpen(false); addItemForm.reset(); toast.success('Item added') },
-    onError: () => toast.error('Failed to add item'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to add item')),
   })
 
   const removeItemM = useMutation({
     mutationFn: (itemId: string) => flashSalesApi.removeItem(itemId),
     onSuccess: () => { refetchItems(); toast.success('Item removed') },
-    onError: () => toast.error('Failed to remove item'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to remove item')),
   })
 
-  const openCreate = () => { setEditing(null); reset({ name: '', description: '', startsAt: '', endsAt: '' }); setDialogOpen(true) }
-  const openEdit = (f: FlashSale) => { setEditing(f); reset({ name: f.name, description: f.description ?? '', startsAt: f.startsAt?.slice(0, 16), endsAt: f.endsAt?.slice(0, 16) }); setDialogOpen(true) }
+  const openCreate = () => { setEditing(null); reset({ name: '', startsAt: '', endsAt: '' }); setDialogOpen(true) }
+  const openEdit = (f: FlashSale) => { setEditing(f); reset({ name: f.name, startsAt: f.startsAt?.slice(0, 16), endsAt: f.endsAt?.slice(0, 16) }); setDialogOpen(true) }
   const onSubmit = (d: FormData) => editing ? updateM.mutate({ ...d, id: editing.id }) : createM.mutate(d)
 
   const columns: ColumnDef<FlashSale>[] = [
@@ -89,9 +92,9 @@ export default function FlashSalesPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Flash Sales" description="Manage flash sale campaigns" action={{ label: 'Add Flash Sale', onClick: openCreate }} />
-      <DataTable columns={columns} data={data ?? []} isLoading={isLoading} searchColumn="name" searchPlaceholder="Search flash sales..."
+      <DataTable columns={columns} data={data ?? []} isLoading={isLoading} isError={isError} onRetry={refetch} searchColumn="name" searchPlaceholder="Search flash sales..."
         enableRowSelection
-        onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} flash sales?`)) rows.forEach((r) => deleteM.mutate(r.id)) }}
+        onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} flash sales?`)) Promise.allSettled(rows.map((r) => flashSalesApi.delete(r.id))).then((results) => { qc.invalidateQueries({ queryKey: ['flash-sales'] }); const failed = results.filter((r) => r.status === 'rejected').length; if (failed) toast.error(`${failed} of ${rows.length} failed`); else toast.success(`${rows.length} flash sale(s) deleted`) }) }}
         exportFilename="flash-sales"
         getExportRow={(r) => ({ Name: r.name, Active: r.isActive, Start: r.startsAt, End: r.endsAt })}
       />
@@ -101,7 +104,6 @@ export default function FlashSalesPage() {
           <DialogHeader><DialogTitle>{editing ? 'Edit Flash Sale' : 'Create Flash Sale'}</DialogTitle><DialogDescription>{editing ? 'Update flash sale' : 'Add new flash sale'}</DialogDescription></DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2"><Label>Name</Label><Input {...register('name')} />{errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}</div>
-            <div className="space-y-2"><Label>Description</Label><Textarea {...register('description')} /></div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Starts At</Label><Input type="datetime-local" {...register('startsAt')} /></div>
               <div className="space-y-2"><Label>Ends At</Label><Input type="datetime-local" {...register('endsAt')} /></div>
@@ -118,7 +120,7 @@ export default function FlashSalesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{detailSale?.name}</DialogTitle>
-            <DialogDescription>{detailSale?.description || 'Flash sale details'}</DialogDescription>
+            <DialogDescription>Flash sale details</DialogDescription>
           </DialogHeader>
           {detailSale && (
             <div className="space-y-4">

@@ -67,6 +67,9 @@ export class Product {
   @Column({ name: 'tax_class', type: 'varchar', length: 50, nullable: true })
   taxClass: string | null;
 
+  @Column({ type: 'varchar', length: 30, default: 'draft' })
+  status: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

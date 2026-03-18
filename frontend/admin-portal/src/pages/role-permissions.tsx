@@ -12,11 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { EmptyState } from '@/components/shared/empty-state'
 import { Shield, Save } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { cn } from '@/lib/utils'
 
 export default function RolePermissionsPage() {
   const [selectedRoleId, setSelectedRoleId] = useState<string>('')
-  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set())
+  const [pendingIds, setPendingIds] = useState<Set<string> | null>(null)
   const qc = useQueryClient()
 
   const { data: roles, isLoading: loadingRoles } = useQuery({
@@ -42,7 +43,7 @@ export default function RolePermissionsPage() {
       qc.invalidateQueries({ queryKey: ['role-permissions', selectedRoleId] })
       toast.success('Permissions updated')
     },
-    onError: () => toast.error('Failed to update permissions'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to update permissions')),
   })
 
   const removeM = useMutation({
@@ -51,7 +52,7 @@ export default function RolePermissionsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['role-permissions', selectedRoleId] })
     },
-    onError: () => toast.error('Failed to remove permission'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to remove permission')),
   })
 
   // Initialize pending set from server data
@@ -62,13 +63,13 @@ export default function RolePermissionsPage() {
   // When a role is selected, sync the pending set  
   const handleRoleChange = (roleId: string) => {
     setSelectedRoleId(roleId)
-    setPendingIds(new Set())
+    setPendingIds(null)
   }
 
-  const effectiveIds = pendingIds.size > 0 ? pendingIds : assignedIds
+  const effectiveIds = pendingIds !== null ? pendingIds : assignedIds
 
   const togglePermission = (permId: string) => {
-    const base = pendingIds.size > 0 ? new Set(pendingIds) : new Set(assignedIds)
+    const base = pendingIds !== null ? new Set(pendingIds) : new Set(assignedIds)
     if (base.has(permId)) {
       base.delete(permId)
     } else {
@@ -86,12 +87,12 @@ export default function RolePermissionsPage() {
     for (const id of toRemove) promises.push(removeM.mutateAsync(id))
 
     Promise.all(promises).then(() => {
-      setPendingIds(new Set())
+      setPendingIds(null)
       toast.success('Permissions saved')
     })
   }
 
-  const hasChanges = pendingIds.size > 0
+  const hasChanges = pendingIds !== null
 
   // Group permissions by module
   const permsByModule: Record<string, Permission[]> = {}

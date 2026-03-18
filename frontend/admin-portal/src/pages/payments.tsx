@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 export default function PaymentsPage() {
@@ -21,7 +22,7 @@ export default function PaymentsPage() {
   const [newStatus, setNewStatus] = useState('')
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['payments', { page, limit: 10 }],
     queryFn: () => paymentsApi.list({ page, limit: 10 }),
   })
@@ -29,7 +30,7 @@ export default function PaymentsPage() {
   const statusM = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => paymentsApi.updateStatus(id, status),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['payments'] }); setStatusDialog(null); toast.success('Updated') },
-    onError: () => toast.error('Failed'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed')),
   })
 
   const columns: ColumnDef<Payment>[] = [
@@ -54,7 +55,7 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Payments" description="View and manage payments" />
-      <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} manualPagination page={page} pageCount={data?.totalPages ?? 1} onPageChange={setPage} searchPlaceholder="Search payments..."
+      <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} isError={isError} onRetry={refetch} manualPagination page={page} pageCount={data?.totalPages ?? 1} onPageChange={setPage} searchPlaceholder="Search payments..."
         enableRowSelection
         exportFilename="payments"
         getExportRow={(r) => ({ ID: r.id, Gateway: r.gateway, Method: r.method ?? '', Amount: r.amount, Currency: r.currency, Status: r.status, Date: r.createdAt })}

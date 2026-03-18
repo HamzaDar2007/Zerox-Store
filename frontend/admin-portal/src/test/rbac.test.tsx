@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { useAuthStore } from '@/store/auth.store'
-import App from '@/App'
 
 describe('Route protection', () => {
   beforeEach(() => {
@@ -36,6 +35,7 @@ describe('Route protection', () => {
         firstName: 'Admin',
         lastName: 'User',
         isActive: true,
+        isEmailVerified: true,
         createdAt: '2024-01-01',
         updatedAt: '2024-01-01',
         role: 'super-admin',

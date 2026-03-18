@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
-import { storesApi } from '@/services/api'
-import type { Store } from '@/types'
+import { storesApi, sellersApi } from '@/services/api'
+import type { Store, Seller } from '@/types'
 import { DataTable, SortHeader } from '@/components/shared/data-table'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatusBadge } from '@/components/shared/status-badge'
@@ -16,9 +16,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreHorizontal, Pencil, Trash2, Eye } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
-import { useForm } from 'react-hook-form'
+import { getErrorMessage } from '@/lib/api-error'
+import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FileUploader } from '@/components/shared/file-uploader'
 import { Progress } from '@/components/ui/progress'
 
@@ -45,26 +47,27 @@ export default function StoresPage() {
   const [deleteTarget, setDeleteTarget] = useState<Store | null>(null)
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({ queryKey: ['stores'], queryFn: storesApi.list })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
-  const createForm = useForm<CreateFormData>({ resolver: zodResolver(createSchema) })
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['stores'], queryFn: storesApi.list })
+  const { data: sellersForDropdown } = useQuery({ queryKey: ['sellers'], queryFn: sellersApi.list })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
+  const createForm = useForm<CreateFormData>({ resolver: zodResolver(createSchema) as any })
 
   const createM = useMutation({
     mutationFn: storesApi.create,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['stores'] }); setCreateOpen(false); createForm.reset(); toast.success('Store created') },
-    onError: () => toast.error('Failed to create'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to create')),
   })
 
   const updateM = useMutation({
     mutationFn: ({ id, ...d }: FormData & { id: string }) => storesApi.update(id, d),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['stores'] }); setDialogOpen(false); setEditing(null); toast.success('Store updated') },
-    onError: () => toast.error('Failed to update'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to update')),
   })
 
   const deleteM = useMutation({
     mutationFn: (id: string) => storesApi.delete(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['stores'] }); setDeleteTarget(null); toast.success('Store deleted') },
-    onError: () => toast.error('Failed to delete'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to delete')),
   })
 
   const uploadLogoM = useMutation({
@@ -73,7 +76,7 @@ export default function StoresPage() {
       return storesApi.uploadLogo(id, fd)
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['stores'] }); toast.success('Logo uploaded') },
-    onError: () => toast.error('Logo upload failed'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Logo upload failed')),
   })
 
   const uploadBannerM = useMutation({
@@ -82,7 +85,7 @@ export default function StoresPage() {
       return storesApi.uploadBanner(id, fd)
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['stores'] }); toast.success('Banner uploaded') },
-    onError: () => toast.error('Banner upload failed'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Banner upload failed')),
   })
 
   const openEdit = (s: Store) => {
@@ -113,7 +116,7 @@ export default function StoresPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="Stores" description="View and manage seller stores" action={{ label: 'Add Store', onClick: () => { createForm.reset({ sellerId: '', name: '', slug: '', description: '' }); setCreateOpen(true) } }} />
-      <DataTable columns={columns} data={data ?? []} isLoading={isLoading} searchColumn="name" searchPlaceholder="Search stores..."
+      <DataTable columns={columns} data={data ?? []} isLoading={isLoading} isError={isError} onRetry={refetch} searchColumn="name" searchPlaceholder="Search stores..."
         enableRowSelection
         exportFilename="stores"
         getExportRow={(r) => ({ Name: r.name, Slug: r.slug, Active: r.isActive, Created: r.createdAt })}
@@ -173,7 +176,20 @@ export default function StoresPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Create Store</DialogTitle><DialogDescription>Add a new store for a seller</DialogDescription></DialogHeader>
           <form onSubmit={createForm.handleSubmit((d) => createM.mutate(d))} className="space-y-4">
-            <div className="space-y-2"><Label>Seller ID</Label><Input {...createForm.register('sellerId')} />{createForm.formState.errors.sellerId && <p className="text-xs text-destructive">{createForm.formState.errors.sellerId.message}</p>}</div>
+            <div className="space-y-2">
+              <Label>Seller</Label>
+              <Controller name="sellerId" control={createForm.control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue placeholder="Select a seller" /></SelectTrigger>
+                  <SelectContent>
+                    {(sellersForDropdown ?? []).map((s: Seller) => (
+                      <SelectItem key={s.id} value={s.id}>{s.displayName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )} />
+              {createForm.formState.errors.sellerId && <p className="text-xs text-destructive">{createForm.formState.errors.sellerId.message}</p>}
+            </div>
             <div className="space-y-2"><Label>Name</Label><Input {...createForm.register('name')} />{createForm.formState.errors.name && <p className="text-xs text-destructive">{createForm.formState.errors.name.message}</p>}</div>
             <div className="space-y-2"><Label>Slug</Label><Input {...createForm.register('slug')} />{createForm.formState.errors.slug && <p className="text-xs text-destructive">{createForm.formState.errors.slug.message}</p>}</div>
             <div className="space-y-2"><Label>Description</Label><Textarea {...createForm.register('description')} /></div>

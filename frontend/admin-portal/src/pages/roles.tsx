@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
@@ -34,26 +35,29 @@ export default function RolesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null)
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({ queryKey: ['roles'], queryFn: rolesApi.list })
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['roles'], queryFn: rolesApi.list })
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<RoleFormData>({
-    resolver: zodResolver(roleSchema),
+    resolver: zodResolver(roleSchema) as any,
   })
 
   const createMutation = useMutation({
     mutationFn: rolesApi.create,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['roles'] }); setDialogOpen(false); reset(); toast.success('Role created') },
-    onError: () => toast.error('Failed to create role'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to create role')),
   })
   const updateMutation = useMutation({
-    mutationFn: ({ id, ...d }: RoleFormData & { id: string }) => rolesApi.update(id, d),
+    mutationFn: ({ id, ...d }: RoleFormData & { id: string }) => {
+      const { isSystem: _ignore, ...payload } = d
+      return rolesApi.update(id, payload)
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['roles'] }); setDialogOpen(false); setEditing(null); reset(); toast.success('Role updated') },
-    onError: () => toast.error('Failed to update role'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to update role')),
   })
   const deleteMutation = useMutation({
     mutationFn: (id: string) => rolesApi.delete(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['roles'] }); setDeleteTarget(null); toast.success('Role deleted') },
-    onError: () => toast.error('Failed to delete role'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to delete role')),
   })
 
   const openCreate = () => { setEditing(null); reset({ name: '', description: '', isSystem: false }); setDialogOpen(true) }
@@ -85,14 +89,19 @@ export default function RolesPage() {
         columns={columns}
         data={data ?? []}
         isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         searchColumn="name"
         searchPlaceholder="Search roles..."
         enableRowSelection
         onBulkDelete={(rows) => {
           const nonSystem = rows.filter((r) => !r.isSystem)
-          Promise.all(nonSystem.map((r) => rolesApi.delete(r.id))).then(() => {
-            qc.invalidateQueries({ queryKey: ['roles'] }); toast.success(`${nonSystem.length} role(s) deleted`)
-          }).catch(() => toast.error('Failed'))
+          Promise.allSettled(nonSystem.map((r) => rolesApi.delete(r.id))).then((results) => {
+            qc.invalidateQueries({ queryKey: ['roles'] })
+            const failed = results.filter((r) => r.status === 'rejected').length
+            if (failed) toast.error(`${failed} role(s) failed to delete`)
+            else toast.success(`${nonSystem.length} role(s) deleted`)
+          })
         }}
         exportFilename="roles"
         getExportRow={(r) => ({ Name: r.name, Description: r.description ?? '', System: r.isSystem ? 'Yes' : 'No', Created: r.createdAt })}

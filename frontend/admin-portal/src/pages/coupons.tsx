@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Pencil, Trash2, Eye, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
@@ -23,11 +24,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 
 const schema = z.object({
   code: z.string().min(1),
-  description: z.string().optional(),
   discountType: z.string().min(1),
   discountValue: z.coerce.number().min(0),
-  minOrderAmount: z.coerce.number().optional(),
+  minOrderValue: z.coerce.number().optional(),
+  maxDiscount: z.coerce.number().optional(),
   usageLimit: z.coerce.number().optional(),
+  perUserLimit: z.coerce.number().optional(),
   startsAt: z.string().min(1),
   expiresAt: z.string().min(1),
 })
@@ -43,12 +45,12 @@ export default function CouponsPage() {
   const [newScopeId, setNewScopeId] = useState('')
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({ queryKey: ['coupons'], queryFn: couponsApi.list })
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['coupons'], queryFn: couponsApi.list })
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
 
-  const createM = useMutation({ mutationFn: couponsApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['coupons'] }); setDialogOpen(false); reset(); toast.success('Coupon created') }, onError: () => toast.error('Failed') })
-  const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => couponsApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['coupons'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: () => toast.error('Failed') })
-  const deleteM = useMutation({ mutationFn: (id: string) => couponsApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['coupons'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: () => toast.error('Failed') })
+  const createM = useMutation({ mutationFn: couponsApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['coupons'] }); setDialogOpen(false); reset(); toast.success('Coupon created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => couponsApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['coupons'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const deleteM = useMutation({ mutationFn: (id: string) => couponsApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['coupons'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
   const { data: scopes, refetch: refetchScopes } = useQuery({
     queryKey: ['coupon-scopes', scopeCoupon?.id],
@@ -57,19 +59,26 @@ export default function CouponsPage() {
   })
 
   const addScopeM = useMutation({
-    mutationFn: () => couponsApi.addScope(scopeCoupon!.id, { scopeType: newScopeType, scopeId: newScopeId }),
-    onSuccess: () => { refetchScopes(); setAddScopeOpen(false); setNewScopeId(''); toast.success('Scope added') },
-    onError: () => toast.error('Failed to add scope'),
+    mutationFn: () => {
+      if (!scopeCoupon) return Promise.reject(new Error('No coupon selected'))
+      const payload: Record<string, string> = { scopeType: newScopeType };
+      if (newScopeType === 'product') payload.productId = newScopeId;
+      else if (newScopeType === 'category') payload.categoryId = newScopeId;
+      else if (newScopeType === 'user') payload.userId = newScopeId;
+      return couponsApi.addScope(scopeCoupon.id, payload);
+    },
+    onSuccess: () => { refetchScopes(); setAddScopeOpen(false); setNewScopeId(''); setNewScopeType('product'); toast.success('Scope added') },
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to add scope')),
   })
 
   const removeScopeM = useMutation({
     mutationFn: (scopeId: string) => couponsApi.removeScope(scopeId),
     onSuccess: () => { refetchScopes(); toast.success('Scope removed') },
-    onError: () => toast.error('Failed to remove scope'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to remove scope')),
   })
 
-  const openCreate = () => { setEditing(null); reset({ code: '', description: '', discountType: 'percentage', discountValue: 0, startsAt: '', expiresAt: '' }); setDialogOpen(true) }
-  const openEdit = (c: Coupon) => { setEditing(c); reset({ code: c.code, description: c.description ?? '', discountType: c.discountType, discountValue: c.discountValue, minOrderAmount: c.minOrderAmount ?? undefined, usageLimit: c.usageLimit ?? undefined, startsAt: c.startsAt?.slice(0, 16), expiresAt: c.expiresAt?.slice(0, 16) }); setDialogOpen(true) }
+  const openCreate = () => { setEditing(null); reset({ code: '', discountType: 'percentage', discountValue: 0, startsAt: '', expiresAt: '' }); setDialogOpen(true) }
+  const openEdit = (c: Coupon) => { setEditing(c); reset({ code: c.code, discountType: c.discountType, discountValue: c.discountValue, minOrderValue: c.minOrderValue ?? undefined, maxDiscount: c.maxDiscount ?? undefined, usageLimit: c.usageLimit ?? undefined, perUserLimit: c.perUserLimit ?? undefined, startsAt: c.startsAt?.slice(0, 16), expiresAt: c.expiresAt?.slice(0, 16) }); setDialogOpen(true) }
   const onSubmit = (d: FormData) => editing ? updateM.mutate({ ...d, id: editing.id }) : createM.mutate(d)
 
   const columns: ColumnDef<Coupon>[] = [
@@ -96,9 +105,9 @@ export default function CouponsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Coupons" description="Manage discount coupons" action={{ label: 'Add Coupon', onClick: openCreate }} />
-      <DataTable columns={columns} data={data ?? []} isLoading={isLoading} searchColumn="code" searchPlaceholder="Search coupons..."
+      <DataTable columns={columns} data={data ?? []} isLoading={isLoading} isError={isError} onRetry={refetch} searchColumn="code" searchPlaceholder="Search coupons..."
         enableRowSelection
-        onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} coupons?`)) rows.forEach((r) => deleteM.mutate(r.id)) }}
+        onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} coupons?`)) Promise.allSettled(rows.map((r) => couponsApi.delete(r.id))).then((results) => { qc.invalidateQueries({ queryKey: ['coupons'] }); const failed = results.filter((r) => r.status === 'rejected').length; if (failed) toast.error(`${failed} of ${rows.length} failed`); else toast.success(`${rows.length} coupon(s) deleted`) }) }}
         exportFilename="coupons"
         getExportRow={(r) => ({ Code: r.code, Type: r.discountType, Value: r.discountValue, Status: r.isActive ? 'Active' : 'Inactive', Expires: r.expiresAt })}
       />
@@ -117,7 +126,11 @@ export default function CouponsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Discount Value</Label><Input type="number" step="0.01" {...register('discountValue')} /></div>
-              <div className="space-y-2"><Label>Min Order Amount</Label><Input type="number" step="0.01" {...register('minOrderAmount')} /></div>
+              <div className="space-y-2"><Label>Min Order Value</Label><Input type="number" step="0.01" {...register('minOrderValue')} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Max Discount</Label><Input type="number" step="0.01" {...register('maxDiscount')} /></div>
+              <div className="space-y-2"><Label>Per-User Limit</Label><Input type="number" {...register('perUserLimit')} /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Starts At</Label><Input type="datetime-local" {...register('startsAt')} /></div>
@@ -144,7 +157,7 @@ export default function CouponsPage() {
               <div className="space-y-2">
                 {(scopes as CouponScope[]).map((s) => (
                   <div key={s.id} className="flex items-center justify-between rounded-lg border p-3">
-                    <div className="text-sm"><Badge variant="outline" className="mr-2">{s.scopeType}</Badge><span className="font-mono">{s.scopeId.slice(0, 12)}</span></div>
+                    <div className="text-sm"><Badge variant="outline" className="mr-2">{s.scopeType}</Badge><span className="font-mono">{(s.productId || s.categoryId || s.userId || '').slice(0, 12)}</span></div>
                     <Button variant="ghost" size="icon" onClick={() => removeScopeM.mutate(s.id)}><X className="h-3 w-3 text-destructive" /></Button>
                   </div>
                 ))}
@@ -155,12 +168,12 @@ export default function CouponsPage() {
       </Dialog>
 
       {/* Add Scope Dialog */}
-      <Dialog open={addScopeOpen} onOpenChange={setAddScopeOpen}>
+      <Dialog open={addScopeOpen} onOpenChange={(open) => { setAddScopeOpen(open); if (!open) { setNewScopeId(''); setNewScopeType('product') } }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Add Scope</DialogTitle><DialogDescription>Restrict this coupon to specific entities</DialogDescription></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2"><Label>Scope Type</Label>
-              <Select value={newScopeType} onValueChange={setNewScopeType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="product">Product</SelectItem><SelectItem value="category">Category</SelectItem><SelectItem value="store">Store</SelectItem><SelectItem value="user">User</SelectItem></SelectContent></Select>
+              <Select value={newScopeType} onValueChange={setNewScopeType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="product">Product</SelectItem><SelectItem value="category">Category</SelectItem><SelectItem value="user">User</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-2"><Label>Scope ID</Label><Input value={newScopeId} onChange={(e) => setNewScopeId(e.target.value)} placeholder="Entity ID" /></div>
           </div>

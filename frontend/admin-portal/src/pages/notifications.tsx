@@ -15,6 +15,7 @@ import { LoadingPage } from '@/components/shared/loading'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Bell, CheckCheck, Trash2, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatDateTime } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
 import { VirtualizedList } from '@/components/shared/virtualized-list'
@@ -40,7 +41,7 @@ export default function NotificationsPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const limit = 20
 
-  const notifyForm = useForm<NotifyFormData>({ resolver: zodResolver(notifySchema) })
+  const notifyForm = useForm<NotifyFormData>({ resolver: zodResolver(notifySchema) as any })
 
   const { data, isLoading } = useQuery({
     queryKey: ['notifications', { page, limit }],
@@ -50,22 +51,25 @@ export default function NotificationsPage() {
   const markReadM = useMutation({
     mutationFn: notificationsApi.markRead,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['notifications'] }); qc.invalidateQueries({ queryKey: ['notifications', 'unread-count'] }) },
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to mark as read')),
   })
 
   const markAllReadM = useMutation({
     mutationFn: notificationsApi.markAllRead,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['notifications'] }); qc.invalidateQueries({ queryKey: ['notifications', 'unread-count'] }); toast.success('All marked as read') },
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to mark all as read')),
   })
 
   const deleteM = useMutation({
     mutationFn: notificationsApi.delete,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['notifications'] }); toast.success('Deleted') },
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to delete')),
   })
 
   const createM = useMutation({
     mutationFn: notificationsApi.create,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['notifications'] }); setCreateOpen(false); notifyForm.reset(); toast.success('Notification sent') },
-    onError: () => toast.error('Failed to send notification'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to send notification')),
   })
 
   if (isLoading) return <LoadingPage />

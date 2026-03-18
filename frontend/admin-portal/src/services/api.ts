@@ -72,7 +72,7 @@ export const authApi = {
     api.post<AuthResponse>('/auth/refresh', { refreshToken }).then((r) => r.data),
   logout: (refreshToken: string) =>
     api.post('/auth/logout', { refreshToken }),
-  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+  changePassword: (data: { oldPassword: string; newPassword: string }) =>
     api.post('/auth/change-password', data),
   forgotPassword: (email: string) =>
     api.post('/auth/forgot-password', { email }),
@@ -288,7 +288,7 @@ export const couponsApi = {
   delete: (id: string) => api.delete(`/coupons/${id}`),
   // Coupon Scopes
   getScopes: (id: string) => api.get<CouponScope[]>(`/coupons/${id}/scopes`).then((r) => r.data),
-  addScope: (id: string, data: { scopeType: string; scopeId: string }) =>
+  addScope: (id: string, data: Record<string, string>) =>
     api.post<CouponScope>(`/coupons/${id}/scopes`, data).then((r) => r.data),
   removeScope: (scopeId: string) => api.delete(`/coupons/scopes/${scopeId}`),
 }
@@ -325,11 +325,11 @@ export const inventoryApi = {
   lowStock: () => api.get<Inventory[]>('/inventory/low-stock').then((r) => r.data),
   set: (data: { warehouseId: string; variantId: string; qtyOnHand: number; lowStockThreshold?: number }) =>
     api.post('/inventory/set', data).then((r) => r.data),
-  adjust: (data: { warehouseId: string; variantId: string; adjustment: number; reason?: string }) =>
+  adjust: (data: { warehouseId: string; variantId: string; delta: number }) =>
     api.post('/inventory/adjust', data).then((r) => r.data),
-  reserve: (data: { warehouseId: string; variantId: string; quantity: number }) =>
+  reserve: (data: { warehouseId: string; variantId: string; delta: number }) =>
     api.post('/inventory/reserve', data).then((r) => r.data),
-  release: (data: { warehouseId: string; variantId: string; quantity: number }) =>
+  release: (data: { warehouseId: string; variantId: string; delta: number }) =>
     api.post('/inventory/release', data).then((r) => r.data),
 }
 
@@ -345,8 +345,10 @@ export const shippingApi = {
   // Zone Countries
   getCountries: (zoneId: string) =>
     api.get<ShippingZoneCountry[]>(`/shipping/zones/${zoneId}/countries`).then((r) => r.data),
-  addCountry: (zoneId: string, data: { countryCode: string }) =>
+  addCountry: (zoneId: string, data: { country: string }) =>
     api.post<ShippingZoneCountry>(`/shipping/zones/${zoneId}/countries`, data).then((r) => r.data),
+  removeCountry: (zoneId: string, country: string) =>
+    api.delete(`/shipping/zones/${zoneId}/countries/${country}`),
   // Methods
   listMethods: () => api.get<ShippingMethod[]>('/shipping/methods').then((r) => r.data),
   createMethod: (data: Partial<ShippingMethod>) =>

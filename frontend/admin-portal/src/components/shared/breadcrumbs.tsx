@@ -35,7 +35,7 @@ export function Breadcrumbs() {
   if (segments.length === 0) return null
 
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
+    <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground/70 mb-6">
       <Link to="/" className="flex items-center gap-1 hover:text-foreground transition-colors">
         <Home className="h-3.5 w-3.5" />
       </Link>
@@ -45,9 +45,9 @@ export function Breadcrumbs() {
         const isLast = i === segments.length - 1
         return (
           <span key={path} className="flex items-center gap-1.5">
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-3 w-3 text-muted-foreground/30" />
             {isLast ? (
-              <span className="font-medium text-foreground">{label}</span>
+              <span className="font-semibold text-foreground text-[13px]">{label}</span>
             ) : (
               <Link to={path} className="hover:text-foreground transition-colors">{label}</Link>
             )}

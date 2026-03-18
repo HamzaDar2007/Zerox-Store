@@ -7,7 +7,7 @@ const EVENTS: (keyof DocumentEventMap)[] = ['mousedown', 'keydown', 'scroll', 't
 export function useSessionTimeout() {
   const logout = useAuthStore((s) => s.logout)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const timerRef = useRef<ReturnType<typeof setTimeout>>()
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current)

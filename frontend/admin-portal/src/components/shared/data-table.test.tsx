@@ -37,7 +37,7 @@ describe('DataTable', () => {
 
   it('shows empty state when no data', () => {
     render(<DataTable columns={columns} data={[]} />)
-    expect(screen.getByText('No results found.')).toBeInTheDocument()
+    expect(screen.getByText('No results found')).toBeInTheDocument()
   })
 
   it('renders sort header buttons', () => {

@@ -167,11 +167,15 @@ export interface Product {
   brand?: Brand
   name: string
   slug: string
-  description?: string
+  shortDesc?: string
+  fullDesc?: string
   basePrice: number
-  compareAtPrice?: number
+  currency: string
   status: string
   isActive: boolean
+  isDigital?: boolean
+  requiresShipping?: boolean
+  taxClass?: string
   createdAt: string
   updatedAt: string
   variants?: ProductVariant[]
@@ -182,9 +186,8 @@ export interface ProductVariant {
   id: string
   productId: string
   sku: string
-  name?: string
   price: number
-  compareAtPrice?: number
+  weightGrams?: number
   isActive: boolean
   createdAt: string
 }
@@ -232,12 +235,12 @@ export interface ProductCategory {
 export interface Coupon {
   id: string
   code: string
-  description?: string
   discountType: string
   discountValue: number
-  minOrderAmount?: number
+  minOrderValue?: number
   maxDiscount?: number
   usageLimit?: number
+  perUserLimit?: number
   usedCount: number
   startsAt: string
   expiresAt: string
@@ -250,14 +253,14 @@ export interface CouponScope {
   id: string
   couponId: string
   scopeType: string
-  scopeId: string
-  createdAt: string
+  userId?: string
+  productId?: string
+  categoryId?: string
 }
 
 export interface FlashSale {
   id: string
   name: string
-  description?: string
   startsAt: string
   endsAt: string
   isActive: boolean
@@ -333,7 +336,7 @@ export interface Warehouse {
   id: string
   code: string
   name: string
-  address?: string
+  line1?: string
   city?: string
   country?: string
   isActive: boolean
@@ -365,19 +368,19 @@ export interface ShippingMethod {
   id: string
   zoneId: string
   name: string
-  description?: string
-  price: number
-  minDeliveryDays?: number
-  maxDeliveryDays?: number
+  carrier?: string
+  estimatedDaysMin?: number
+  estimatedDaysMax?: number
+  baseRate: number
+  perKgRate: number
+  freeThreshold?: number
   isActive: boolean
   createdAt: string
 }
 
 export interface ShippingZoneCountry {
-  id: string
   zoneId: string
-  countryCode: string
-  createdAt: string
+  country: string
 }
 
 export interface Shipment {

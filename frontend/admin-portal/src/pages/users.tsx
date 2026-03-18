@@ -13,14 +13,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Pencil, Trash2, Eye, Plus, X, MapPin, Shield } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { UrlFileField } from '@/components/shared/url-file-field'
 
 const userSchema = z.object({
   email: z.string().email(),
@@ -28,6 +30,8 @@ const userSchema = z.object({
   firstName: z.string().min(1, 'Required'),
   lastName: z.string().min(1, 'Required'),
   phone: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  roleId: z.string().optional(),
 })
 
 type UserFormData = z.infer<typeof userSchema>
@@ -44,8 +48,8 @@ function UserRolesPanel({ userId }: { userId: string }) {
   const [selectedRoleId, setSelectedRoleId] = useState('')
   const { data: userRoles = [], isLoading } = useQuery({ queryKey: ['user-roles', userId], queryFn: () => usersApi.getRoles(userId) })
   const { data: allRoles = [] } = useQuery({ queryKey: ['roles'], queryFn: rolesApi.list })
-  const assignM = useMutation({ mutationFn: (roleId: string) => usersApi.assignRole(userId, roleId), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-roles', userId] }); setSelectedRoleId(''); toast.success('Role assigned') }, onError: () => toast.error('Failed') })
-  const removeM = useMutation({ mutationFn: (roleId: string) => usersApi.removeRole(userId, roleId), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-roles', userId] }); toast.success('Role removed') }, onError: () => toast.error('Failed') })
+  const assignM = useMutation({ mutationFn: (roleId: string) => usersApi.assignRole(userId, roleId), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-roles', userId] }); setSelectedRoleId(''); toast.success('Role assigned') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const removeM = useMutation({ mutationFn: (roleId: string) => usersApi.removeRole(userId, roleId), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-roles', userId] }); toast.success('Role removed') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
   const rolesArr = Array.isArray(userRoles) ? userRoles : []
   const allRolesArr = Array.isArray(allRoles) ? allRoles : []
@@ -88,10 +92,10 @@ function UserAddressesPanel({ userId }: { userId: string }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingAddr, setEditingAddr] = useState<Address | null>(null)
   const { data: addresses = [], isLoading } = useQuery({ queryKey: ['user-addresses', userId], queryFn: () => usersApi.getAddresses(userId) })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<AddressFormData>({ resolver: zodResolver(addressSchema) })
-  const createM = useMutation({ mutationFn: (d: AddressFormData) => usersApi.createAddress(userId, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-addresses', userId] }); setDialogOpen(false); reset(); toast.success('Address added') }, onError: () => toast.error('Failed') })
-  const updateM = useMutation({ mutationFn: ({ id, ...d }: AddressFormData & { id: string }) => usersApi.updateAddress(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-addresses', userId] }); setDialogOpen(false); setEditingAddr(null); toast.success('Updated') }, onError: () => toast.error('Failed') })
-  const deleteM = useMutation({ mutationFn: (id: string) => usersApi.deleteAddress(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-addresses', userId] }); toast.success('Deleted') }, onError: () => toast.error('Failed') })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<AddressFormData>({ resolver: zodResolver(addressSchema) as any })
+  const createM = useMutation({ mutationFn: (d: AddressFormData) => usersApi.createAddress(userId, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-addresses', userId] }); setDialogOpen(false); reset(); toast.success('Address added') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const updateM = useMutation({ mutationFn: ({ id, ...d }: AddressFormData & { id: string }) => usersApi.updateAddress(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-addresses', userId] }); setDialogOpen(false); setEditingAddr(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const deleteM = useMutation({ mutationFn: (id: string) => usersApi.deleteAddress(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-addresses', userId] }); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
   const openCreate = () => { setEditingAddr(null); reset({ label: '', line1: '', line2: '', city: '', state: '', postalCode: '', country: '' }); setDialogOpen(true) }
   const openEdit = (a: Address) => { setEditingAddr(a); reset({ label: a.label ?? '', line1: a.line1, line2: a.line2 ?? '', city: a.city, state: a.state, postalCode: a.postalCode, country: a.country }); setDialogOpen(true) }
@@ -155,34 +159,42 @@ export default function UsersPage() {
   const [detailTab, setDetailTab] = useState<'info' | 'roles' | 'addresses'>('info')
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['users', { page, limit: 10, search }],
     queryFn: () => usersApi.list({ page, limit: 10, search: search || undefined }),
   })
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<UserFormData>({
-    resolver: zodResolver(userSchema),
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<UserFormData>({
+    resolver: zodResolver(userSchema) as any,
   })
 
+  const { data: allRoles = [] } = useQuery({ queryKey: ['roles'], queryFn: rolesApi.list })
+
   const createMutation = useMutation({
-    mutationFn: (d: UserFormData) => usersApi.create({ ...d, password: d.password! }),
+    mutationFn: (d: UserFormData) => {
+      const { roleId, ...userData } = d
+      return usersApi.create({ ...userData, password: userData.password! }).then(async (user) => {
+        if (roleId) await usersApi.assignRole(user.id, roleId)
+        return user
+      })
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); setDialogOpen(false); reset(); toast.success('User created') },
-    onError: () => toast.error('Failed to create user'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to create user')),
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, ...d }: UserFormData & { id: string }) => usersApi.update(id, d),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); setDialogOpen(false); setEditing(null); reset(); toast.success('User updated') },
-    onError: () => toast.error('Failed to update user'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to update user')),
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => usersApi.delete(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); setDeleteTarget(null); toast.success('User deleted') },
-    onError: () => toast.error('Failed to delete user'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to delete user')),
   })
 
-  const openCreate = () => { setEditing(null); reset({ email: '', firstName: '', lastName: '', phone: '', password: '' }); setDialogOpen(true) }
+  const openCreate = () => { setEditing(null); reset({ email: '', firstName: '', lastName: '', phone: '', password: '', avatarUrl: '', roleId: '' }); setDialogOpen(true) }
   const openEdit = (user: User) => { setEditing(user); reset({ email: user.email, firstName: user.firstName, lastName: user.lastName, phone: user.phone ?? '' }); setDialogOpen(true) }
 
   const onSubmit = (d: UserFormData) => {
@@ -193,6 +205,7 @@ export default function UsersPage() {
   const columns: ColumnDef<User>[] = [
     { accessorKey: 'firstName', header: ({ column }) => <SortHeader column={column}>Name</SortHeader>, cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}` },
     { accessorKey: 'email', header: ({ column }) => <SortHeader column={column}>Email</SortHeader> },
+    { accessorKey: 'role', header: 'Role', cell: ({ row }) => <Badge variant="outline">{row.original.role ?? '—'}</Badge> },
     { accessorKey: 'isActive', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.isActive ? 'active' : 'inactive'} /> },
     { accessorKey: 'isEmailVerified', header: 'Verified', cell: ({ row }) => <Badge variant={row.original.isEmailVerified ? 'success' : 'secondary'}>{row.original.isEmailVerified ? 'Yes' : 'No'}</Badge> },
     { accessorKey: 'createdAt', header: ({ column }) => <SortHeader column={column}>Created</SortHeader>, cell: ({ row }) => formatDate(row.original.createdAt) },
@@ -212,10 +225,12 @@ export default function UsersPage() {
   ]
 
   const handleBulkDelete = (rows: User[]) => {
-    Promise.all(rows.map((r) => usersApi.delete(r.id))).then(() => {
+    Promise.allSettled(rows.map((r) => usersApi.delete(r.id))).then((results) => {
       qc.invalidateQueries({ queryKey: ['users'] })
-      toast.success(`${rows.length} user(s) deleted`)
-    }).catch(() => toast.error('Failed to delete some users'))
+      const failed = results.filter((r) => r.status === 'rejected').length
+      if (failed) toast.error(`${failed} of ${rows.length} failed to delete`)
+      else toast.success(`${rows.length} user(s) deleted`)
+    })
   }
 
   return (
@@ -226,6 +241,8 @@ export default function UsersPage() {
         columns={columns}
         data={data?.data ?? []}
         isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
         manualPagination
         page={page}
         pageCount={data?.totalPages ?? 1}
@@ -235,7 +252,7 @@ export default function UsersPage() {
         enableRowSelection
         onBulkDelete={handleBulkDelete}
         exportFilename="users"
-        getExportRow={(u) => ({ Name: `${u.firstName} ${u.lastName}`, Email: u.email, Status: u.isActive ? 'Active' : 'Inactive', Created: u.createdAt })}
+        getExportRow={(u) => ({ Name: `${u.firstName} ${u.lastName}`, Email: u.email, Role: u.role ?? '', Status: u.isActive ? 'Active' : 'Inactive', Created: u.createdAt })}
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -269,10 +286,31 @@ export default function UsersPage() {
                 {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
               </div>
             )}
-            <div className="space-y-2">
-              <Label>Phone</Label>
-              <Input {...register('phone')} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input {...register('phone')} />
+              </div>
+              <div className="space-y-2">
+                <Label>Avatar</Label>
+                <Controller name="avatarUrl" control={control} render={({ field }) => <UrlFileField value={field.value ?? ''} onChange={field.onChange} />} />
+              </div>
             </div>
+            {!editing && (
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Controller name="roleId" control={control} render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue placeholder="Select a role (optional)" /></SelectTrigger>
+                    <SelectContent>
+                      {(Array.isArray(allRoles) ? allRoles : []).map((r: Role) => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )} />
+              </div>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
@@ -316,6 +354,7 @@ export default function UsersPage() {
                   <div><span className="text-muted-foreground">Email:</span> {detailUser.email}</div>
                   <div><span className="text-muted-foreground">Phone:</span> {detailUser.phone || '—'}</div>
                   <div><span className="text-muted-foreground">Active:</span> <StatusBadge status={detailUser.isActive ? 'active' : 'inactive'} /></div>
+                  <div><span className="text-muted-foreground">Role:</span> <Badge variant="outline">{detailUser.role ?? '—'}</Badge></div>
                   <div><span className="text-muted-foreground">Verified:</span> <Badge variant={detailUser.isEmailVerified ? 'success' : 'secondary'}>{detailUser.isEmailVerified ? 'Yes' : 'No'}</Badge></div>
                   <div><span className="text-muted-foreground">Created:</span> {formatDate(detailUser.createdAt)}</div>
                   <div><span className="text-muted-foreground">Updated:</span> {formatDate(detailUser.updatedAt)}</div>

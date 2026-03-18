@@ -12,17 +12,17 @@ afterAll(() => server.close())
 describe('LoginPage', () => {
   it('renders login form', () => {
     renderWithProviders(<LoginPage />)
-    expect(screen.getByText('Admin Portal')).toBeInTheDocument()
-    expect(screen.getByLabelText('Email')).toBeInTheDocument()
+    expect(screen.getByText('Welcome back')).toBeInTheDocument()
+    expect(screen.getByLabelText('Email address')).toBeInTheDocument()
     expect(screen.getByLabelText('Password')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
   })
 
   it('shows validation errors for empty form', async () => {
     const user = userEvent.setup()
     renderWithProviders(<LoginPage />)
 
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
       expect(screen.getByText('Invalid email address')).toBeInTheDocument()
@@ -33,9 +33,9 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     renderWithProviders(<LoginPage />)
 
-    await user.type(screen.getByLabelText('Email'), 'test@example.com')
+    await user.type(screen.getByLabelText('Email address'), 'test@example.com')
     await user.type(screen.getByLabelText('Password'), '123')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
       expect(screen.getByText('Password must be at least 6 characters')).toBeInTheDocument()
@@ -46,12 +46,12 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     renderWithProviders(<LoginPage />)
 
-    await user.type(screen.getByLabelText('Email'), 'admin@example.com')
+    await user.type(screen.getByLabelText('Email address'), 'admin@example.com')
     await user.type(screen.getByLabelText('Password'), 'password123')
-    await user.click(screen.getByRole('button', { name: 'Sign In' }))
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Sign In' })).not.toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Sign in' })).not.toBeDisabled()
     })
   })
 })

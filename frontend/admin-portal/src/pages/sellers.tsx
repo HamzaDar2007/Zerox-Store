@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ColumnDef } from '@tanstack/react-table'
-import { sellersApi } from '@/services/api'
-import type { Seller } from '@/types'
+import { sellersApi, usersApi } from '@/services/api'
+import type { Seller, User } from '@/types'
 import { DataTable, SortHeader } from '@/components/shared/data-table'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatusBadge } from '@/components/shared/status-badge'
@@ -16,16 +16,17 @@ import { MoreHorizontal, CheckCircle, Trash2, Eye } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
-import { useForm } from 'react-hook-form'
+import { getErrorMessage } from '@/lib/api-error'
+import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const createSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
   displayName: z.string().min(1, 'Display name is required'),
   legalName: z.string().optional(),
   taxId: z.string().optional(),
-  commissionRate: z.coerce.number().min(0).max(100).optional(),
 })
 type CreateFormData = z.infer<typeof createSchema>
 
@@ -35,25 +36,26 @@ export default function SellersPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({ queryKey: ['sellers'], queryFn: sellersApi.list })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateFormData>({ resolver: zodResolver(createSchema) as any })
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['sellers'], queryFn: sellersApi.list })
+  const { data: usersForDropdown } = useQuery({ queryKey: ['users', { page: 1, limit: 200 }], queryFn: () => usersApi.list({ page: 1, limit: 200 }) })
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<CreateFormData>({ resolver: zodResolver(createSchema) as any })
 
   const createM = useMutation({
     mutationFn: sellersApi.create,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['sellers'] }); setCreateOpen(false); reset(); toast.success('Seller created') },
-    onError: () => toast.error('Failed to create seller'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to create seller')),
   })
 
   const approveM = useMutation({
     mutationFn: (id: string) => sellersApi.approve(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['sellers'] }); toast.success('Seller approved') },
-    onError: () => toast.error('Failed to approve'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to approve')),
   })
 
   const deleteM = useMutation({
     mutationFn: (id: string) => sellersApi.delete(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['sellers'] }); setDeleteTarget(null); toast.success('Seller deleted') },
-    onError: () => toast.error('Failed to delete'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to delete')),
   })
 
   const columns: ColumnDef<Seller>[] = [
@@ -84,19 +86,25 @@ export default function SellersPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <PageHeader title="Sellers" description="View and manage sellers" action={{ label: 'Add Seller', onClick: () => { reset({ userId: '', displayName: '', legalName: '', taxId: '', commissionRate: undefined }); setCreateOpen(true) } }} />
-      <DataTable columns={columns} data={data ?? []} isLoading={isLoading} searchColumn="displayName" searchPlaceholder="Search sellers..."
+      <PageHeader title="Sellers" description="View and manage sellers" action={{ label: 'Add Seller', onClick: () => { reset({ userId: '', displayName: '', legalName: '', taxId: '' }); setCreateOpen(true) } }} />
+      <DataTable columns={columns} data={data ?? []} isLoading={isLoading} isError={isError} onRetry={refetch} searchColumn="displayName" searchPlaceholder="Search sellers..."
         enableRowSelection
         onBulkDelete={(rows) => {
-          Promise.all(rows.map((r) => sellersApi.delete(r.id))).then(() => {
-            qc.invalidateQueries({ queryKey: ['sellers'] }); toast.success(`${rows.length} seller(s) deleted`)
-          }).catch(() => toast.error('Failed'))
+          Promise.allSettled(rows.map((r) => sellersApi.delete(r.id))).then((results) => {
+            qc.invalidateQueries({ queryKey: ['sellers'] })
+            const failed = results.filter((r) => r.status === 'rejected').length
+            if (failed) toast.error(`${failed} of ${rows.length} failed to delete`)
+            else toast.success(`${rows.length} seller(s) deleted`)
+          })
         }}
         bulkStatusOptions={['active', 'suspended']}
         onBulkStatusChange={(rows, status) => {
-          Promise.all(rows.map((r) => sellersApi.update(r.id, { status }))).then(() => {
-            qc.invalidateQueries({ queryKey: ['sellers'] }); toast.success(`${rows.length} seller(s) updated`)
-          }).catch(() => toast.error('Failed'))
+          Promise.allSettled(rows.map((r) => sellersApi.update(r.id, { status }))).then((results) => {
+            qc.invalidateQueries({ queryKey: ['sellers'] })
+            const failed = results.filter((r) => r.status === 'rejected').length
+            if (failed) toast.error(`${failed} of ${rows.length} failed to update`)
+            else toast.success(`${rows.length} seller(s) updated`)
+          })
         }}
         exportFilename="sellers"
         getExportRow={(r) => ({ DisplayName: r.displayName, LegalName: r.legalName ?? '', Commission: r.commissionRate ?? '', Status: r.status, Joined: r.createdAt })}
@@ -138,13 +146,25 @@ export default function SellersPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Create Seller</DialogTitle><DialogDescription>Register a new seller account</DialogDescription></DialogHeader>
           <form onSubmit={handleSubmit((d) => createM.mutate(d))} className="space-y-4">
-            <div className="space-y-2"><Label>User ID</Label><Input {...register('userId')} placeholder="Existing user ID" />{errors.userId && <p className="text-xs text-destructive">{errors.userId.message}</p>}</div>
+            <div className="space-y-2">
+              <Label>User</Label>
+              <Controller name="userId" control={control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger><SelectValue placeholder="Select a user" /></SelectTrigger>
+                  <SelectContent>
+                    {(usersForDropdown?.data ?? []).map((u: User) => (
+                      <SelectItem key={u.id} value={u.id}>{u.firstName} {u.lastName} ({u.email})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )} />
+              {errors.userId && <p className="text-xs text-destructive">{errors.userId.message}</p>}
+            </div>
             <div className="space-y-2"><Label>Display Name</Label><Input {...register('displayName')} />{errors.displayName && <p className="text-xs text-destructive">{errors.displayName.message}</p>}</div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Legal Name</Label><Input {...register('legalName')} /></div>
               <div className="space-y-2"><Label>Tax ID</Label><Input {...register('taxId')} /></div>
             </div>
-            <div className="space-y-2"><Label>Commission Rate (%)</Label><Input type="number" step="0.01" {...register('commissionRate')} /></div>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button><Button type="submit" disabled={createM.isPending}>Create</Button></DialogFooter>
           </form>
         </DialogContent>

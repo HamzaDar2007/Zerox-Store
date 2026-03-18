@@ -17,7 +17,7 @@ describe('ForbiddenPage', () => {
     const { default: ForbiddenPage } = await import('@/pages/forbidden')
     render(<MemoryRouter><ForbiddenPage /></MemoryRouter>)
     expect(screen.getByText('403')).toBeInTheDocument()
-    expect(screen.getByText('Forbidden')).toBeInTheDocument()
+    expect(screen.getByText('Access Forbidden')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Back to Dashboard' })).toHaveAttribute('href', '/')
   })
 })

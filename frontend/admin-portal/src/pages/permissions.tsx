@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -33,12 +34,12 @@ export default function PermissionsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Permission | null>(null)
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({ queryKey: ['permissions'], queryFn: permissionsApi.list })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['permissions'], queryFn: permissionsApi.list })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
 
-  const createM = useMutation({ mutationFn: permissionsApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['permissions'] }); setDialogOpen(false); reset(); toast.success('Permission created') }, onError: () => toast.error('Failed') })
-  const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => permissionsApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['permissions'] }); setDialogOpen(false); setEditing(null); reset(); toast.success('Permission updated') }, onError: () => toast.error('Failed') })
-  const deleteM = useMutation({ mutationFn: (id: string) => permissionsApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['permissions'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: () => toast.error('Failed') })
+  const createM = useMutation({ mutationFn: permissionsApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['permissions'] }); setDialogOpen(false); reset(); toast.success('Permission created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => permissionsApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['permissions'] }); setDialogOpen(false); setEditing(null); reset(); toast.success('Permission updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const deleteM = useMutation({ mutationFn: (id: string) => permissionsApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['permissions'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
   const openCreate = () => { setEditing(null); reset({ code: '', module: '', description: '' }); setDialogOpen(true) }
   const openEdit = (p: Permission) => { setEditing(p); reset({ code: p.code, module: p.module, description: p.description ?? '' }); setDialogOpen(true) }
@@ -65,9 +66,9 @@ export default function PermissionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Permissions" description="Manage access permissions" action={{ label: 'Add Permission', onClick: openCreate }} />
-      <DataTable columns={columns} data={data ?? []} isLoading={isLoading} searchColumn="code" searchPlaceholder="Search permissions..."
+      <DataTable columns={columns} data={data ?? []} isLoading={isLoading} isError={isError} onRetry={refetch} searchColumn="code" searchPlaceholder="Search permissions..."
         enableRowSelection
-        onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} permissions?`)) rows.forEach((r) => deleteM.mutate(r.id)) }}
+        onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} permissions?`)) Promise.allSettled(rows.map((r) => permissionsApi.delete(r.id))).then((results) => { qc.invalidateQueries({ queryKey: ['permissions'] }); const failed = results.filter((r) => r.status === 'rejected').length; if (failed) toast.error(`${failed} of ${rows.length} failed`); else toast.success(`${rows.length} permission(s) deleted`) }) }}
         exportFilename="permissions"
         getExportRow={(r) => ({ Code: r.code, Module: r.module, Description: r.description ?? '', Created: r.createdAt })}
       />

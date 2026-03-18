@@ -9,16 +9,15 @@ export function AppLayout() {
   const { sidebarCollapsed } = useThemeStore()
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-muted/20">
       <Sidebar />
       <div className={cn(
-        'transition-all duration-300',
-        /* Mobile: no left margin (sidebar is overlay). Desktop: margin based on collapse state */
+        'transition-all duration-300 ease-in-out',
         'ml-0 md:ml-16',
         !sidebarCollapsed && 'md:ml-64',
       )}>
         <Header />
-        <main className="p-4 md:p-6 animate-fade-in">
+        <main className="p-4 md:p-6 lg:p-8 page-enter">
           <Breadcrumbs />
           <Outlet />
         </main>

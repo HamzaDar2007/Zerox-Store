@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Delete,
   Body,
   Param,
   Query,
@@ -103,6 +104,20 @@ export class ShippingController {
   @ApiResponse({ status: 200, description: 'Zone countries returned' })
   getCountries(@Param('zoneId') zoneId: string) {
     return this.svc.getZoneCountries(zoneId);
+  }
+
+  @Delete('zones/:zoneId/countries/:country')
+  @UseGuards(RolesGuard)
+  @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Remove country from shipping zone (Admin only)' })
+  @ApiParam({ name: 'zoneId', description: 'Zone UUID' })
+  @ApiParam({ name: 'country', description: 'Country code (e.g. US)' })
+  @ApiResponse({ status: 200, description: 'Country removed from zone' })
+  removeCountry(
+    @Param('zoneId') zoneId: string,
+    @Param('country') country: string,
+  ) {
+    return this.svc.removeCountryFromZone(zoneId, country);
   }
 
   @Post('methods')

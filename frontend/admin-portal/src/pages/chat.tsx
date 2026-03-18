@@ -15,6 +15,7 @@ import { Send, MessageSquare, CheckCircle, XCircle, Clock, Plus, Users } from 'l
 import { formatDateTime } from '@/lib/utils'
 import { useAuthStore } from '@/store/auth.store'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 
 export default function ChatPage() {
   const [selectedThread, setSelectedThread] = useState<ChatThread | null>(null)
@@ -42,18 +43,25 @@ export default function ChatPage() {
   const sendM = useMutation({
     mutationFn: (body: string) => chatApi.sendMessage({ threadId: selectedThread!.id, body }),
     onSuccess: () => { setMessage(''); refetchMessages() },
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to send message')),
   })
 
   const updateStatusM = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => chatApi.updateThreadStatus(id, status),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['chat-threads'] }); toast.success('Thread status updated') },
-    onError: () => toast.error('Failed to update status'),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['chat-threads'] })
+      if (selectedThread && selectedThread.id === vars.id) {
+        setSelectedThread({ ...selectedThread, status: vars.status })
+      }
+      toast.success('Thread status updated')
+    },
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to update status')),
   })
 
   const createThreadM = useMutation({
     mutationFn: chatApi.createThread,
     onSuccess: (thread) => { qc.invalidateQueries({ queryKey: ['chat-threads'] }); setCreateOpen(false); setNewThreadOrderId(''); setNewThreadProductId(''); setSelectedThread(thread as ChatThread); toast.success('Thread created') },
-    onError: () => toast.error('Failed to create thread'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to create thread')),
   })
 
   const { data: participants } = useQuery({
@@ -84,7 +92,7 @@ export default function ChatPage() {
           <CardHeader className="py-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm">Threads</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}><Plus className="mr-1 h-3 w-3" />New</Button>
+              <Button size="sm" variant="outline" onClick={() => { setNewThreadOrderId(''); setNewThreadProductId(''); setCreateOpen(true) }}><Plus className="mr-1 h-3 w-3" />New</Button>
             </div>
           </CardHeader>
           <ScrollArea className="h-[calc(100%-60px)]">

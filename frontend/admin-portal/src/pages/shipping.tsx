@@ -16,13 +16,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreHorizontal, Pencil, Eye, Plus, MapPin, Globe, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 const zoneSchema = z.object({ name: z.string().min(1) })
-const methodSchema = z.object({ name: z.string().min(1), zoneId: z.string().min(1), price: z.coerce.number().min(0), minDeliveryDays: z.coerce.number().optional(), maxDeliveryDays: z.coerce.number().optional() })
+const methodSchema = z.object({ name: z.string().min(1), zoneId: z.string().min(1), baseRate: z.coerce.number().min(0), perKgRate: z.coerce.number().min(0).default(0), estimatedDaysMin: z.coerce.number().optional(), estimatedDaysMax: z.coerce.number().optional(), carrier: z.string().optional(), freeThreshold: z.coerce.number().optional() })
 
 export default function ShippingPage() {
   const [zoneDialog, setZoneDialog] = useState(false)
@@ -33,10 +34,10 @@ export default function ShippingPage() {
   const [addCountryCode, setAddCountryCode] = useState('')
   const qc = useQueryClient()
 
-  const { data: zones, isLoading: loadingZones } = useQuery({ queryKey: ['shipping-zones'], queryFn: shippingApi.listZones })
-  const { data: methods, isLoading: loadingMethods } = useQuery({ queryKey: ['shipping-methods'], queryFn: shippingApi.listMethods })
+  const { data: zones, isLoading: loadingZones, isError: errorZones, refetch: refetchZones } = useQuery({ queryKey: ['shipping-zones'], queryFn: shippingApi.listZones })
+  const { data: methods, isLoading: loadingMethods, isError: errorMethods, refetch: refetchMethods } = useQuery({ queryKey: ['shipping-methods'], queryFn: shippingApi.listMethods })
 
-  const zoneForm = useForm<z.infer<typeof zoneSchema>>({ resolver: zodResolver(zoneSchema) })
+  const zoneForm = useForm<z.infer<typeof zoneSchema>>({ resolver: zodResolver(zoneSchema) as any })
   const methodForm = useForm<z.infer<typeof methodSchema>>({ resolver: zodResolver(methodSchema) as any })
 
   const { data: zoneCountries, refetch: refetchCountries } = useQuery({
@@ -46,15 +47,25 @@ export default function ShippingPage() {
   })
 
   const addCountryM = useMutation({
-    mutationFn: () => shippingApi.addCountry(countriesZone!.id, { countryCode: addCountryCode }),
+    mutationFn: () => {
+      if (!countriesZone) return Promise.reject(new Error('No zone selected'))
+      return shippingApi.addCountry(countriesZone.id, { country: addCountryCode })
+    },
     onSuccess: () => { refetchCountries(); setAddCountryCode(''); toast.success('Country added') },
-    onError: () => toast.error('Failed to add country'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to add country')),
   })
 
-  const createZoneM = useMutation({ mutationFn: shippingApi.createZone, onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-zones'] }); setZoneDialog(false); setEditingZone(null); zoneForm.reset(); toast.success('Zone created') }, onError: () => toast.error('Failed') })
-  const updateZoneM = useMutation({ mutationFn: ({ id, ...d }: { id: string; name: string }) => shippingApi.updateZone(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-zones'] }); setZoneDialog(false); setEditingZone(null); zoneForm.reset(); toast.success('Zone updated') }, onError: () => toast.error('Failed') })
-  const createMethodM = useMutation({ mutationFn: shippingApi.createMethod, onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-methods'] }); setMethodDialog(false); setEditingMethod(null); methodForm.reset(); toast.success('Method created') }, onError: () => toast.error('Failed') })
-  const updateMethodM = useMutation({ mutationFn: ({ id, ...d }: { id: string; name: string; zoneId: string; price: number; minDeliveryDays?: number; maxDeliveryDays?: number }) => shippingApi.updateMethod(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-methods'] }); setMethodDialog(false); setEditingMethod(null); methodForm.reset(); toast.success('Method updated') }, onError: () => toast.error('Failed') })
+  const removeCountryM = useMutation({
+    mutationFn: ({ zoneId, country }: { zoneId: string; country: string }) =>
+      shippingApi.removeCountry(zoneId, country),
+    onSuccess: () => { refetchCountries(); toast.success('Country removed') },
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to remove country')),
+  })
+
+  const createZoneM = useMutation({ mutationFn: shippingApi.createZone, onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-zones'] }); setZoneDialog(false); setEditingZone(null); zoneForm.reset(); toast.success('Zone created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const updateZoneM = useMutation({ mutationFn: ({ id, ...d }: { id: string; name: string }) => shippingApi.updateZone(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-zones'] }); setZoneDialog(false); setEditingZone(null); zoneForm.reset(); toast.success('Zone updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const createMethodM = useMutation({ mutationFn: shippingApi.createMethod, onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-methods'] }); setMethodDialog(false); setEditingMethod(null); methodForm.reset(); toast.success('Method created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const updateMethodM = useMutation({ mutationFn: ({ id, ...d }: { id: string; name: string; zoneId: string; baseRate: number; perKgRate: number; estimatedDaysMin?: number; estimatedDaysMax?: number; carrier?: string; freeThreshold?: number }) => shippingApi.updateMethod(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipping-methods'] }); setMethodDialog(false); setEditingMethod(null); methodForm.reset(); toast.success('Method updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
   const openEditZone = (zone: ShippingZone) => {
     setEditingZone(zone)
@@ -64,7 +75,7 @@ export default function ShippingPage() {
 
   const openEditMethod = (method: ShippingMethod) => {
     setEditingMethod(method)
-    methodForm.reset({ name: method.name, zoneId: method.zoneId, price: method.price, minDeliveryDays: method.minDeliveryDays, maxDeliveryDays: method.maxDeliveryDays })
+    methodForm.reset({ name: method.name, zoneId: method.zoneId, baseRate: method.baseRate, perKgRate: method.perKgRate, estimatedDaysMin: method.estimatedDaysMin, estimatedDaysMax: method.estimatedDaysMax, carrier: method.carrier ?? '', freeThreshold: method.freeThreshold ?? undefined })
     setMethodDialog(true)
   }
 
@@ -96,9 +107,10 @@ export default function ShippingPage() {
 
   const methodColumns: ColumnDef<ShippingMethod>[] = [
     { accessorKey: 'name', header: ({ column }) => <SortHeader column={column}>Method</SortHeader> },
-    { accessorKey: 'price', header: ({ column }) => <SortHeader column={column}>Price</SortHeader>, cell: ({ row }) => formatCurrency(row.original.price) },
-    { accessorKey: 'minDeliveryDays', header: 'Min Days', cell: ({ row }) => row.original.minDeliveryDays ?? '—' },
-    { accessorKey: 'maxDeliveryDays', header: 'Max Days', cell: ({ row }) => row.original.maxDeliveryDays ?? '—' },
+    { accessorKey: 'baseRate', header: ({ column }) => <SortHeader column={column}>Base Rate</SortHeader>, cell: ({ row }) => formatCurrency(row.original.baseRate) },
+    { accessorKey: 'carrier', header: 'Carrier', cell: ({ row }) => row.original.carrier ?? '—' },
+    { accessorKey: 'estimatedDaysMin', header: 'Min Days', cell: ({ row }) => row.original.estimatedDaysMin ?? '—' },
+    { accessorKey: 'estimatedDaysMax', header: 'Max Days', cell: ({ row }) => row.original.estimatedDaysMax ?? '—' },
     { accessorKey: 'isActive', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.isActive ? 'active' : 'inactive'} /> },
     {
       id: 'actions', cell: ({ row }) => (
@@ -124,18 +136,18 @@ export default function ShippingPage() {
         </TabsList>
         <TabsContent value="zones">
           <div className="mb-4"><Button onClick={() => { setEditingZone(null); zoneForm.reset({ name: '' }); setZoneDialog(true) }}>Add Zone</Button></div>
-          <DataTable columns={zoneColumns} data={zones ?? []} isLoading={loadingZones} searchColumn="name"
+          <DataTable columns={zoneColumns} data={zones ?? []} isLoading={loadingZones} isError={errorZones} onRetry={refetchZones} searchColumn="name"
             enableRowSelection
             exportFilename="shipping-zones"
             getExportRow={(r) => ({ Name: r.name, Active: r.isActive })}
           />
         </TabsContent>
         <TabsContent value="methods">
-          <div className="mb-4"><Button onClick={() => { setEditingMethod(null); methodForm.reset({ name: '', zoneId: '', price: 0 }); setMethodDialog(true) }}>Add Method</Button></div>
-          <DataTable columns={methodColumns} data={methods ?? []} isLoading={loadingMethods} searchColumn="name"
+          <div className="mb-4"><Button onClick={() => { setEditingMethod(null); methodForm.reset({ name: '', zoneId: '', baseRate: 0, perKgRate: 0 }); setMethodDialog(true) }}>Add Method</Button></div>
+          <DataTable columns={methodColumns} data={methods ?? []} isLoading={loadingMethods} isError={errorMethods} onRetry={refetchMethods} searchColumn="name"
             enableRowSelection
             exportFilename="shipping-methods"
-            getExportRow={(r) => ({ Name: r.name, Price: r.price, MinDays: r.minDeliveryDays ?? '', MaxDays: r.maxDeliveryDays ?? '', Active: r.isActive })}
+            getExportRow={(r) => ({ Name: r.name, BaseRate: r.baseRate, Carrier: r.carrier ?? '', MinDays: r.estimatedDaysMin ?? '', MaxDays: r.estimatedDaysMax ?? '', Active: r.isActive })}
           />
         </TabsContent>
         <TabsContent value="shipments">
@@ -165,9 +177,9 @@ export default function ShippingPage() {
             {(zoneCountries as ShippingZoneCountry[] | undefined)?.length ? (
               <div className="flex flex-wrap gap-2">
                 {(zoneCountries as ShippingZoneCountry[]).map((c) => (
-                  <Badge key={c.id} variant="outline" className="gap-1 pr-1">
-                    {c.countryCode}
-                    <button onClick={() => { /* removeCountry not yet in API, but the ID is available */ toast.info('Country: ' + c.countryCode) }} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button>
+                  <Badge key={`${c.zoneId}-${c.country}`} variant="outline" className="gap-1 pr-1">
+                    {c.country}
+                    <button onClick={() => { if (countriesZone) removeCountryM.mutate({ zoneId: countriesZone.id, country: c.country }) }} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button>
                   </Badge>
                 ))}
               </div>
@@ -182,11 +194,16 @@ export default function ShippingPage() {
           <form onSubmit={methodForm.handleSubmit(handleMethodSubmit)} className="space-y-4">
             <div className="space-y-2"><Label>Name</Label><Input {...methodForm.register('name')} /></div>
             <div className="space-y-2"><Label>Zone ID</Label><Input {...methodForm.register('zoneId')} /></div>
-            <div className="space-y-2"><Label>Price</Label><Input type="number" step="0.01" {...methodForm.register('price')} /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Min Days</Label><Input type="number" {...methodForm.register('minDeliveryDays')} /></div>
-              <div className="space-y-2"><Label>Max Days</Label><Input type="number" {...methodForm.register('maxDeliveryDays')} /></div>
+              <div className="space-y-2"><Label>Base Rate</Label><Input type="number" step="0.01" {...methodForm.register('baseRate')} /></div>
+              <div className="space-y-2"><Label>Per-Kg Rate</Label><Input type="number" step="0.01" {...methodForm.register('perKgRate')} /></div>
             </div>
+            <div className="space-y-2"><Label>Carrier</Label><Input {...methodForm.register('carrier')} placeholder="e.g. UPS, FedEx" /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Est. Min Days</Label><Input type="number" {...methodForm.register('estimatedDaysMin')} /></div>
+              <div className="space-y-2"><Label>Est. Max Days</Label><Input type="number" {...methodForm.register('estimatedDaysMax')} /></div>
+            </div>
+            <div className="space-y-2"><Label>Free Threshold</Label><Input type="number" step="0.01" {...methodForm.register('freeThreshold')} placeholder="Order amount for free shipping" /></div>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setMethodDialog(false)}>Cancel</Button><Button type="submit" disabled={createMethodM.isPending || updateMethodM.isPending}>{editingMethod ? 'Update' : 'Create'}</Button></DialogFooter>
           </form>
         </DialogContent>
@@ -230,19 +247,22 @@ function ShipmentsTab() {
     enabled: !!detailShipment,
   })
 
-  const createForm = useForm<z.infer<typeof shipmentSchema>>({ resolver: zodResolver(shipmentSchema) })
-  const eventForm = useForm<z.infer<typeof eventSchema>>({ resolver: zodResolver(eventSchema) })
+  const createForm = useForm<z.infer<typeof shipmentSchema>>({ resolver: zodResolver(shipmentSchema) as any })
+  const eventForm = useForm<z.infer<typeof eventSchema>>({ resolver: zodResolver(eventSchema) as any })
 
   const createM = useMutation({
     mutationFn: shippingApi.createShipment,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipments'] }); setCreateDialog(false); createForm.reset(); toast.success('Shipment created') },
-    onError: () => toast.error('Failed to create shipment'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to create shipment')),
   })
 
   const addEventM = useMutation({
-    mutationFn: (data: z.infer<typeof eventSchema>) => shippingApi.createShipmentEvent(detailShipment!.id, data),
+    mutationFn: (data: z.infer<typeof eventSchema>) => {
+      if (!detailShipment) return Promise.reject(new Error('No shipment selected'))
+      return shippingApi.createShipmentEvent(detailShipment.id, data)
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['shipment-events'] }); setEventDialog(false); eventForm.reset(); toast.success('Event added') },
-    onError: () => toast.error('Failed to add event'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to add event')),
   })
 
   return (

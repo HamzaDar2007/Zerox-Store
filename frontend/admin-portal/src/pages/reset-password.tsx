@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { authApi } from '@/services/api'
+import { getErrorMessage } from '@/lib/api-error'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,7 +29,7 @@ export default function ResetPasswordPage() {
   const token = searchParams.get('token') ?? ''
 
   const { register, handleSubmit, formState: { errors } } = useForm<ResetForm>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
   })
 
   const onSubmit = async (data: ResetForm) => {
@@ -41,22 +42,23 @@ export default function ResetPasswordPage() {
       await authApi.resetPassword({ token, newPassword: data.newPassword })
       toast.success('Password reset successfully!')
       navigate('/login')
-    } catch {
-      toast.error('Failed to reset password. The link may have expired.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to reset password. The link may have expired.'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md animate-scale-in shadow-lg">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <KeyRound className="h-6 w-6 text-primary" />
+    <div className="login-bg flex min-h-screen items-center justify-center p-4">
+      <div className="dot-pattern fixed inset-0 pointer-events-none opacity-60" />
+      <Card className="relative w-full max-w-[400px] animate-scale-in shadow-2xl shadow-primary/5 border-border/40">
+        <CardHeader className="text-center pb-2 pt-8">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/8">
+            <KeyRound className="h-7 w-7 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
-          <CardDescription>Enter your new password below</CardDescription>
+          <CardTitle className="text-2xl font-bold tracking-tight">Reset Password</CardTitle>
+          <CardDescription className="text-muted-foreground/70 text-[13px]">Enter your new password below</CardDescription>
         </CardHeader>
         <CardContent>
           {!token ? (

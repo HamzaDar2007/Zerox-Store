@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { PageHeader } from '@/components/shared/page-header'
 import { Badge } from '@/components/ui/badge'
 import { authApi, usersApi } from '@/services/api'
+import { getErrorMessage } from '@/lib/api-error'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { profileSchema, changePasswordSchema } from '@/lib/validation'
@@ -41,12 +42,12 @@ export default function SettingsPage() {
   const [avatarLoading, setAvatarLoading] = useState(false)
 
   const profileForm = useForm<ProfileForm>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(profileSchema) as any,
     defaultValues: { firstName: user?.firstName ?? '', lastName: user?.lastName ?? '', phone: user?.phone ?? '' },
   })
 
   const passwordForm = useForm<PasswordForm>({
-    resolver: zodResolver(changePasswordSchema),
+    resolver: zodResolver(changePasswordSchema) as any,
   })
 
   const onProfileSubmit = async (data: ProfileForm) => {
@@ -57,8 +58,8 @@ export default function SettingsPage() {
       setUser({ ...user, ...updated })
       toast.success('Profile updated')
       setEditingProfile(false)
-    } catch {
-      toast.error('Failed to update profile')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to update profile'))
     } finally {
       setProfileLoading(false)
     }
@@ -67,11 +68,11 @@ export default function SettingsPage() {
   const onPasswordSubmit = async (data: PasswordForm) => {
     setPasswordLoading(true)
     try {
-      await authApi.changePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword })
+      await authApi.changePassword({ oldPassword: data.currentPassword, newPassword: data.newPassword })
       toast.success('Password changed successfully')
       passwordForm.reset()
-    } catch {
-      toast.error('Failed to change password. Check your current password.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to change password. Check your current password.'))
     } finally {
       setPasswordLoading(false)
     }
@@ -86,8 +87,8 @@ export default function SettingsPage() {
       const updated = await usersApi.uploadAvatar(user.id, fd)
       setUser({ ...user, ...updated })
       toast.success('Avatar updated')
-    } catch {
-      toast.error('Failed to upload avatar')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to upload avatar'))
     } finally {
       setAvatarLoading(false)
     }
@@ -109,7 +110,7 @@ export default function SettingsPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Profile</CardTitle>
             {!editingProfile && (
-              <Button variant="outline" size="sm" onClick={() => setEditingProfile(true)}>Edit</Button>
+              <Button variant="outline" size="sm" onClick={() => { profileForm.reset({ firstName: user?.firstName ?? '', lastName: user?.lastName ?? '', phone: user?.phone ?? '' }); setEditingProfile(true) }}>Edit</Button>
             )}
           </CardHeader>
           <CardContent className="space-y-4">
@@ -149,7 +150,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit" loading={profileLoading}>Save Changes</Button>
-                  <Button type="button" variant="outline" onClick={() => setEditingProfile(false)}>Cancel</Button>
+                  <Button type="button" variant="outline" onClick={() => { setEditingProfile(false); profileForm.reset({ firstName: user?.firstName ?? '', lastName: user?.lastName ?? '', phone: user?.phone ?? '' }) }}>Cancel</Button>
                 </div>
               </form>
             ) : (

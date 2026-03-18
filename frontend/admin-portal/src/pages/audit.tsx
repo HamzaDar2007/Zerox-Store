@@ -28,7 +28,7 @@ export default function AuditPage() {
   if (tableFilter) params.tableName = tableFilter
   if (actorFilter) params.actorId = actorFilter
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['audit-logs', params],
     queryFn: () => auditApi.list(params as { page?: number; limit?: number; action?: string; tableName?: string; actorId?: string }),
   })
@@ -96,7 +96,7 @@ export default function AuditPage() {
         </Card>
       )}
 
-      <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} manualPagination page={page} pageCount={data?.totalPages ?? 1} onPageChange={setPage} searchPlaceholder="Search logs..."
+      <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} isError={isError} onRetry={refetch} manualPagination page={page} pageCount={data?.totalPages ?? 1} onPageChange={setPage} searchPlaceholder="Search logs..."
         enableRowSelection
         exportFilename="audit-logs"
         getExportRow={(r) => ({ Action: r.action, Table: r.tableName, RecordID: r.recordId ?? '', IP: r.ip ?? '', Time: r.occurredAt })}

@@ -62,6 +62,10 @@ export class ShippingService {
     return this.zoneCountryRepo.find({ where: { zoneId } });
   }
 
+  async removeCountryFromZone(zoneId: string, country: string): Promise<void> {
+    await this.zoneCountryRepo.delete({ zoneId, country });
+  }
+
   async createMethod(dto: Partial<ShippingMethod>): Promise<ShippingMethod> {
     const m = this.methodRepo.create(dto);
     return this.methodRepo.save(m);

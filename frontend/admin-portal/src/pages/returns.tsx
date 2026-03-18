@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, RefreshCw, Eye } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 export default function ReturnsPage() {
@@ -22,7 +23,7 @@ export default function ReturnsPage() {
   const [detailDialog, setDetailDialog] = useState<Return | null>(null)
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['returns', { page, limit: 10 }],
     queryFn: () => returnsApi.list({ page, limit: 10 }),
   })
@@ -36,7 +37,7 @@ export default function ReturnsPage() {
   const statusM = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => returnsApi.updateStatus(id, status),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['returns'] }); setStatusDialog(null); toast.success('Updated') },
-    onError: () => toast.error('Failed'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed')),
   })
 
   const columns: ColumnDef<Return>[] = [
@@ -61,7 +62,7 @@ export default function ReturnsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Returns" description="Manage return requests" />
-      <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} manualPagination page={page} pageCount={data?.totalPages ?? 1} onPageChange={setPage} searchPlaceholder="Search returns..."
+      <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} isError={isError} onRetry={refetch} manualPagination page={page} pageCount={data?.totalPages ?? 1} onPageChange={setPage} searchPlaceholder="Search returns..."
         enableRowSelection
         exportFilename="returns"
         getExportRow={(r) => ({ ID: r.id, Reason: r.reason, Status: r.status, Refund: r.refundAmount ?? '', Date: r.createdAt })}

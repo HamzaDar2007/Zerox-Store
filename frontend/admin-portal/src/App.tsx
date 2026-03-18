@@ -9,6 +9,7 @@ import { AppLayout } from '@/components/layout/app-layout'
 import { ThemeProvider } from '@/providers/ThemeProvider'
 import { useAuthStore } from '@/store/auth.store'
 import { useSessionTimeout } from '@/hooks/useSessionTimeout'
+import { shouldRetry } from '@/lib/api-error'
 
 const LoginPage = lazy(() => import('@/pages/login'))
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
@@ -45,8 +46,11 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30_000,
-      retry: 1,
+      retry: shouldRetry,
       refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: false,
     },
   },
 })

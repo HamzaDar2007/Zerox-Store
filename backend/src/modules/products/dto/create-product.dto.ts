@@ -122,4 +122,14 @@ export class CreateProductDto {
   @IsString()
   @MaxLength(50)
   taxClass?: string;
+
+  @ApiPropertyOptional({
+    example: 'draft',
+    description: 'Product status (e.g. draft, active, archived)',
+    maxLength: 30,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  status?: string;
 }

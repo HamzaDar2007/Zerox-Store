@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Pencil, Trash2, Search, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/api-error'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -39,12 +40,12 @@ export default function SubscriptionsPage() {
   const [deleteTarget, setDeleteTarget] = useState<SubscriptionPlan | null>(null)
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({ queryKey: ['subscription-plans'], queryFn: subscriptionsApi.listPlans })
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['subscription-plans'], queryFn: subscriptionsApi.listPlans })
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
 
-  const createM = useMutation({ mutationFn: subscriptionsApi.createPlan, onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription-plans'] }); setDialogOpen(false); reset(); toast.success('Plan created') }, onError: () => toast.error('Failed') })
-  const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => subscriptionsApi.updatePlan(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription-plans'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: () => toast.error('Failed') })
-  const deleteM = useMutation({ mutationFn: (id: string) => subscriptionsApi.deletePlan(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription-plans'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: () => toast.error('Failed') })
+  const createM = useMutation({ mutationFn: subscriptionsApi.createPlan, onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription-plans'] }); setDialogOpen(false); reset(); toast.success('Plan created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => subscriptionsApi.updatePlan(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription-plans'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
+  const deleteM = useMutation({ mutationFn: (id: string) => subscriptionsApi.deletePlan(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription-plans'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
   const openCreate = () => { setEditing(null); reset({ name: '', description: '', price: 0, currency: 'USD', interval: 'month', intervalCount: 1, trialDays: 0 }); setDialogOpen(true) }
   const openEdit = (p: SubscriptionPlan) => { setEditing(p); reset({ name: p.name, description: p.description ?? '', price: p.price, currency: p.currency, interval: p.interval, intervalCount: p.intervalCount, trialDays: p.trialDays }); setDialogOpen(true) }
@@ -81,9 +82,9 @@ export default function SubscriptionsPage() {
         </TabsList>
 
         <TabsContent value="plans">
-          <DataTable columns={columns} data={data ?? []} isLoading={isLoading} searchColumn="name" searchPlaceholder="Search plans..."
+          <DataTable columns={columns} data={data ?? []} isLoading={isLoading} isError={isError} onRetry={refetch} searchColumn="name" searchPlaceholder="Search plans..."
         enableRowSelection
-        onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} plans?`)) rows.forEach((r) => deleteM.mutate(r.id)) }}
+        onBulkDelete={(rows) => { if (confirm(`Delete ${rows.length} plans?`)) Promise.allSettled(rows.map((r) => subscriptionsApi.deletePlan(r.id))).then((results) => { qc.invalidateQueries({ queryKey: ['subscription-plans'] }); const failed = results.filter((r) => r.status === 'rejected').length; if (failed) toast.error(`${failed} of ${rows.length} failed`); else toast.success(`${rows.length} plan(s) deleted`) }) }}
         exportFilename="subscription-plans"
         getExportRow={(r) => ({ Name: r.name, Price: r.price, Currency: r.currency, Interval: r.interval, TrialDays: r.trialDays, Active: r.isActive })}
       />
@@ -134,7 +135,7 @@ function SubscriptionsList() {
   const cancelM = useMutation({
     mutationFn: (id: string) => subscriptionsApi.cancel(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscriptions-list'] }); toast.success('Subscription cancelled') },
-    onError: () => toast.error('Failed to cancel'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to cancel')),
   })
 
   const subColumns: ColumnDef<Subscription>[] = [
@@ -181,7 +182,7 @@ function SubscriptionLookup() {
   const cancelM = useMutation({
     mutationFn: (id: string) => subscriptionsApi.cancel(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription', queriedId] }); toast.success('Subscription cancelled') },
-    onError: () => toast.error('Failed to cancel'),
+    onError: (e) => toast.error(getErrorMessage(e, 'Failed to cancel')),
   })
 
   const handleSearch = () => { if (subId.trim()) setQueriedId(subId.trim()) }
