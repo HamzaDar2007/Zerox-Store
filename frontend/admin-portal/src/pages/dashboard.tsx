@@ -94,21 +94,23 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Greeting Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            {getGreeting()}, {user?.firstName ?? 'Admin'} 👋
-          </h1>
-          <p className="text-sm text-muted-foreground">Here&apos;s what&apos;s happening with your store today.</p>
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" onClick={() => navigate('/products')} className="shadow-sm">
-            <Plus className="mr-1.5 h-3.5 w-3.5" />Add Product
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => navigate('/orders')}>
-            <FileText className="mr-1.5 h-3.5 w-3.5" />Orders
-          </Button>
+      {/* Welcome Banner */}
+      <div className="welcome-gradient rounded-2xl p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+              {getGreeting()}, {user?.firstName ?? 'Admin'} 👋
+            </h1>
+            <p className="text-sm text-muted-foreground/70">Here&apos;s what&apos;s happening with your store today.</p>
+          </div>
+          <div className="flex gap-2.5">
+            <Button size="sm" onClick={() => navigate('/products')} className="shadow-md shadow-primary/15 h-9 rounded-xl px-4">
+              <Plus className="mr-1.5 h-3.5 w-3.5" />Add Product
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => navigate('/orders')} className="h-9 rounded-xl px-4 border-border/50">
+              <FileText className="mr-1.5 h-3.5 w-3.5" />Orders
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -121,34 +123,35 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         <Card className="chart-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div className="space-y-0.5">
-              <CardTitle className="text-sm font-semibold">Monthly Orders</CardTitle>
-              <p className="text-xs text-muted-foreground/60">Order volume over time</p>
+            <div className="space-y-1">
+              <CardTitle className="text-sm font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Monthly Orders</CardTitle>
+              <p className="text-xs text-muted-foreground/50">Order volume over time</p>
             </div>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
-              <ShoppingCart className="h-3.5 w-3.5 text-blue-500" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10">
+              <ShoppingCart className="h-4 w-4 text-blue-500" />
             </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={280}>
               <BarChart data={monthlyData} barCategoryGap="25%">
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border/20" vertical={false} />
                 <XAxis dataKey="month" className="text-[11px]" axisLine={false} tickLine={false} dy={8} />
                 <YAxis className="text-[11px]" axisLine={false} tickLine={false} dx={-4} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border) / 0.5)',
-                    borderRadius: '0.625rem',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                    border: '1px solid hsl(var(--border) / 0.4)',
+                    borderRadius: '0.75rem',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
                     fontSize: '12px',
+                    padding: '8px 12px',
                   }}
-                  cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
+                  cursor={{ fill: 'hsl(var(--muted) / 0.25)' }}
                 />
-                <Bar dataKey="orders" fill="hsl(221.2, 83.2%, 53.3%)" radius={[6, 6, 2, 2]} />
+                <Bar dataKey="orders" fill="hsl(221.2, 83.2%, 53.3%)" radius={[8, 8, 2, 2]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -156,37 +159,38 @@ export default function DashboardPage() {
 
         <Card className="chart-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div className="space-y-0.5">
-              <CardTitle className="text-sm font-semibold">Revenue Trend</CardTitle>
-              <p className="text-xs text-muted-foreground/60">Revenue performance over time</p>
+            <div className="space-y-1">
+              <CardTitle className="text-sm font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Revenue Trend</CardTitle>
+              <p className="text-xs text-muted-foreground/50">Revenue performance over time</p>
             </div>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10">
-              <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10">
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
             </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={monthlyData}>
                 <defs>
                   <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(142.1, 76.2%, 36.3%)" stopOpacity={0.25} />
-                    <stop offset="100%" stopColor="hsl(142.1, 76.2%, 36.3%)" stopOpacity={0} />
+                    <stop offset="0%" stopColor="hsl(142.1, 76.2%, 36.3%)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(142.1, 76.2%, 36.3%)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border/20" vertical={false} />
                 <XAxis dataKey="month" className="text-[11px]" axisLine={false} tickLine={false} dy={8} />
                 <YAxis className="text-[11px]" axisLine={false} tickLine={false} dx={-4} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border) / 0.5)',
-                    borderRadius: '0.625rem',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                    border: '1px solid hsl(var(--border) / 0.4)',
+                    borderRadius: '0.75rem',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
                     fontSize: '12px',
+                    padding: '8px 12px',
                   }}
-                  cursor={{ stroke: 'hsl(var(--muted-foreground) / 0.2)' }}
+                  cursor={{ stroke: 'hsl(var(--muted-foreground) / 0.15)' }}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="hsl(142.1, 76.2%, 36.3%)" strokeWidth={2} fill="url(#revenueGradient)" />
+                <Area type="monotone" dataKey="revenue" stroke="hsl(142.1, 76.2%, 36.3%)" strokeWidth={2.5} fill="url(#revenueGradient)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -194,16 +198,16 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom Row */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-3">
         <Card className="chart-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Order Status</CardTitle>
-            <p className="text-xs text-muted-foreground/60">Distribution by status</p>
+            <CardTitle className="text-sm font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Order Status</CardTitle>
+            <p className="text-xs text-muted-foreground/50">Distribution by status</p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={orderStatusData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value" strokeWidth={2} stroke="hsl(var(--card))">
+                <Pie data={orderStatusData} cx="50%" cy="50%" innerRadius={58} outerRadius={82} paddingAngle={3} dataKey="value" strokeWidth={2} stroke="hsl(var(--card))">
                   {orderStatusData.map((_, index) => (
                     <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
@@ -211,17 +215,21 @@ export default function DashboardPage() {
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '0.5rem',
+                    border: '1px solid hsl(var(--border) / 0.4)',
+                    borderRadius: '0.75rem',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+                    fontSize: '12px',
+                    padding: '8px 12px',
                   }}
                 />
               </PieChart>
             </ResponsiveContainer>
-            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-1">
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-2">
               {orderStatusData.map((item, i) => (
-                <div key={item.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <div className="h-2 w-2 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                  {item.name} ({item.value})
+                <div key={item.name} className="flex items-center gap-2 text-xs text-muted-foreground/70">
+                  <div className="h-2.5 w-2.5 rounded-full shadow-sm" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                  <span className="font-medium">{item.name}</span>
+                  <span className="text-muted-foreground/40">{item.value}</span>
                 </div>
               ))}
             </div>
@@ -230,40 +238,41 @@ export default function DashboardPage() {
 
         <Card className="lg:col-span-2 chart-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div className="space-y-0.5">
-              <CardTitle className="text-sm font-semibold">Recent Orders</CardTitle>
-              <p className="text-xs text-muted-foreground/60">Latest 5 orders placed</p>
+            <div className="space-y-1">
+              <CardTitle className="text-sm font-semibold" style={{ fontFamily: 'var(--font-display)' }}>Recent Orders</CardTitle>
+              <p className="text-xs text-muted-foreground/50">Latest 5 orders placed</p>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/orders')} className="text-xs text-primary/80 hover:text-primary h-8 px-3">
-              View all <ArrowRight className="ml-1 h-3 w-3" />
+            <Button variant="ghost" size="sm" onClick={() => navigate('/orders')} className="text-xs text-primary/70 hover:text-primary h-8 px-3 rounded-lg">
+              View all <ArrowRight className="ml-1.5 h-3 w-3" />
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {ordersData?.data?.length ? (
                 ordersData.data.map((order) => (
-                  <div key={order.id} className="order-row-hover flex items-center justify-between rounded-lg border border-border/40 p-3">
+                  <div key={order.id} className="order-row-hover flex items-center justify-between rounded-xl border border-border/30 p-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/8">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8">
                         <ShoppingCart className="h-4 w-4 text-primary" />
                       </div>
                       <div>
-                        <p className="text-[13px] font-medium">Order #{order.id.slice(0, 8)}</p>
-                        <p className="text-[11px] text-muted-foreground/60">{new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        <p className="text-[13px] font-semibold">Order #{order.id.slice(0, 8)}</p>
+                        <p className="text-[11px] text-muted-foreground/50">{new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                       </div>
                     </div>
                     <div className="text-right flex items-center gap-3">
                       <StatusBadge status={order.status} />
-                      <p className="text-[13px] font-semibold min-w-[60px] text-right tabular-nums">${order.total?.toFixed(2)}</p>
+                      <p className="text-[13px] font-bold min-w-[60px] text-right tabular-nums">${order.total?.toFixed(2)}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="flex flex-col items-center gap-2 py-12 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
-                    <ShoppingCart className="h-5 w-5 text-muted-foreground/40" />
+                <div className="flex flex-col items-center gap-3 py-16 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50">
+                    <ShoppingCart className="h-6 w-6 text-muted-foreground/30" />
                   </div>
-                  <p className="text-sm text-muted-foreground">No recent orders</p>
+                  <p className="text-sm font-medium text-muted-foreground/60">No recent orders</p>
+                  <p className="text-xs text-muted-foreground/40">Orders will appear here once placed</p>
                 </div>
               )}
             </div>

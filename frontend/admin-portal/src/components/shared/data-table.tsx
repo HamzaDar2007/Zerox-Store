@@ -208,7 +208,7 @@ export function DataTable<TData, TValue>({
                 handleSearchChange(e.target.value)
               }
             }}
-            className="pl-9 h-9 bg-muted/30 border-border/50 focus:bg-background"
+            className="pl-9 h-10 rounded-xl bg-muted/25 border-border/40 focus:bg-background"
           />
         </div>
 
@@ -253,13 +253,13 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      <div className="rounded-xl border border-border/50 overflow-hidden bg-card shadow-sm">
+      <div className="rounded-2xl border border-border/40 overflow-hidden bg-card shadow-sm shadow-foreground/[0.02]">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="bg-muted/30 hover:bg-muted/30 border-border/50">
+              <TableRow key={headerGroup.id} className="bg-muted/25 hover:bg-muted/25 border-border/40">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 h-10">
+                  <TableHead key={header.id} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/50 h-11">
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
@@ -279,9 +279,9 @@ export function DataTable<TData, TValue>({
               ))
             ) : isError ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-32 text-center">
+                <TableCell colSpan={columns.length} className="h-40 text-center">
                   <div className="flex flex-col items-center gap-3 text-destructive">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/8">
                       <AlertCircle className="h-6 w-6" />
                     </div>
                     <div className="space-y-1">
@@ -289,7 +289,7 @@ export function DataTable<TData, TValue>({
                       <p className="text-xs text-muted-foreground">Something went wrong while fetching the data.</p>
                     </div>
                     {onRetry && (
-                      <Button variant="outline" size="sm" onClick={onRetry} className="mt-1">
+                      <Button variant="outline" size="sm" onClick={onRetry} className="mt-1 rounded-lg">
                         <RefreshCw className="mr-1.5 h-3.5 w-3.5" />Try again
                       </Button>
                     )}
@@ -298,21 +298,21 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ) : table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="border-border/30 table-row-hover">
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className="border-border/25 table-row-hover">
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-3 text-[13px]">{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                    <TableCell key={cell.id} className="py-3.5 text-[13px]">{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-32 text-center">
-                  <div className="flex flex-col items-center gap-2 py-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
-                      <Search className="h-5 w-5 text-muted-foreground/50" />
+                <TableCell colSpan={columns.length} className="h-40 text-center">
+                  <div className="flex flex-col items-center gap-3 py-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50">
+                      <Search className="h-5 w-5 text-muted-foreground/40" />
                     </div>
                     <p className="text-sm font-medium text-muted-foreground">No results found</p>
-                    <p className="text-xs text-muted-foreground/60">Try adjusting your search or filters</p>
+                    <p className="text-xs text-muted-foreground/50">Try adjusting your search or filters</p>
                   </div>
                 </TableCell>
               </TableRow>

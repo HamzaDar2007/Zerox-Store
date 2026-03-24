@@ -2,12 +2,12 @@ import { Loader2 } from 'lucide-react'
 
 export function LoadingPage() {
   return (
-    <div className="flex h-[50vh] flex-col items-center justify-center gap-4 animate-fade-in">
+    <div className="flex h-[50vh] flex-col items-center justify-center gap-5 animate-fade-in">
       <div className="relative">
-        <div className="h-10 w-10 rounded-full border-2 border-muted/80" />
-        <div className="absolute inset-0 h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <div className="h-12 w-12 rounded-full border-2 border-muted/60" />
+        <div className="absolute inset-0 h-12 w-12 rounded-full border-2 border-primary border-t-transparent animate-spin" />
       </div>
-      <p className="text-[13px] text-muted-foreground/60 font-medium">Loading...</p>
+      <p className="text-sm text-muted-foreground/50 font-medium tracking-wide">Loading...</p>
     </div>
   )
 }

@@ -35,7 +35,7 @@ export function Breadcrumbs() {
   if (segments.length === 0) return null
 
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground/70 mb-6">
+    <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground/60 mb-7">
       <Link to="/" className="flex items-center gap-1 hover:text-foreground transition-colors">
         <Home className="h-3.5 w-3.5" />
       </Link>

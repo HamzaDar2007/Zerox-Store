@@ -9,7 +9,7 @@ export function AppLayout() {
   const { sidebarCollapsed } = useThemeStore()
 
   return (
-    <div className="min-h-screen bg-muted/20">
+    <div className="min-h-screen bg-muted/15">
       <Sidebar />
       <div className={cn(
         'transition-all duration-300 ease-in-out',
