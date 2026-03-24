@@ -1,0 +1,281 @@
+
+Running 277 tests using 6 workers
+
+[1A[2K[1/277] [chromium] ΓÇ║ e2e\auth\forgot-password.spec.ts:23:3 ΓÇ║ Forgot Password ΓÇ║ shows validation error for empty email
+[1A[2K[2/277] [chromium] ΓÇ║ e2e\auth\forgot-password.spec.ts:41:3 ΓÇ║ Forgot Password ΓÇ║ back to login link navigates to login
+[1A[2K[3/277] [chromium] ΓÇ║ e2e\auth\forgot-password.spec.ts:28:3 ΓÇ║ Forgot Password ΓÇ║ successful submission shows success message
+[1A[2K[4/277] [chromium] ΓÇ║ e2e\auth\forgot-password.spec.ts:15:3 ΓÇ║ Forgot Password ΓÇ║ renders forgot password form
+[1A[2K[5/277] [chromium] ΓÇ║ e2e\auth\login.spec.ts:22:3 ΓÇ║ Login Page ΓÇ║ renders login form with all elements
+[1A[2K[6/277] [chromium] ΓÇ║ e2e\auth\forgot-password.spec.ts:35:3 ΓÇ║ Forgot Password ΓÇ║ send again button is available after success
+[1A[2K[7/277] [chromium] ΓÇ║ e2e\auth\login.spec.ts:37:3 ΓÇ║ Login Page ΓÇ║ shows validation error for invalid email
+[1A[2K[8/277] [chromium] ΓÇ║ e2e\auth\login.spec.ts:31:3 ΓÇ║ Login Page ΓÇ║ shows validation errors for empty fields
+[1A[2K[9/277] [chromium] ΓÇ║ e2e\auth\login.spec.ts:45:3 ΓÇ║ Login Page ΓÇ║ shows validation error for short password
+[1A[2K[10/277] [chromium] ΓÇ║ e2e\auth\login.spec.ts:52:3 ΓÇ║ Login Page ΓÇ║ successful login redirects to dashboard
+[1A[2K[11/277] [chromium] ΓÇ║ e2e\auth\login.spec.ts:59:3 ΓÇ║ Login Page ΓÇ║ failed login shows error toast
+[1A[2K[12/277] [chromium] ΓÇ║ e2e\auth\login.spec.ts:69:3 ΓÇ║ Login Page ΓÇ║ show/hide password toggle works
+[1A[2K[13/277] [chromium] ΓÇ║ e2e\auth\login.spec.ts:80:3 ΓÇ║ Login Page ΓÇ║ redirects authenticated user away from login
+[1A[2K[14/277] [chromium] ΓÇ║ e2e\auth\rbac.spec.ts:4:3 ΓÇ║ RBAC - Role-Based Access Control ΓÇ║ seller cannot access admin-only routes
+[1A[2K[15/277] [chromium] ΓÇ║ e2e\auth\rbac.spec.ts:25:3 ΓÇ║ RBAC - Role-Based Access Control ΓÇ║ admin can access all routes
+[1A[2K[16/277] [chromium] ΓÇ║ e2e\auth\rbac.spec.ts:12:3 ΓÇ║ RBAC - Role-Based Access Control ΓÇ║ seller can access general routes
+[1A[2K[17/277] [chromium] ΓÇ║ e2e\auth\reset-password.spec.ts:14:3 ΓÇ║ Reset Password ΓÇ║ shows invalid token message when no token
+[1A[2K[18/277] [chromium] ΓÇ║ e2e\auth\reset-password.spec.ts:20:3 ΓÇ║ Reset Password ΓÇ║ renders form with valid token
+[1A[2K[19/277] [chromium] ΓÇ║ e2e\auth\reset-password.spec.ts:30:3 ΓÇ║ Reset Password ΓÇ║ shows validation for mismatched passwords
+[1A[2K[20/277] [chromium] ΓÇ║ e2e\auth\reset-password.spec.ts:38:3 ΓÇ║ Reset Password ΓÇ║ shows validation for short password
+[1A[2K[21/277] [chromium] ΓÇ║ e2e\auth\reset-password.spec.ts:46:3 ΓÇ║ Reset Password ΓÇ║ successful reset redirects to login
+[1A[2K[22/277] [chromium] ΓÇ║ e2e\auth\reset-password.spec.ts:54:3 ΓÇ║ Reset Password ΓÇ║ back to login link works
+[1A[2K[23/277] [chromium] ΓÇ║ e2e\auth\session.spec.ts:4:3 ΓÇ║ Session & Logout ΓÇ║ logout from header clears auth and redirects to login
+[1A[2K[24/277] [chromium] ΓÇ║ e2e\auth\session.spec.ts:18:3 ΓÇ║ Session & Logout ΓÇ║ unauthenticated user is redirected to login from protected routes
+[1A[2K[25/277] [chromium] ΓÇ║ e2e\auth\session.spec.ts:28:3 ΓÇ║ Session & Logout ΓÇ║ unauthenticated user can access login page
+[1A[2K[26/277] [chromium] ΓÇ║ e2e\cross-cutting\data-table.spec.ts:10:3 ΓÇ║ DataTable - Shared Behaviors ΓÇ║ table renders with columns and rows
+[1A[2K[27/277] [chromium] ΓÇ║ e2e\cross-cutting\data-table.spec.ts:17:3 ΓÇ║ DataTable - Shared Behaviors ΓÇ║ clickable column header for sorting
+[1A[2K[28/277] [chromium] ΓÇ║ e2e\cross-cutting\data-table.spec.ts:25:3 ΓÇ║ DataTable - Shared Behaviors ΓÇ║ pagination controls are visible
+[1A[2K[29/277] [chromium] ΓÇ║ e2e\cross-cutting\data-table.spec.ts:32:3 ΓÇ║ DataTable - Shared Behaviors ΓÇ║ pagination next button navigates
+[1A[2K[30/277] [chromium] ΓÇ║ e2e\cross-cutting\data-table.spec.ts:40:3 ΓÇ║ DataTable - Shared Behaviors ΓÇ║ row checkbox selection works
+[1A[2K[31/277] [chromium] ΓÇ║ e2e\cross-cutting\data-table.spec.ts:50:3 ΓÇ║ DataTable - Shared Behaviors ΓÇ║ select all checkbox in header
+[1A[2K[32/277] [chromium] ΓÇ║ e2e\cross-cutting\data-table.spec.ts:58:3 ΓÇ║ DataTable - Shared Behaviors ΓÇ║ search input filters table
+[1A[2K[33/277] [chromium] ΓÇ║ e2e\cross-cutting\data-table.spec.ts:64:3 ΓÇ║ DataTable - Shared Behaviors ΓÇ║ table shows loading skeletons
+[1A[2K[34/277] [chromium] ΓÇ║ e2e\cross-cutting\empty-states.spec.ts:19:5 ΓÇ║ Empty State - /users ΓÇ║ shows empty table on /users
+[1A[2K[35/277] [chromium] ΓÇ║ e2e\cross-cutting\empty-states.spec.ts:19:5 ΓÇ║ Empty State - /roles ΓÇ║ shows empty table on /roles
+[1A[2K[36/277] [chromium] ΓÇ║ e2e\cross-cutting\empty-states.spec.ts:19:5 ΓÇ║ Empty State - /permissions ΓÇ║ shows empty table on /permissions
+[1A[2K[37/277] [chromium] ΓÇ║ e2e\cross-cutting\empty-states.spec.ts:19:5 ΓÇ║ Empty State - /categories ΓÇ║ shows empty table on /categories
+[1A[2K[38/277] [chromium] ΓÇ║ e2e\cross-cutting\empty-states.spec.ts:19:5 ΓÇ║ Empty State - /brands ΓÇ║ shows empty table on /brands
+[1A[2K[39/277] [chromium] ΓÇ║ e2e\cross-cutting\empty-states.spec.ts:19:5 ΓÇ║ Empty State - /sellers ΓÇ║ shows empty table on /sellers
+[1A[2K[40/277] [chromium] ΓÇ║ e2e\cross-cutting\empty-states.spec.ts:19:5 ΓÇ║ Empty State - /stores ΓÇ║ shows empty table on /stores
+[1A[2K[41/277] [chromium] ΓÇ║ e2e\cross-cutting\empty-states.spec.ts:19:5 ΓÇ║ Empty State - /products ΓÇ║ shows empty table on /products
+[1A[2K[42/277] [chromium] ΓÇ║ e2e\cross-cutting\empty-states.spec.ts:19:5 ΓÇ║ Empty State - /orders ΓÇ║ shows empty table on /orders
+[1A[2K[43/277] [chromium] ΓÇ║ e2e\cross-cutting\empty-states.spec.ts:19:5 ΓÇ║ Empty State - /coupons ΓÇ║ shows empty table on /coupons
+[1A[2K[44/277] [chromium] ΓÇ║ e2e\cross-cutting\empty-states.spec.ts:19:5 ΓÇ║ Empty State - /reviews ΓÇ║ shows empty table on /reviews
+[1A[2K[45/277] [chromium] ΓÇ║ e2e\cross-cutting\error-handling.spec.ts:12:5 ΓÇ║ Error Handling - /users ΓÇ║ shows error state on /users
+[1A[2K[46/277] [chromium] ΓÇ║ e2e\cross-cutting\error-handling.spec.ts:23:5 ΓÇ║ Error Handling - /users ΓÇ║ retry button reloads on /users
+[1A[2K[47/277] [chromium] ΓÇ║ e2e\cross-cutting\error-handling.spec.ts:12:5 ΓÇ║ Error Handling - /roles ΓÇ║ shows error state on /roles
+[1A[2K[48/277] [chromium] ΓÇ║ e2e\cross-cutting\error-handling.spec.ts:23:5 ΓÇ║ Error Handling - /roles ΓÇ║ retry button reloads on /roles
+[1A[2K[49/277] [chromium] ΓÇ║ e2e\cross-cutting\error-handling.spec.ts:12:5 ΓÇ║ Error Handling - /products ΓÇ║ shows error state on /products
+[1A[2K[50/277] [chromium] ΓÇ║ e2e\cross-cutting\error-handling.spec.ts:23:5 ΓÇ║ Error Handling - /products ΓÇ║ retry button reloads on /products
+[1A[2K[51/277] [chromium] ΓÇ║ e2e\cross-cutting\error-handling.spec.ts:12:5 ΓÇ║ Error Handling - /orders ΓÇ║ shows error state on /orders
+[1A[2K[52/277] [chromium] ΓÇ║ e2e\cross-cutting\error-handling.spec.ts:23:5 ΓÇ║ Error Handling - /orders ΓÇ║ retry button reloads on /orders
+[1A[2K[53/277] [chromium] ΓÇ║ e2e\cross-cutting\theme.spec.ts:4:3 ΓÇ║ Theme Persistence ΓÇ║ dark mode toggle persists on reload
+[1A[2K[54/277] [chromium] ΓÇ║ e2e\cross-cutting\theme.spec.ts:29:3 ΓÇ║ Theme Persistence ΓÇ║ theme color persists on reload
+[1A[2K[55/277] [chromium] ΓÇ║ e2e\cross-cutting\theme.spec.ts:46:3 ΓÇ║ Theme Persistence ΓÇ║ dark mode toggle from header works
+[1A[2K[56/277] [chromium] ΓÇ║ e2e\navigation\header.spec.ts:4:3 ΓÇ║ Header ΓÇ║ header displays theme toggle
+[1A[2K[57/277] [chromium] ΓÇ║ e2e\navigation\header.spec.ts:9:3 ΓÇ║ Header ΓÇ║ header shows notification bell
+[1A[2K[58/277] [chromium] ΓÇ║ e2e\navigation\header.spec.ts:14:3 ΓÇ║ Header ΓÇ║ theme toggle switches dark/light mode
+[1A[2K[59/277] [chromium] ΓÇ║ e2e\navigation\header.spec.ts:24:3 ΓÇ║ Header ΓÇ║ profile dropdown shows user options
+[1A[2K[60/277] [chromium] ΓÇ║ e2e\navigation\responsive.spec.ts:4:3 ΓÇ║ Responsive Layout ΓÇ║ desktop layout shows sidebar
+[1A[2K[61/277] [chromium] ΓÇ║ e2e\navigation\responsive.spec.ts:11:3 ΓÇ║ Responsive Layout ΓÇ║ mobile layout hides sidebar and shows hamburger
+[1A[2K[62/277] [chromium] ΓÇ║ e2e\navigation\responsive.spec.ts:20:3 ΓÇ║ Responsive Layout ΓÇ║ mobile hamburger opens sidebar overlay
+[1A[2K[63/277] [chromium] ΓÇ║ e2e\navigation\responsive.spec.ts:32:3 ΓÇ║ Responsive Layout ΓÇ║ tablet layout renders correctly
+[1A[2K[64/277] [chromium] ΓÇ║ e2e\navigation\responsive.spec.ts:38:3 ΓÇ║ Responsive Layout ΓÇ║ main content adjusts width on mobile
+[1A[2K[65/277] [chromium] ΓÇ║ e2e\navigation\sidebar.spec.ts:4:3 ΓÇ║ Sidebar Navigation ΓÇ║ sidebar is visible on desktop with nav groups
+[1A[2K[66/277] [chromium] ΓÇ║ e2e\navigation\sidebar.spec.ts:13:3 ΓÇ║ Sidebar Navigation ΓÇ║ navigates to each main page via sidebar
+[1A[2K[67/277] [chromium] ΓÇ║ e2e\navigation\sidebar.spec.ts:27:3 ΓÇ║ Sidebar Navigation ΓÇ║ active link is highlighted correctly
+[1A[2K[68/277] [chromium] ΓÇ║ e2e\navigation\sidebar.spec.ts:35:3 ΓÇ║ Sidebar Navigation ΓÇ║ sidebar collapse toggle works
+[1A[2K[69/277] [chromium] ΓÇ║ e2e\navigation\sidebar.spec.ts:51:3 ΓÇ║ Sidebar Navigation ΓÇ║ sidebar shows correct nav groups
+[1A[2K[70/277] [chromium] ΓÇ║ e2e\pages\audit.spec.ts:10:3 ΓÇ║ Audit Logs Page ΓÇ║ renders audit logs table with data
+[1A[2K[71/277] [chromium] ΓÇ║ e2e\pages\audit.spec.ts:15:3 ΓÇ║ Audit Logs Page ΓÇ║ search filters audit logs
+[1A[2K[72/277] [chromium] ΓÇ║ e2e\pages\audit.spec.ts:21:3 ΓÇ║ Audit Logs Page ΓÇ║ filter panel toggle works
+[1A[2K[73/277] [chromium] ΓÇ║ e2e\pages\audit.spec.ts:31:3 ΓÇ║ Audit Logs Page ΓÇ║ apply action filter
+[1A[2K[74/277] [chromium] ΓÇ║ e2e\pages\audit.spec.ts:43:3 ΓÇ║ Audit Logs Page ΓÇ║ clear filters button works
+[1A[2K[75/277] [chromium] ΓÇ║ e2e\pages\audit.spec.ts:55:3 ΓÇ║ Audit Logs Page ΓÇ║ view audit log detail dialog
+[1A[2K[76/277] [chromium] ΓÇ║ e2e\pages\audit.spec.ts:60:3 ΓÇ║ Audit Logs Page ΓÇ║ audit detail shows diff data
+[1A[2K[77/277] [chromium] ΓÇ║ e2e\pages\audit.spec.ts:66:3 ΓÇ║ Audit Logs Page ΓÇ║ export dropdown works
+[1A[2K[78/277] [chromium] ΓÇ║ e2e\pages\brands.spec.ts:10:3 ΓÇ║ Brands Page ΓÇ║ renders brands table with data
+[1A[2K[79/277] [chromium] ΓÇ║ e2e\pages\brands.spec.ts:15:3 ΓÇ║ Brands Page ΓÇ║ search filters brands
+[1A[2K[80/277] [chromium] ΓÇ║ e2e\pages\brands.spec.ts:21:3 ΓÇ║ Brands Page ΓÇ║ create brand via dialog
+[1A[2K[81/277] [chromium] ΓÇ║ e2e\pages\brands.spec.ts:28:3 ΓÇ║ Brands Page ΓÇ║ cancel create closes dialog
+[1A[2K[82/277] [chromium] ΓÇ║ e2e\pages\brands.spec.ts:34:3 ΓÇ║ Brands Page ΓÇ║ edit brand via row action
+[1A[2K[83/277] [chromium] ΓÇ║ e2e\pages\brands.spec.ts:42:3 ΓÇ║ Brands Page ΓÇ║ delete brand via row action
+[1A[2K[84/277] [chromium] ΓÇ║ e2e\pages\brands.spec.ts:49:3 ΓÇ║ Brands Page ΓÇ║ upload logo via row action
+[1A[2K[85/277] [chromium] ΓÇ║ e2e\pages\brands.spec.ts:54:3 ΓÇ║ Brands Page ΓÇ║ export dropdown works
+[1A[2K[86/277] [chromium] ΓÇ║ e2e\pages\categories.spec.ts:10:3 ΓÇ║ Categories Page ΓÇ║ renders categories table with data
+[1A[2K[87/277] [chromium] ΓÇ║ e2e\pages\categories.spec.ts:15:3 ΓÇ║ Categories Page ΓÇ║ search filters categories
+[1A[2K[88/277] [chromium] ΓÇ║ e2e\pages\categories.spec.ts:21:3 ΓÇ║ Categories Page ΓÇ║ create category via dialog
+[1A[2K[89/277] [chromium] ΓÇ║ e2e\pages\categories.spec.ts:28:3 ΓÇ║ Categories Page ΓÇ║ validates required fields on create
+[1A[2K[90/277] [chromium] ΓÇ║ e2e\pages\categories.spec.ts:34:3 ΓÇ║ Categories Page ΓÇ║ cancel create closes dialog
+[1A[2K[91/277] [chromium] ΓÇ║ e2e\pages\categories.spec.ts:41:3 ΓÇ║ Categories Page ΓÇ║ edit category via row action
+[1A[2K[92/277] [chromium] ΓÇ║ e2e\pages\categories.spec.ts:49:3 ΓÇ║ Categories Page ΓÇ║ delete category via row action
+[1A[2K[93/277] [chromium] ΓÇ║ e2e\pages\categories.spec.ts:56:3 ΓÇ║ Categories Page ΓÇ║ upload image via row action
+[1A[2K[94/277] [chromium] ΓÇ║ e2e\pages\categories.spec.ts:61:3 ΓÇ║ Categories Page ΓÇ║ export dropdown works
+[1A[2K[95/277] [chromium] ΓÇ║ e2e\pages\categories.spec.ts:65:3 ΓÇ║ Categories Page ΓÇ║ bulk select rows
+[1A[2K[96/277] [chromium] ΓÇ║ e2e\pages\chat.spec.ts:10:3 ΓÇ║ Chat Page ΓÇ║ renders thread list
+[1A[2K[97/277] [chromium] ΓÇ║ e2e\pages\chat.spec.ts:14:3 ΓÇ║ Chat Page ΓÇ║ shows select thread prompt before selection
+[1A[2K[98/277] [chromium] ΓÇ║ e2e\pages\chat.spec.ts:18:3 ΓÇ║ Chat Page ΓÇ║ select thread loads messages
+[1A[2K[99/277] [chromium] ΓÇ║ e2e\pages\chat.spec.ts:29:3 ΓÇ║ Chat Page ΓÇ║ message input is visible after selecting thread
+[1A[2K[100/277] [chromium] ΓÇ║ e2e\pages\chat.spec.ts:38:3 ΓÇ║ Chat Page ΓÇ║ send message via input
+[1A[2K[101/277] [chromium] ΓÇ║ e2e\pages\chat.spec.ts:52:3 ΓÇ║ Chat Page ΓÇ║ create new thread dialog opens
+[1A[2K[102/277] [chromium] ΓÇ║ e2e\pages\chat.spec.ts:60:3 ΓÇ║ Chat Page ΓÇ║ create new thread via dialog
+[1A[2K[103/277] [chromium] ΓÇ║ e2e\pages\chat.spec.ts:70:3 ΓÇ║ Chat Page ΓÇ║ thread status actions are available
+[1A[2K[104/277] [chromium] ΓÇ║ e2e\pages\coupons.spec.ts:10:3 ΓÇ║ Coupons Page ΓÇ║ renders coupons table with data
+[1A[2K[105/277] [chromium] ΓÇ║ e2e\pages\coupons.spec.ts:15:3 ΓÇ║ Coupons Page ΓÇ║ search filters coupons
+[1A[2K[106/277] [chromium] ΓÇ║ e2e\pages\coupons.spec.ts:21:3 ΓÇ║ Coupons Page ΓÇ║ create coupon via dialog
+[1A[2K[107/277] [chromium] ΓÇ║ e2e\pages\coupons.spec.ts:37:3 ΓÇ║ Coupons Page ΓÇ║ cancel create closes dialog
+[1A[2K[108/277] [chromium] ΓÇ║ e2e\pages\coupons.spec.ts:43:3 ΓÇ║ Coupons Page ΓÇ║ edit coupon via row action
+[1A[2K[109/277] [chromium] ΓÇ║ e2e\pages\coupons.spec.ts:50:3 ΓÇ║ Coupons Page ΓÇ║ delete coupon via row action
+[1A[2K[110/277] [chromium] ΓÇ║ e2e\pages\coupons.spec.ts:57:3 ΓÇ║ Coupons Page ΓÇ║ view coupon scopes dialog
+[1A[2K[111/277] [chromium] ΓÇ║ e2e\pages\coupons.spec.ts:62:3 ΓÇ║ Coupons Page ΓÇ║ export dropdown works
+[1A[2K[112/277] [chromium] ΓÇ║ e2e\pages\coupons.spec.ts:66:3 ΓÇ║ Coupons Page ΓÇ║ bulk select rows
+[1A[2K[113/277] [chromium] ΓÇ║ e2e\pages\dashboard.spec.ts:4:3 ΓÇ║ Dashboard ΓÇ║ renders page heading with greeting
+[1A[2K[114/277] [chromium] ΓÇ║ e2e\pages\dashboard.spec.ts:9:3 ΓÇ║ Dashboard ΓÇ║ shows store overview text
+[1A[2K[115/277] [chromium] ΓÇ║ e2e\pages\dashboard.spec.ts:14:3 ΓÇ║ Dashboard ΓÇ║ displays stat cards
+[1A[2K[116/277] [chromium] ΓÇ║ e2e\pages\dashboard.spec.ts:21:3 ΓÇ║ Dashboard ΓÇ║ renders chart sections
+[1A[2K[117/277] [chromium] ΓÇ║ e2e\pages\dashboard.spec.ts:26:3 ΓÇ║ Dashboard ΓÇ║ shows recent orders section
+[1A[2K[118/277] [chromium] ΓÇ║ e2e\pages\dashboard.spec.ts:31:3 ΓÇ║ Dashboard ΓÇ║ quick action Add Product navigates to products
+[1A[2K[119/277] [chromium] ΓÇ║ e2e\pages\dashboard.spec.ts:37:3 ΓÇ║ Dashboard ΓÇ║ quick action Orders navigates to orders
+[1A[2K[120/277] [chromium] ΓÇ║ e2e\pages\dashboard.spec.ts:48:3 ΓÇ║ Dashboard Empty State ΓÇ║ renders with empty data
+[1A[2K[121/277] [chromium] ΓÇ║ e2e\pages\error-pages.spec.ts:4:3 ΓÇ║ Error Pages ΓÇ║ 404 renders for unknown route
+[1A[2K[122/277] [chromium] ΓÇ║ e2e\pages\error-pages.spec.ts:10:3 ΓÇ║ Error Pages ΓÇ║ 404 Go to Dashboard navigates home
+[1A[2K[123/277] [chromium] ΓÇ║ e2e\pages\error-pages.spec.ts:16:3 ΓÇ║ Error Pages ΓÇ║ 401 unauthorized page renders
+[1A[2K[124/277] [chromium] ΓÇ║ e2e\pages\error-pages.spec.ts:22:3 ΓÇ║ Error Pages ΓÇ║ 401 Go to Login navigates to login
+[1A[2K[125/277] [chromium] ΓÇ║ e2e\pages\error-pages.spec.ts:30:3 ΓÇ║ Error Pages ΓÇ║ 403 forbidden page renders
+[1A[2K[126/277] [chromium] ΓÇ║ e2e\pages\error-pages.spec.ts:36:3 ΓÇ║ Error Pages ΓÇ║ 403 Back to Dashboard navigates home
+[1A[2K[127/277] [chromium] ΓÇ║ e2e\pages\flash-sales.spec.ts:10:3 ΓÇ║ Flash Sales Page ΓÇ║ renders flash sales table with data
+[1A[2K[128/277] [chromium] ΓÇ║ e2e\pages\flash-sales.spec.ts:15:3 ΓÇ║ Flash Sales Page ΓÇ║ search filters flash sales
+[1A[2K[129/277] [chromium] ΓÇ║ e2e\pages\flash-sales.spec.ts:21:3 ΓÇ║ Flash Sales Page ΓÇ║ create flash sale via dialog
+[1A[2K[130/277] [chromium] ΓÇ║ e2e\pages\flash-sales.spec.ts:29:3 ΓÇ║ Flash Sales Page ΓÇ║ edit flash sale via row action
+[1A[2K[131/277] [chromium] ΓÇ║ e2e\pages\flash-sales.spec.ts:37:3 ΓÇ║ Flash Sales Page ΓÇ║ delete flash sale via row action
+[1A[2K[132/277] [chromium] ΓÇ║ e2e\pages\flash-sales.spec.ts:44:3 ΓÇ║ Flash Sales Page ΓÇ║ view flash sale detail with items
+[1A[2K[133/277] [chromium] ΓÇ║ e2e\pages\flash-sales.spec.ts:50:3 ΓÇ║ Flash Sales Page ΓÇ║ add sale item in detail view
+[1A[2K[134/277] [chromium] ΓÇ║ e2e\pages\flash-sales.spec.ts:60:3 ΓÇ║ Flash Sales Page ΓÇ║ export dropdown works
+[1A[2K[135/277] [chromium] ΓÇ║ e2e\pages\flash-sales.spec.ts:64:3 ΓÇ║ Flash Sales Page ΓÇ║ bulk select rows
+[1A[2K[136/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:10:3 ΓÇ║ Inventory Page ΓÇ║ warehouses tab renders table with data
+[1A[2K[137/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:16:3 ΓÇ║ Inventory Page ΓÇ║ create warehouse via dialog
+[1A[2K[138/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:24:3 ΓÇ║ Inventory Page ΓÇ║ edit warehouse via row action
+[1A[2K[139/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:32:3 ΓÇ║ Inventory Page ΓÇ║ delete warehouse via row action
+[1A[2K[140/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:40:3 ΓÇ║ Inventory Page ΓÇ║ stock tab renders inventory data
+[1A[2K[141/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:47:3 ΓÇ║ Inventory Page ΓÇ║ set stock dialog opens with correct fields
+[1A[2K[142/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:56:3 ΓÇ║ Inventory Page ΓÇ║ set stock submission works
+[1A[2K[143/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:69:3 ΓÇ║ Inventory Page ΓÇ║ adjust stock dialog opens
+[1A[2K[144/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:75:3 ΓÇ║ Inventory Page ΓÇ║ reserve stock dialog opens
+[1A[2K[145/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:81:3 ΓÇ║ Inventory Page ΓÇ║ release reservation dialog opens
+[1A[2K[146/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:87:3 ΓÇ║ Inventory Page ΓÇ║ low stock tab shows filtered data
+[1A[2K[147/277] [chromium] ΓÇ║ e2e\pages\inventory.spec.ts:94:3 ΓÇ║ Inventory Page ΓÇ║ tab switching works
+[1A[2K[148/277] [chromium] ΓÇ║ e2e\pages\notifications.spec.ts:10:3 ΓÇ║ Notifications Page ΓÇ║ renders notification list with data
+[1A[2K[149/277] [chromium] ΓÇ║ e2e\pages\notifications.spec.ts:14:3 ΓÇ║ Notifications Page ΓÇ║ filter toggle buttons are visible
+[1A[2K[150/277] [chromium] ΓÇ║ e2e\pages\notifications.spec.ts:19:3 ΓÇ║ Notifications Page ΓÇ║ filter by unread
+[1A[2K[151/277] [chromium] ΓÇ║ e2e\pages\notifications.spec.ts:27:3 ΓÇ║ Notifications Page ΓÇ║ filter by read
+[1A[2K[152/277] [chromium] ΓÇ║ e2e\pages\notifications.spec.ts:35:3 ΓÇ║ Notifications Page ΓÇ║ mark all read button is visible
+[1A[2K[153/277] [chromium] ΓÇ║ e2e\pages\notifications.spec.ts:40:3 ΓÇ║ Notifications Page ΓÇ║ mark all read works
+[1A[2K[154/277] [chromium] ΓÇ║ e2e\pages\notifications.spec.ts:45:3 ΓÇ║ Notifications Page ΓÇ║ send notification dialog opens
+[1A[2K[155/277] [chromium] ΓÇ║ e2e\pages\notifications.spec.ts:50:3 ΓÇ║ Notifications Page ΓÇ║ send notification via dialog
+[1A[2K[156/277] [chromium] ΓÇ║ e2e\pages\notifications.spec.ts:60:3 ΓÇ║ Notifications Page ΓÇ║ send notification validates required fields
+[1A[2K[157/277] [chromium] ΓÇ║ e2e\pages\notifications.spec.ts:68:3 ΓÇ║ Notifications Empty State ΓÇ║ shows empty state message
+[1A[2K[158/277] [chromium] ΓÇ║ e2e\pages\orders.spec.ts:10:3 ΓÇ║ Orders Page ΓÇ║ renders orders table with data
+[1A[2K[159/277] [chromium] ΓÇ║ e2e\pages\orders.spec.ts:15:3 ΓÇ║ Orders Page ΓÇ║ search filters orders
+[1A[2K[160/277] [chromium] ΓÇ║ e2e\pages\orders.spec.ts:21:3 ΓÇ║ Orders Page ΓÇ║ view order detail via row action
+[1A[2K[161/277] [chromium] ΓÇ║ e2e\pages\orders.spec.ts:27:3 ΓÇ║ Orders Page ΓÇ║ order detail shows items section
+[1A[2K[162/277] [chromium] ΓÇ║ e2e\pages\orders.spec.ts:33:3 ΓÇ║ Orders Page ΓÇ║ update order status via row action
+[1A[2K[163/277] [chromium] ΓÇ║ e2e\pages\orders.spec.ts:48:3 ΓÇ║ Orders Page ΓÇ║ cancel order via row action
+[1A[2K[164/277] [chromium] ΓÇ║ e2e\pages\orders.spec.ts:53:3 ΓÇ║ Orders Page ΓÇ║ export dropdown works
+[1A[2K[165/277] [chromium] ΓÇ║ e2e\pages\payments.spec.ts:10:3 ΓÇ║ Payments Page ΓÇ║ renders payments table with data
+[1A[2K[166/277] [chromium] ΓÇ║ e2e\pages\payments.spec.ts:15:3 ΓÇ║ Payments Page ΓÇ║ search filters payments
+[1A[2K[167/277] [chromium] ΓÇ║ e2e\pages\payments.spec.ts:35:3 ΓÇ║ Payments Page ΓÇ║ export dropdown works
+[1A[2K[168/277] [chromium] ΓÇ║ e2e\pages\payments.spec.ts:21:3 ΓÇ║ Payments Page ΓÇ║ update payment status via row action
+[1A[2K[169/277] [chromium] ΓÇ║ e2e\pages\permissions.spec.ts:10:3 ΓÇ║ Permissions Page ΓÇ║ renders permissions table with data
+[1A[2K[170/277] [chromium] ΓÇ║ e2e\pages\permissions.spec.ts:16:3 ΓÇ║ Permissions Page ΓÇ║ search filters permissions
+[1A[2K[171/277] [chromium] ΓÇ║ e2e\pages\permissions.spec.ts:22:3 ΓÇ║ Permissions Page ΓÇ║ create permission via dialog
+[1A[2K[172/277] [chromium] ΓÇ║ e2e\pages\permissions.spec.ts:29:3 ΓÇ║ Permissions Page ΓÇ║ validates required fields on create
+[1A[2K[173/277] [chromium] ΓÇ║ e2e\pages\permissions.spec.ts:35:3 ΓÇ║ Permissions Page ΓÇ║ edit permission via row action
+[1A[2K[174/277] [chromium] ΓÇ║ e2e\pages\permissions.spec.ts:42:3 ΓÇ║ Permissions Page ΓÇ║ delete permission via row action
+[1A[2K[175/277] [chromium] ΓÇ║ e2e\pages\permissions.spec.ts:49:3 ΓÇ║ Permissions Page ΓÇ║ export dropdown works
+[1A[2K[176/277] [chromium] ΓÇ║ e2e\pages\permissions.spec.ts:53:3 ΓÇ║ Permissions Page ΓÇ║ bulk select and delete
+[1A[2K[177/277] [chromium] ΓÇ║ e2e\pages\products.spec.ts:10:3 ΓÇ║ Products Page ΓÇ║ renders products table with data
+[1A[2K[178/277] [chromium] ΓÇ║ e2e\pages\products.spec.ts:15:3 ΓÇ║ Products Page ΓÇ║ search filters products
+[1A[2K[179/277] [chromium] ΓÇ║ e2e\pages\products.spec.ts:21:3 ΓÇ║ Products Page ΓÇ║ create product switches to form view
+[1A[2K[180/277] [chromium] ΓÇ║ e2e\pages\products.spec.ts:28:3 ΓÇ║ Products Page ΓÇ║ cancel create product returns to list
+[1A[2K[181/277] [chromium] ΓÇ║ e2e\pages\products.spec.ts:42:3 ΓÇ║ Products Page ΓÇ║ product edit form has tabs: Variants, Images, Attributes
+[1A[2K[182/277] [chromium] ΓÇ║ e2e\pages\products.spec.ts:36:3 ΓÇ║ Products Page ΓÇ║ view product detail via row action
+[1A[2K[183/277] [chromium] ΓÇ║ e2e\pages\products.spec.ts:52:3 ΓÇ║ Products Page ΓÇ║ edit product via row action opens form
+[1A[2K[184/277] [chromium] ΓÇ║ e2e\pages\products.spec.ts:60:3 ΓÇ║ Products Page ΓÇ║ delete product via row action
+[1A[2K[185/277] [chromium] ΓÇ║ e2e\pages\products.spec.ts:67:3 ΓÇ║ Products Page ΓÇ║ export dropdown works
+[1A[2K[186/277] [chromium] ΓÇ║ e2e\pages\products.spec.ts:71:3 ΓÇ║ Products Page ΓÇ║ bulk select rows
+[1A[2K[187/277] [chromium] ΓÇ║ e2e\pages\returns.spec.ts:10:3 ΓÇ║ Returns Page ΓÇ║ renders returns table with data
+[1A[2K[188/277] [chromium] ΓÇ║ e2e\pages\returns.spec.ts:15:3 ΓÇ║ Returns Page ΓÇ║ search filters returns
+[1A[2K[189/277] [chromium] ΓÇ║ e2e\pages\returns.spec.ts:21:3 ΓÇ║ Returns Page ΓÇ║ view return detail dialog
+[1A[2K[190/277] [chromium] ΓÇ║ e2e\pages\returns.spec.ts:26:3 ΓÇ║ Returns Page ΓÇ║ return detail shows items section
+[1A[2K[191/277] [chromium] ΓÇ║ e2e\pages\returns.spec.ts:32:3 ΓÇ║ Returns Page ΓÇ║ update return status via row action
+[1A[2K[192/277] [chromium] ΓÇ║ e2e\pages\returns.spec.ts:46:3 ΓÇ║ Returns Page ΓÇ║ export dropdown works
+[1A[2K[193/277] [chromium] ΓÇ║ e2e\pages\reviews.spec.ts:10:3 ΓÇ║ Reviews Page ΓÇ║ renders reviews table with data
+[1A[2K[194/277] [chromium] ΓÇ║ e2e\pages\reviews.spec.ts:15:3 ΓÇ║ Reviews Page ΓÇ║ search filters reviews
+[1A[2K[195/277] [chromium] ΓÇ║ e2e\pages\reviews.spec.ts:21:3 ΓÇ║ Reviews Page ΓÇ║ moderate review via row action
+[1A[2K[196/277] [chromium] ΓÇ║ e2e\pages\reviews.spec.ts:36:3 ΓÇ║ Reviews Page ΓÇ║ delete review via row action
+[1A[2K[197/277] [chromium] ΓÇ║ e2e\pages\reviews.spec.ts:43:3 ΓÇ║ Reviews Page ΓÇ║ export dropdown works
+[1A[2K[198/277] [chromium] ΓÇ║ e2e\pages\reviews.spec.ts:47:3 ΓÇ║ Reviews Page ΓÇ║ bulk select rows
+[1A[2K[199/277] [chromium] ΓÇ║ e2e\pages\role-permissions.spec.ts:9:3 ΓÇ║ Role Permissions Page ΓÇ║ shows empty state before role selection
+[1A[2K[200/277] [chromium] ΓÇ║ e2e\pages\role-permissions.spec.ts:13:3 ΓÇ║ Role Permissions Page ΓÇ║ select role shows permissions checkboxes
+[1A[2K[201/277] [chromium] ΓÇ║ e2e\pages\role-permissions.spec.ts:31:3 ΓÇ║ Role Permissions Page ΓÇ║ Save Changes button appears after toggling permission
+[1A[2K[202/277] [chromium] ΓÇ║ e2e\pages\role-permissions.spec.ts:50:3 ΓÇ║ Role Permissions Page ΓÇ║ shows page description
+[1A[2K[203/277] [chromium] ΓÇ║ e2e\pages\roles.spec.ts:16:3 ΓÇ║ Roles Page ΓÇ║ search filters roles
+[1A[2K[204/277] [chromium] ΓÇ║ e2e\pages\roles.spec.ts:10:3 ΓÇ║ Roles Page ΓÇ║ renders roles table with data
+[1A[2K[205/277] [chromium] ΓÇ║ e2e\pages\roles.spec.ts:22:3 ΓÇ║ Roles Page ΓÇ║ create role via dialog
+[1A[2K[206/277] [chromium] ΓÇ║ e2e\pages\roles.spec.ts:26:3 ΓÇ║ Roles Page ΓÇ║ validates required name on create
+[1A[2K[207/277] [chromium] ΓÇ║ e2e\pages\roles.spec.ts:53:3 ΓÇ║ Roles Page ΓÇ║ export dropdown works
+[1A[2K[208/277] [chromium] ΓÇ║ e2e\pages\roles.spec.ts:46:3 ΓÇ║ Roles Page ΓÇ║ delete non-system role via row action
+[1A[2K[209/277] [chromium] ΓÇ║ e2e\pages\roles.spec.ts:32:3 ΓÇ║ Roles Page ΓÇ║ cancel create role closes dialog
+[1A[2K[210/277] [chromium] ΓÇ║ e2e\pages\roles.spec.ts:38:3 ΓÇ║ Roles Page ΓÇ║ edit role via row action
+[1A[2K[211/277] [chromium] ΓÇ║ e2e\pages\roles.spec.ts:57:3 ΓÇ║ Roles Page ΓÇ║ displays system role indicator
+[1A[2K[212/277] [chromium] ΓÇ║ e2e\pages\search-analytics.spec.ts:9:3 ΓÇ║ Search Analytics Page ΓÇ║ shows page description
+[1A[2K[213/277] [chromium] ΓÇ║ e2e\pages\search-analytics.spec.ts:13:3 ΓÇ║ Search Analytics Page ΓÇ║ renders popular searches section
+[1A[2K[214/277] [chromium] ΓÇ║ e2e\pages\search-analytics.spec.ts:18:3 ΓÇ║ Search Analytics Page ΓÇ║ renders search history section
+[1A[2K[215/277] [chromium] ΓÇ║ e2e\pages\search-analytics.spec.ts:22:3 ΓÇ║ Search Analytics Page ΓÇ║ shows search count badges
+[1A[2K[216/277] [chromium] ΓÇ║ e2e\pages\search-analytics.spec.ts:28:3 ΓÇ║ Search Analytics Empty State ΓÇ║ shows empty state when no data
+[1A[2K[217/277] [chromium] ΓÇ║ e2e\pages\sellers.spec.ts:10:3 ΓÇ║ Sellers Page ΓÇ║ renders sellers table with data
+[1A[2K[218/277] [chromium] ΓÇ║ e2e\pages\sellers.spec.ts:15:3 ΓÇ║ Sellers Page ΓÇ║ search filters sellers
+[1A[2K[219/277] [chromium] ΓÇ║ e2e\pages\sellers.spec.ts:21:3 ΓÇ║ Sellers Page ΓÇ║ create seller via dialog
+[1A[2K[220/277] [chromium] ΓÇ║ e2e\pages\sellers.spec.ts:33:3 ΓÇ║ Sellers Page ΓÇ║ view seller details
+[1A[2K[221/277] [chromium] ΓÇ║ e2e\pages\sellers.spec.ts:38:3 ΓÇ║ Sellers Page ΓÇ║ approve pending seller
+[1A[2K[222/277] [chromium] ΓÇ║ e2e\pages\sellers.spec.ts:43:3 ΓÇ║ Sellers Page ΓÇ║ delete seller via row action
+[1A[2K[223/277] [chromium] ΓÇ║ e2e\pages\sellers.spec.ts:50:3 ΓÇ║ Sellers Page ΓÇ║ export dropdown works
+[1A[2K[224/277] [chromium] ΓÇ║ e2e\pages\sellers.spec.ts:54:3 ΓÇ║ Sellers Page ΓÇ║ bulk select rows
+[1A[2K[225/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:10:3 ΓÇ║ Settings Page ΓÇ║ shows page description
+[1A[2K[226/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:18:3 ΓÇ║ Settings Page ΓÇ║ edit profile toggle shows form
+[1A[2K[227/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:14:3 ΓÇ║ Settings Page ΓÇ║ profile section is visible
+[1A[2K[228/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:27:3 ΓÇ║ Settings Page ΓÇ║ save profile changes
+[1A[2K[229/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:37:3 ΓÇ║ Settings Page ΓÇ║ cancel profile edit
+[1A[2K[230/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:47:3 ΓÇ║ Settings Page ΓÇ║ change password section is visible
+[1A[2K[231/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:51:3 ΓÇ║ Settings Page ΓÇ║ change password validates required fields
+[1A[2K[232/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:56:3 ΓÇ║ Settings Page ΓÇ║ change password validates mismatched passwords
+[1A[2K[233/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:64:3 ΓÇ║ Settings Page ΓÇ║ change password validates short password
+[1A[2K[234/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:72:3 ΓÇ║ Settings Page ΓÇ║ appearance section shows theme options
+[1A[2K[235/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:77:3 ΓÇ║ Settings Page ΓÇ║ dark mode toggle works
+[1A[2K[236/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:85:3 ΓÇ║ Settings Page ΓÇ║ theme color options are visible
+[1A[2K[237/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:91:3 ΓÇ║ Settings Page ΓÇ║ select theme color
+[1A[2K[238/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:99:3 ΓÇ║ Settings Page ΓÇ║ danger zone has logout button
+[1A[2K[239/277] [chromium] ΓÇ║ e2e\pages\settings.spec.ts:104:3 ΓÇ║ Settings Page ΓÇ║ avatar section is visible
+[1A[2K[240/277] [chromium] ΓÇ║ e2e\pages\shipping.spec.ts:11:3 ΓÇ║ Shipping Page ΓÇ║ zones tab renders table with data
+[1A[2K[241/277] [chromium] ΓÇ║ e2e\pages\shipping.spec.ts:16:3 ΓÇ║ Shipping Page ΓÇ║ create zone via dialog
+[1A[2K[242/277] [chromium] ΓÇ║ e2e\pages\shipping.spec.ts:21:3 ΓÇ║ Shipping Page ΓÇ║ edit zone via row action
+[1A[2K[243/277] [chromium] ΓÇ║ e2e\pages\shipping.spec.ts:29:3 ΓÇ║ Shipping Page ΓÇ║ manage zone countries via row action
+[1A[2K[244/277] [chromium] ΓÇ║ e2e\pages\shipping.spec.ts:36:3 ΓÇ║ Shipping Page ΓÇ║ methods tab renders table with data
+[1A[2K[245/277] [chromium] ΓÇ║ e2e\pages\shipping.spec.ts:42:3 ΓÇ║ Shipping Page ΓÇ║ create method via dialog
+[1A[2K[246/277] [chromium] ΓÇ║ e2e\pages\shipping.spec.ts:54:3 ΓÇ║ Shipping Page ΓÇ║ edit method via row action
+[1A[2K[247/277] [chromium] ΓÇ║ e2e\pages\shipping.spec.ts:63:3 ΓÇ║ Shipping Page ΓÇ║ shipments tab has create shipment button
+[1A[2K[248/277] [chromium] ΓÇ║ e2e\pages\shipping.spec.ts:68:3 ΓÇ║ Shipping Page ΓÇ║ create shipment dialog opens
+[1A[2K[249/277] [chromium] ΓÇ║ e2e\pages\shipping.spec.ts:74:3 ΓÇ║ Shipping Page ΓÇ║ shipments tab has order ID lookup
+[1A[2K[250/277] [chromium] ΓÇ║ e2e\pages\shipping.spec.ts:80:3 ΓÇ║ Shipping Page ΓÇ║ tab switching works
+[1A[2K[251/277] [chromium] ΓÇ║ e2e\pages\stores.spec.ts:10:3 ΓÇ║ Stores Page ΓÇ║ renders stores table with data
+[1A[2K[252/277] [chromium] ΓÇ║ e2e\pages\stores.spec.ts:15:3 ΓÇ║ Stores Page ΓÇ║ search filters stores
+[1A[2K[253/277] [chromium] ΓÇ║ e2e\pages\stores.spec.ts:21:3 ΓÇ║ Stores Page ΓÇ║ create store via dialog
+[1A[2K[254/277] [chromium] ΓÇ║ e2e\pages\stores.spec.ts:34:3 ΓÇ║ Stores Page ΓÇ║ edit store via row action
+[1A[2K[255/277] [chromium] ΓÇ║ e2e\pages\stores.spec.ts:42:3 ΓÇ║ Stores Page ΓÇ║ delete store via row action
+[1A[2K[256/277] [chromium] ΓÇ║ e2e\pages\stores.spec.ts:49:3 ΓÇ║ Stores Page ΓÇ║ view store detail dialog
+[1A[2K[257/277] [chromium] ΓÇ║ e2e\pages\stores.spec.ts:54:3 ΓÇ║ Stores Page ΓÇ║ export dropdown works
+[1A[2K[258/277] [chromium] ΓÇ║ e2e\pages\subscriptions.spec.ts:11:3 ΓÇ║ Subscriptions Page ΓÇ║ plans tab renders table with data
+[1A[2K[259/277] [chromium] ΓÇ║ e2e\pages\subscriptions.spec.ts:16:3 ΓÇ║ Subscriptions Page ΓÇ║ create plan via dialog
+[1A[2K[260/277] [chromium] ΓÇ║ e2e\pages\subscriptions.spec.ts:34:3 ΓÇ║ Subscriptions Page ΓÇ║ delete plan via row action
+[1A[2K[261/277] [chromium] ΓÇ║ e2e\pages\subscriptions.spec.ts:27:3 ΓÇ║ Subscriptions Page ΓÇ║ edit plan via row action
+[1A[2K[262/277] [chromium] ΓÇ║ e2e\pages\subscriptions.spec.ts:42:3 ΓÇ║ Subscriptions Page ΓÇ║ active subscriptions tab renders
+[1A[2K[263/277] [chromium] ΓÇ║ e2e\pages\subscriptions.spec.ts:49:3 ΓÇ║ Subscriptions Page ΓÇ║ lookup tab has search input
+[1A[2K[264/277] [chromium] ΓÇ║ e2e\pages\subscriptions.spec.ts:54:3 ΓÇ║ Subscriptions Page ΓÇ║ lookup by ID finds subscription
+[1A[2K[265/277] [chromium] ΓÇ║ e2e\pages\subscriptions.spec.ts:68:3 ΓÇ║ Subscriptions Page ΓÇ║ tab switching works
+[1A[2K[266/277] [chromium] ΓÇ║ e2e\pages\subscriptions.spec.ts:75:3 ΓÇ║ Subscriptions Page ΓÇ║ export dropdown works
+[1A[2K[267/277] [chromium] ΓÇ║ e2e\pages\users.spec.ts:10:3 ΓÇ║ Users Page ΓÇ║ renders users table with data
+[1A[2K[268/277] [chromium] ΓÇ║ e2e\pages\users.spec.ts:15:3 ΓÇ║ Users Page ΓÇ║ search filters users
+[1A[2K[269/277] [chromium] ΓÇ║ e2e\pages\users.spec.ts:21:3 ΓÇ║ Users Page ΓÇ║ create user via dialog
+[1A[2K[270/277] [chromium] ΓÇ║ e2e\pages\users.spec.ts:30:3 ΓÇ║ Users Page ΓÇ║ validates required fields on create
+[1A[2K[271/277] [chromium] ΓÇ║ e2e\pages\users.spec.ts:36:3 ΓÇ║ Users Page ΓÇ║ cancel create user closes dialog
+[1A[2K[272/277] [chromium] ΓÇ║ e2e\pages\users.spec.ts:43:3 ΓÇ║ Users Page ΓÇ║ edit user via row action
+[1A[2K[273/277] [chromium] ΓÇ║ e2e\pages\users.spec.ts:51:3 ΓÇ║ Users Page ΓÇ║ delete user via row action
+[1A[2K[274/277] [chromium] ΓÇ║ e2e\pages\users.spec.ts:59:3 ΓÇ║ Users Page ΓÇ║ view user detail dialog
+[1A[2K[275/277] [chromium] ΓÇ║ e2e\pages\users.spec.ts:65:3 ΓÇ║ Users Page ΓÇ║ user detail has Info, Roles, Addresses tabs
+[1A[2K[276/277] [chromium] ΓÇ║ e2e\pages\users.spec.ts:76:3 ΓÇ║ Users Page ΓÇ║ export dropdown shows CSV, Excel, PDF
+[1A[2K[277/277] [chromium] ΓÇ║ e2e\pages\users.spec.ts:80:3 ΓÇ║ Users Page ΓÇ║ bulk select rows
+[1A[2K  277 passed (3.1m)
