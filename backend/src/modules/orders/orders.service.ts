@@ -121,6 +121,7 @@ export class OrdersService {
 
   async findAll(options?: {
     userId?: string;
+    storeId?: string;
     status?: string;
     page?: number;
     limit?: number;
@@ -128,6 +129,12 @@ export class OrdersService {
     const qb = this.orderRepo
       .createQueryBuilder('o')
       .leftJoinAndSelect('o.user', 'user');
+    if (options?.storeId) {
+      qb.innerJoin('order_items', 'oi', 'oi.order_id = o.id')
+        .andWhere('oi.store_id = :storeId', { storeId: options.storeId })
+        .groupBy('o.id')
+        .addGroupBy('user.id');
+    }
     if (options?.userId)
       qb.andWhere('o.userId = :userId', { userId: options.userId });
     if (options?.status)

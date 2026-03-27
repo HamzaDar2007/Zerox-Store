@@ -54,6 +54,12 @@ export class Review {
   @Column({ type: 'varchar', length: 20, default: 'pending' })
   status: string = 'pending';
 
+  @Column({ name: 'seller_reply', type: 'text', nullable: true })
+  sellerReply: string | null;
+
+  @Column({ name: 'seller_reply_at', type: 'timestamptz', nullable: true })
+  sellerReplyAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

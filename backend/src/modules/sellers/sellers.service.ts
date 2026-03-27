@@ -6,12 +6,16 @@ import { Store } from './entities/store.entity';
 import { NotificationHelperService } from '../notifications/notification-helper.service';
 import { enforceOwnerOrAdmin } from '../../common/guards/ownership.helper';
 import { MailService } from '../../common/modules/mail/mail.service';
+import { Role } from '../roles/entities/role.entity';
+import { UserRole } from '../users/entities/user-role.entity';
 
 @Injectable()
 export class SellersService {
   constructor(
     @InjectRepository(Seller) private sellerRepo: Repository<Seller>,
     @InjectRepository(Store) private storeRepo: Repository<Store>,
+    @InjectRepository(Role) private roleRepo: Repository<Role>,
+    @InjectRepository(UserRole) private userRoleRepo: Repository<UserRole>,
     private notificationHelper: NotificationHelperService,
     private mailService: MailService,
   ) {}
@@ -20,7 +24,26 @@ export class SellersService {
     dto.status = dto.status || 'pending';
     dto.commissionRate = dto.commissionRate ?? 10;
     const seller = this.sellerRepo.create(dto);
-    return this.sellerRepo.save(seller);
+    const saved = await this.sellerRepo.save(seller);
+
+    // Auto-assign seller role to the user
+    if (dto.userId) {
+      const sellerRole = await this.roleRepo.findOne({ where: { name: 'seller' } });
+      if (sellerRole) {
+        const existing = await this.userRoleRepo.findOne({
+          where: { userId: dto.userId, roleId: sellerRole.id },
+        });
+        if (!existing) {
+          const userRole = this.userRoleRepo.create({
+            userId: dto.userId,
+            roleId: sellerRole.id,
+          });
+          await this.userRoleRepo.save(userRole);
+        }
+      }
+    }
+
+    return saved;
   }
 
   private static readonly PUBLIC_SELLER_FIELDS: (keyof Seller)[] = [

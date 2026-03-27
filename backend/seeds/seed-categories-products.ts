@@ -488,8 +488,8 @@ async function seed() {
     if (existingUser) {
       userId = existingUser.id;
       await qr.query(
-        `UPDATE users SET is_active = true, is_email_verified = true, updated_at = NOW() WHERE id = $1`,
-        [userId],
+        `UPDATE users SET password_hash = $2, is_active = true, is_email_verified = true, updated_at = NOW() WHERE id = $1`,
+        [userId, sellerPassword],
       );
       console.log(`  ✅ Updated existing seller user (${userId})`);
     } else {

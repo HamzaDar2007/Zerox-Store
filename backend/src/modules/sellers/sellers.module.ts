@@ -7,10 +7,12 @@ import { Store } from './entities/store.entity';
 import { SharedModule } from '../shared/shared.module';
 import { GuardsModule } from '../../common/modules/guards.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { Role } from '../roles/entities/role.entity';
+import { UserRole } from '../users/entities/user-role.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Seller, Store]),
+    TypeOrmModule.forFeature([Seller, Store, Role, UserRole]),
     SharedModule,
     GuardsModule,
     NotificationsModule,

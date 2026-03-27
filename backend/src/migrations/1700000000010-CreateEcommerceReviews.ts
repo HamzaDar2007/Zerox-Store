@@ -14,6 +14,10 @@ export class CreateEcommerceReviews1700000000010 implements MigrationInterface {
         body TEXT,
         is_verified BOOLEAN DEFAULT FALSE,
         status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'approved', 'rejected')),
+        seller_reply TEXT,
+        seller_reply_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         UNIQUE (product_id, user_id, order_id)
       )
     `);

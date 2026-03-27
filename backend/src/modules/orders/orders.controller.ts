@@ -68,18 +68,27 @@ export class OrdersController {
     type: String,
     description: 'Filter by status',
   })
+  @ApiQuery({
+    name: 'storeId',
+    required: false,
+    type: String,
+    description: 'Filter by store UUID (for sellers)',
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Orders list returned' })
   findAll(
     @Query('status') status?: string,
+    @Query('storeId') storeId?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @CurrentUser() user?: any,
   ) {
     const isAdmin = user.role === 'admin' || user.role === 'super_admin';
+    const isSeller = user.role === 'seller';
     return this.svc.findAll({
-      userId: isAdmin ? undefined : user.id,
+      userId: isAdmin || (isSeller && storeId) ? undefined : user.id,
+      storeId: isSeller ? storeId : isAdmin ? storeId : undefined,
       status,
       page: page ? Math.max(1, +page) : undefined,
       limit: limit ? Math.min(Math.max(1, +limit), 100) : undefined,

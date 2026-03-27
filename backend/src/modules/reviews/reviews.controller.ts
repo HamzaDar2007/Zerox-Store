@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -111,6 +112,20 @@ export class ReviewsController {
   @ApiResponse({ status: 200, description: 'Review updated' })
   update(@Param('id') id: string, @Body() dto: UpdateReviewDto) {
     return this.svc.update(id, dto);
+  }
+
+  @Patch(':id/reply')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Reply to a review (seller only)' })
+  @ApiParam({ name: 'id', description: 'Review UUID' })
+  @ApiResponse({ status: 200, description: 'Reply added' })
+  reply(
+    @Param('id') id: string,
+    @Body('body') body: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.svc.reply(id, body, user.id);
   }
 
   @Delete(':id')

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
@@ -102,5 +102,24 @@ export class ReviewsService {
       avg: parseFloat(result?.avg) || 0,
       count: parseInt(result?.count, 10) || 0,
     };
+  }
+
+  async reply(
+    id: string,
+    body: string,
+    callerId: string,
+  ): Promise<Review> {
+    const review = await this.reviewRepo.findOne({
+      where: { id },
+      relations: ['product', 'product.store', 'product.store.seller'],
+    });
+    if (!review) throw new NotFoundException('Review not found');
+    const seller = (review as any).product?.store?.seller;
+    if (!seller || seller.userId !== callerId) {
+      throw new ForbiddenException('Only the product owner can reply to reviews');
+    }
+    review.sellerReply = body;
+    review.sellerReplyAt = new Date();
+    return this.reviewRepo.save(review);
   }
 }
