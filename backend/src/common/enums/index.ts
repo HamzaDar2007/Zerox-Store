@@ -33,6 +33,3 @@ export * from './audit.enum';
 
 // Chat
 export * from './chat.enum';
-
-// Permission Actions (existing)
-export * from './permission-actions.enum';

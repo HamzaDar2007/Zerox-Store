@@ -25,13 +25,6 @@ export interface LoginCredentials {
   password: string
 }
 
-export interface RegisterData {
-  email: string
-  password: string
-  firstName: string
-  lastName: string
-}
-
 export interface AuthResponse {
   accessToken: string
   refreshToken: string
