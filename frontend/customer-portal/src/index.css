@@ -1,0 +1,305 @@
+@import "tailwindcss";
+
+/* ─── Amazon + Daraz Fusion Design Tokens ─── */
+@theme {
+  --color-primary: #F57224;
+  --color-primary-hover: #e0651d;
+  --color-primary-light: #FFF3EC;
+  --color-secondary: #FFD814;
+  --color-secondary-hover: #f0c800;
+  --color-navy: #131921;
+  --color-navy-light: #232F3E;
+  --color-navy-lighter: #37475A;
+  --color-accent: #FEBD69;
+  --color-success: #007600;
+  --color-success-light: #f0faf0;
+  --color-danger: #B12704;
+  --color-danger-light: #FFF5F5;
+  --color-background: #F3F3F3;
+  --color-card: #FFFFFF;
+  --color-text-primary: #0F1111;
+  --color-text-secondary: #565959;
+  --color-text-muted: #8D9096;
+  --color-border: #DDDDDD;
+  --color-border-focus: #F57224;
+  --color-link: #007185;
+  --color-link-hover: #C7511F;
+  --color-badge-red: #CC0C39;
+  --color-badge-green: #007600;
+  --color-badge-orange: #F57224;
+  --color-star: #FFA41C;
+  --color-price: #B12704;
+  --color-savings: #007600;
+  --color-footer-divider: #3a4553;
+
+  --font-family-primary: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.14);
+  --shadow-header: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --shadow-modal: 0 16px 48px rgba(0, 0, 0, 0.2);
+
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-slide-down: slide-down 0.3s ease-out;
+  --animate-slide-left: slide-left 0.3s ease-out;
+  --animate-slide-right: slide-right 0.3s ease-out;
+  --animate-scale-in: scale-in 0.2s ease-out;
+  --animate-pulse-badge: pulse-badge 2s ease-in-out infinite;
+  --animate-countdown: countdown-pulse 1s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.5s ease-in-out infinite;
+  --animate-bounce-subtle: bounce-subtle 0.6s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-left {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes countdown-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+  60% { transform: translateY(-3px); }
+}
+
+/* ─── Base Styles ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-family-primary);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-background);
+  min-height: 100vh;
+}
+
+/* ─── Skip to Content (Accessibility) ─── */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: 8px 16px;
+  z-index: 100;
+  font-weight: 600;
+  transition: top 0.2s;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* ─── Custom Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* ─── Product Card Styles ─── */
+.product-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  overflow: hidden;
+}
+
+.product-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: scale(1.02);
+}
+
+.product-card .product-image {
+  overflow: hidden;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.08);
+}
+
+.product-card .product-image img {
+  transition: transform 0.3s ease;
+}
+
+/* ─── Star Rating ─── */
+.star-filled {
+  color: var(--color-star);
+}
+
+.star-empty {
+  color: #e0e0e0;
+}
+
+/* ─── Sale Badge Pulse ─── */
+.flash-sale-badge {
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+/* ─── Brand Logo Strip ─── */
+.brand-logo {
+  filter: grayscale(100%);
+  opacity: 0.6;
+  transition: filter 0.3s, opacity 0.3s;
+}
+
+.brand-logo:hover {
+  filter: grayscale(0%);
+  opacity: 1;
+}
+
+/* ─── Skeleton Loading ─── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ─── Page Enter Animation ─── */
+.page-enter {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* ─── Mega Menu ─── */
+.mega-menu {
+  box-shadow: var(--shadow-dropdown);
+  animation: slide-down 0.2s ease-out;
+}
+
+/* ─── Carousel Navigation Dots ─── */
+.carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.carousel-dot.active {
+  background: white;
+  width: 24px;
+  border-radius: 5px;
+}
+
+/* ─── Checkout Step Indicator ─── */
+.step-completed {
+  background: var(--color-success);
+  color: white;
+}
+
+.step-active {
+  background: var(--color-primary);
+  color: white;
+}
+
+.step-pending {
+  background: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+/* ─── Toast Overrides ─── */
+[data-sonner-toaster] {
+  --normal-bg: var(--color-card);
+  --normal-border: var(--color-border);
+  --normal-text: var(--color-text-primary);
+}
+
+/* ─── Responsive Container ─── */
+.container-main {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (min-width: 768px) {
+  .container-main {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+.container-content {
+  max-width: 1280px;
+  margin: 0 auto;
+}
