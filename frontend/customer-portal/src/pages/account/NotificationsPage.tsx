@@ -51,7 +51,7 @@ export default function NotificationsPage() {
       <SEOHead title="Notifications" />
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold text-[#0F1111]">Notifications</h1>
+          <h1 className="text-xl font-bold text-[#0F172A]">Notifications</h1>
           {notifications.some((n) => !n.isRead) && (
             <Button variant="ghost" size="sm" onClick={markAllRead}>
               <Check className="h-4 w-4 mr-1" /> Mark all read
@@ -67,21 +67,21 @@ export default function NotificationsPage() {
               <div
                 key={n.id}
                 className={cn(
-                  'flex gap-3 p-4 rounded-[8px] border transition-colors',
-                  n.isRead ? 'bg-white border-[#DDD]' : 'bg-[#FFF3EC] border-[#F57224]/30',
+                  'flex gap-3 p-4 rounded-xl border transition-colors',
+                  n.isRead ? 'bg-white border-[#E2E8F0]' : 'bg-[#EEF2FF] border-[#6366F1]/30',
                 )}
               >
-                <Bell className={cn('h-5 w-5 mt-0.5 shrink-0', n.isRead ? 'text-[#565959]' : 'text-[#F57224]')} />
+                <Bell className={cn('h-5 w-5 mt-0.5 shrink-0', n.isRead ? 'text-[#64748B]' : 'text-[#6366F1]')} />
                 <div className="flex-1 min-w-0">
-                  {n.title && <p className="text-sm font-medium text-[#0F1111]">{n.title}</p>}
-                  {n.body && <p className="text-sm text-[#565959]">{n.body}</p>}
-                  <p className="text-xs text-[#8D9096] mt-1">{formatRelativeTime(n.createdAt)}</p>
+                  {n.title && <p className="text-sm font-medium text-[#0F172A]">{n.title}</p>}
+                  {n.body && <p className="text-sm text-[#64748B]">{n.body}</p>}
+                  <p className="text-xs text-[#94A3B8] mt-1">{formatRelativeTime(n.createdAt)}</p>
                 </div>
                 <div className="flex gap-1 shrink-0">
                   {!n.isRead && (
-                    <button onClick={() => markRead(n.id)} className="text-xs text-[#007185] hover:underline cursor-pointer">Read</button>
+                    <button onClick={() => markRead(n.id)} className="text-xs text-[#6366F1] hover:underline cursor-pointer">Read</button>
                   )}
-                  <button onClick={() => handleDelete(n.id)} className="text-[#565959] hover:text-[#B12704] cursor-pointer p-1">
+                  <button onClick={() => handleDelete(n.id)} className="text-[#64748B] hover:text-[#EF4444] cursor-pointer p-1">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>

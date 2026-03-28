@@ -19,37 +19,37 @@ export function CartSummary({ subtotal, itemCount, discount = 0, shipping, coupo
   const total = subtotal - discount + shippingCost
 
   return (
-    <div className="bg-white rounded-[8px] border border-[#DDD] p-4 sticky top-24">
-      <h2 className="text-lg font-bold text-[#0F1111] mb-4">Order Summary</h2>
+    <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 sticky top-24">
+      <h2 className="text-lg font-bold text-[#0F172A] mb-4">Order Summary</h2>
 
       <div className="space-y-2 text-sm">
-        <div className="flex justify-between text-[#0F1111]">
+        <div className="flex justify-between text-[#0F172A]">
           <span>Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
 
         {discount > 0 && (
-          <div className="flex justify-between text-[#007600]">
+          <div className="flex justify-between text-[#10B981]">
             <span>Discount {couponCode && `(${couponCode})`}</span>
             <span>−{formatPrice(discount)}</span>
           </div>
         )}
 
-        <div className="flex justify-between text-[#0F1111]">
+        <div className="flex justify-between text-[#0F172A]">
           <span>Shipping</span>
-          <span>{shippingCost === 0 ? <span className="text-[#007600]">FREE</span> : formatPrice(shippingCost)}</span>
+          <span>{shippingCost === 0 ? <span className="text-[#10B981]">FREE</span> : formatPrice(shippingCost)}</span>
         </div>
       </div>
 
       <Separator className="my-3" />
 
-      <div className="flex justify-between text-lg font-bold text-[#B12704] mb-4">
+      <div className="flex justify-between text-lg font-bold text-[#EF4444] mb-4">
         <span>Total</span>
         <span>{formatPrice(total)}</span>
       </div>
 
       {subtotal < 2000 && (
-        <p className="text-xs text-[#007600] mb-3">
+        <p className="text-xs text-[#10B981] mb-3">
           <Truck className="h-3 w-3 inline mr-1" />
           Add {formatPrice(2000 - subtotal)} more for FREE shipping!
         </p>
@@ -61,8 +61,8 @@ export function CartSummary({ subtotal, itemCount, discount = 0, shipping, coupo
         </Button>
       </Link>
 
-      <div className="flex items-center gap-1 justify-center mt-3 text-xs text-[#565959]">
-        <ShieldCheck className="h-3.5 w-3.5 text-[#007600]" /> Secure checkout
+      <div className="flex items-center gap-1 justify-center mt-3 text-xs text-[#64748B]">
+        <ShieldCheck className="h-3.5 w-3.5 text-[#10B981]" /> Secure checkout
       </div>
     </div>
   )

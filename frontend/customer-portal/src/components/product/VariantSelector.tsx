@@ -51,8 +51,8 @@ export function VariantSelector({ variants, selectedVariantId, onSelect }: Varia
     <div className="space-y-4">
       {Array.from(attributeGroups.entries()).map(([keyId, { key, values }]) => (
         <div key={keyId}>
-          <label className="text-sm font-medium text-[#0F1111] mb-2 block">
-            {key.name}: <span className="font-normal text-[#565959]">{selectedAttrs.get(keyId) ?? '—'}</span>
+          <label className="text-sm font-medium text-[#0F172A] mb-2 block">
+            {key.name}: <span className="font-normal text-[#64748B]">{selectedAttrs.get(keyId) ?? '—'}</span>
           </label>
           <div className="flex flex-wrap gap-2">
             {Array.from(values).map((value) => {
@@ -68,10 +68,10 @@ export function VariantSelector({ variants, selectedVariantId, onSelect }: Varia
                   className={cn(
                     'px-4 py-2 text-sm rounded border transition-colors cursor-pointer',
                     isSelected
-                      ? 'border-[#F57224] bg-[#FFF3EC] text-[#F57224] font-medium'
+                      ? 'border-[#6366F1] bg-[#EEF2FF] text-[#6366F1] font-medium'
                       : isAvailable
-                        ? 'border-[#DDD] bg-white text-[#0F1111] hover:border-[#999]'
-                        : 'border-[#DDD] bg-[#F0F0F0] text-[#999] cursor-not-allowed line-through',
+                        ? 'border-[#E2E8F0] bg-white text-[#0F172A] hover:border-[#94A3B8]'
+                        : 'border-[#E2E8F0] bg-[#F1F5F9] text-[#94A3B8] cursor-not-allowed line-through',
                   )}
                 >
                   {value}

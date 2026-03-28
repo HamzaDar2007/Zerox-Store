@@ -68,8 +68,8 @@ export default function CartPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
             {/* Items */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-[8px] border border-[#DDD] p-4">
-                <h1 className="text-xl font-bold text-[#0F1111] mb-4">Shopping Cart ({items.length} items)</h1>
+              <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
+                <h1 className="text-xl font-bold text-[#0F172A] mb-4">Shopping Cart ({items.length} items)</h1>
                 {items.map((item) => (
                   <CartItemRow
                     key={item.id}
@@ -82,7 +82,7 @@ export default function CartPage() {
               </div>
 
               {/* Coupon */}
-              <div className="bg-white rounded-[8px] border border-[#DDD] p-4 mt-4">
+              <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 mt-4">
                 <CouponInput
                   onApply={setCoupon}
                   appliedCode={coupon?.code}

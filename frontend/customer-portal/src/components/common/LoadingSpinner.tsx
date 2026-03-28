@@ -8,7 +8,7 @@ interface LoadingSpinnerProps {
 
 export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) {
   const sizeClass = { sm: 'h-4 w-4', md: 'h-8 w-8', lg: 'h-12 w-12' }[size]
-  return <Loader2 className={cn('animate-spin text-[#F57224]', sizeClass, className)} />
+  return <Loader2 className={cn('animate-spin text-[#6366F1]', sizeClass, className)} />
 }
 
 export function PageLoader() {

@@ -38,7 +38,7 @@ export function CountdownTimer({ targetDate, onExpire, className, size = 'md' }:
     return () => clearInterval(timer)
   }, [calculateTimeLeft, onExpire])
 
-  if (timeLeft.expired) return <span className="text-[#B12704] font-bold">Expired</span>
+  if (timeLeft.expired) return <span className="text-[#EF4444] font-bold">Expired</span>
 
   const pad = (n: number) => n.toString().padStart(2, '0')
 
@@ -58,7 +58,7 @@ export function CountdownTimer({ targetDate, onExpire, className, size = 'md' }:
 
 function TimeBlock({ value, label, textSize, labelSize }: { value: string; label: string; textSize: string; labelSize: string }) {
   return (
-    <div className="flex flex-col items-center bg-[#0F1111] text-white rounded px-2 py-1 min-w-[40px]">
+    <div className="flex flex-col items-center bg-[#0F172A] text-white rounded px-2 py-1 min-w-[40px]">
       <span className={cn('font-bold leading-tight', textSize)}>{value}</span>
       <span className={cn('uppercase tracking-wider', labelSize)}>{label}</span>
     </div>

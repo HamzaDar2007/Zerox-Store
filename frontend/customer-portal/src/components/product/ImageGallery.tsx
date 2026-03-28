@@ -34,7 +34,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
             onClick={() => setSelectedIndex(index)}
             className={cn(
               'h-14 w-14 rounded border-2 overflow-hidden bg-white transition-colors cursor-pointer',
-              selectedIndex === index ? 'border-[#F57224]' : 'border-[#DDD] hover:border-[#999]',
+              selectedIndex === index ? 'border-[#6366F1]' : 'border-[#E2E8F0] hover:border-[#94A3B8]',
             )}
           >
             <img src={img.url} alt={img.altText ?? `${productName} ${index + 1}`} className="h-full w-full object-contain" />
@@ -44,7 +44,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
 
       {/* Main Image */}
       <div
-        className="flex-1 relative bg-white border border-[#DDD] rounded-[8px] overflow-hidden cursor-crosshair"
+        className="flex-1 relative bg-white border border-[#E2E8F0] rounded-xl overflow-hidden cursor-crosshair"
         onMouseEnter={() => setIsZoomed(true)}
         onMouseLeave={() => setIsZoomed(false)}
         onMouseMove={handleMouseMove}
@@ -62,7 +62,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
             />
           </div>
         ) : (
-          <div className="aspect-square flex items-center justify-center text-[#565959]">No image</div>
+          <div className="aspect-square flex items-center justify-center text-[#64748B]">No image</div>
         )}
       </div>
     </div>

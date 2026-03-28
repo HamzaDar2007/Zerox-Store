@@ -35,23 +35,23 @@ export default function FlashSalePage() {
         <Breadcrumb items={[{ label: 'Flash Sales' }]} />
 
         <div className="flex items-center gap-3 mt-4 mb-6">
-          <Flame className="h-8 w-8 text-[#CC0C39] flash-sale-badge" />
-          <h1 className="text-2xl font-extrabold text-[#0F1111]">Flash Sales</h1>
+          <Flame className="h-8 w-8 text-[#EF4444] flash-sale-badge" />
+          <h1 className="text-2xl font-bold text-[#0F172A]">Flash Sales</h1>
         </div>
 
         {loading ? (
           <div className="space-y-8">{[1, 2].map((i) => <Skeleton key={i} className="h-64" />)}</div>
         ) : sales.length === 0 ? (
           <div className="text-center py-16">
-            <Flame className="h-12 w-12 text-[#565959] mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-[#0F1111]">No active flash sales</h2>
-            <p className="text-sm text-[#565959] mt-2">Check back soon for amazing deals!</p>
+            <Flame className="h-12 w-12 text-[#64748B] mx-auto mb-4" />
+            <h2 className="text-lg font-bold text-[#0F172A]">No active flash sales</h2>
+            <p className="text-sm text-[#64748B] mt-2">Check back soon for amazing deals!</p>
           </div>
         ) : (
           <div className="space-y-8">
             {sales.map((sale) => (
-              <div key={sale.id} className="bg-white rounded-[8px] border border-[#DDD] overflow-hidden">
-                <div className="bg-[#CC0C39] px-6 py-3 flex items-center justify-between">
+              <div key={sale.id} className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
+                <div className="bg-[#EF4444] px-6 py-3 flex items-center justify-between">
                   <h2 className="text-white font-bold text-lg">{sale.name}</h2>
                   <div className="flex items-center gap-3">
                     <span className="text-white text-sm">Ends in</span>

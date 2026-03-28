@@ -14,7 +14,7 @@ const BANNERS = [
     subtitle: 'Up to 70% OFF on Electronics',
     cta: 'Shop Now',
     link: '/categories/electronics',
-    bgGradient: 'from-[#FF6B35] via-[#F57224] to-[#FF8C42]',
+    bgGradient: 'from-[#4F46E5] via-[#6366F1] to-[#818CF8]',
     textColor: 'text-white',
   },
   {
@@ -23,7 +23,7 @@ const BANNERS = [
     subtitle: 'Trendy styles at unbeatable prices',
     cta: 'Explore',
     link: '/categories/fashion',
-    bgGradient: 'from-[#232F3E] via-[#37475A] to-[#485769]',
+    bgGradient: 'from-[#0F172A] via-[#1E293B] to-[#334155]',
     textColor: 'text-white',
   },
   {
@@ -32,7 +32,7 @@ const BANNERS = [
     subtitle: 'Transform your space — Starting Rs. 499',
     cta: 'Discover',
     link: '/categories/home-living',
-    bgGradient: 'from-[#007600] via-[#008a00] to-[#00a000]',
+    bgGradient: 'from-[#059669] via-[#10B981] to-[#34D399]',
     textColor: 'text-white',
   },
   {
@@ -41,7 +41,7 @@ const BANNERS = [
     subtitle: 'Limited time deals — Don\'t miss out',
     cta: 'View Deals',
     link: '/flash-sales',
-    bgGradient: 'from-[#CC0C39] via-[#e01048] to-[#FF1A5C]',
+    bgGradient: 'from-[#7C3AED] via-[#8B5CF6] to-[#A78BFA]',
     textColor: 'text-white',
   },
 ]
@@ -71,7 +71,7 @@ export function HeroBanner() {
               <div className={cn('h-[300px] md:h-[400px] lg:h-[480px] bg-gradient-to-r flex items-center', banner.bgGradient)}>
                 <div className="container-main w-full">
                   <div className="max-w-xl">
-                    <h2 className={cn('text-3xl md:text-5xl font-extrabold mb-3 leading-tight', banner.textColor)}>
+                    <h2 className={cn('text-3xl md:text-5xl font-bold mb-3 leading-tight', banner.textColor)}>
                       {banner.title}
                     </h2>
                     <p className={cn('text-lg md:text-xl mb-6 opacity-90', banner.textColor)}>
@@ -96,14 +96,14 @@ export function HeroBanner() {
         className="absolute left-4 top-1/2 -translate-y-1/2 h-16 w-10 bg-white/80 hover:bg-white rounded flex items-center justify-center shadow-md transition-colors cursor-pointer"
         aria-label="Previous slide"
       >
-        <ChevronLeft className="h-6 w-6 text-[#0F1111]" />
+        <ChevronLeft className="h-6 w-6 text-[#0F172A]" />
       </button>
       <button
         onClick={scrollNext}
         className="absolute right-4 top-1/2 -translate-y-1/2 h-16 w-10 bg-white/80 hover:bg-white rounded flex items-center justify-center shadow-md transition-colors cursor-pointer"
         aria-label="Next slide"
       >
-        <ChevronRight className="h-6 w-6 text-[#0F1111]" />
+        <ChevronRight className="h-6 w-6 text-[#0F172A]" />
       </button>
 
       {/* Dots */}

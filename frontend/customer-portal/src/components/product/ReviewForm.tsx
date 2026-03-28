@@ -50,13 +50,13 @@ export function ReviewForm({ productId, orderId, onSuccess }: ReviewFormProps) {
       <div>
         <Label className="mb-2 block">Your Rating</Label>
         <StarRating rating={rating} size="lg" interactive onRate={handleSetRating} />
-        {errors.rating && <p className="text-xs text-[#B12704] mt-1">{errors.rating.message}</p>}
+        {errors.rating && <p className="text-xs text-[#EF4444] mt-1">{errors.rating.message}</p>}
       </div>
 
       <div>
         <Label htmlFor="review-title" className="mb-1 block">Review Title</Label>
         <Input id="review-title" placeholder="Summarize your review" {...register('title')} />
-        {errors.title && <p className="text-xs text-[#B12704] mt-1">{errors.title.message}</p>}
+        {errors.title && <p className="text-xs text-[#EF4444] mt-1">{errors.title.message}</p>}
       </div>
 
       <div>
@@ -67,7 +67,7 @@ export function ReviewForm({ productId, orderId, onSuccess }: ReviewFormProps) {
           rows={4}
           {...register('body')}
         />
-        {errors.body && <p className="text-xs text-[#B12704] mt-1">{errors.body.message}</p>}
+        {errors.body && <p className="text-xs text-[#EF4444] mt-1">{errors.body.message}</p>}
       </div>
 
       <Button type="submit" disabled={submitting || rating === 0}>

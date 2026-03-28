@@ -16,8 +16,8 @@ export function BrandStrip() {
   return (
     <section className="py-6" aria-label="Shop by brand">
       <div className="container-main">
-        <div className="bg-white rounded-[8px] border border-[#DDD] p-6">
-          <h2 className="text-xl font-bold text-[#0F1111] mb-4">Top Brands</h2>
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
+          <h2 className="text-xl font-bold text-[#0F172A] mb-4">Top Brands</h2>
           <ScrollArea className="w-full">
             <div className="flex gap-8 items-center pb-2">
               {brands.map((brand) => (
@@ -34,7 +34,7 @@ export function BrandStrip() {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="h-12 w-20 bg-[#F0F2F2] rounded flex items-center justify-center text-sm font-bold text-[#565959] brand-logo">
+                    <div className="h-12 w-20 bg-[#F1F5F9] rounded flex items-center justify-center text-sm font-bold text-[#64748B] brand-logo">
                       {brand.name}
                     </div>
                   )}

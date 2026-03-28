@@ -5,9 +5,9 @@ export function AppDownloadBanner() {
   return (
     <section className="py-6" aria-label="Download our app">
       <div className="container-main">
-        <div className="bg-gradient-to-r from-[#F57224] via-[#FF6B35] to-[#FF8C42] rounded-[12px] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="bg-gradient-to-r from-[#4F46E5] via-[#6366F1] to-[#818CF8] rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="text-white max-w-lg">
-            <h2 className="text-2xl md:text-3xl font-extrabold mb-3">Download the ShopVerse App</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">Download the ShopVerse App</h2>
             <p className="text-white/90 mb-6">
               Get exclusive app-only deals, faster checkout, and real-time order tracking.
               Shop anytime, anywhere!

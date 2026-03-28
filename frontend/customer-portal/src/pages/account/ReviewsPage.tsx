@@ -24,12 +24,12 @@ export default function ReviewsPage() {
     <>
       <SEOHead title="My Reviews" />
       <div>
-        <h1 className="text-xl font-bold text-[#0F1111] mb-6">My Reviews</h1>
+        <h1 className="text-xl font-bold text-[#0F172A] mb-6">My Reviews</h1>
 
         {reviews.length === 0 ? (
           <EmptyState icon={<Star className="h-16 w-16" />} title="No reviews yet" description="Share your experience by reviewing products you've purchased." />
         ) : (
-          <div className="bg-white rounded-[8px] border border-[#DDD] p-4">
+          <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
             {reviews.map((review) => (
               <ReviewCard key={review.id} review={review} />
             ))}

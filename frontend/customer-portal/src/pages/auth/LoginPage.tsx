@@ -45,55 +45,55 @@ export default function LoginPage() {
   return (
     <>
       <SEOHead title="Sign In" />
-      <div className="w-full max-w-md mx-auto">
-        <h1 className="text-2xl font-extrabold text-[#0F1111] mb-1">Sign In</h1>
-        <p className="text-sm text-[#565959] mb-6">Welcome back to ShopVerse</p>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="email" className="mb-1 block">Email</Label>
-            <Input id="email" type="email" placeholder="you@example.com" {...register('email')} autoFocus />
-            {errors.email && <p className="text-xs text-[#B12704] mt-1">{errors.email.message}</p>}
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <Label htmlFor="password">Password</Label>
-              <Link to={ROUTES.FORGOT_PASSWORD} className="text-xs text-[#007185] hover:text-[#C7511F] hover:underline">
-                Forgot password?
-              </Link>
-            </div>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                {...register('password')}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#565959] cursor-pointer"
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-            {errors.password && <p className="text-xs text-[#B12704] mt-1">{errors.password.message}</p>}
-          </div>
-
-          <Button type="submit" className="w-full font-bold" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign In'}
-          </Button>
-        </form>
-
-        <p className="text-sm text-[#565959] text-center mt-6">
-          New to ShopVerse?{' '}
-          <Link to={ROUTES.REGISTER} className="text-[#007185] hover:text-[#C7511F] hover:underline font-medium">
-            Create your account
-          </Link>
-        </p>
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight">Welcome back</h1>
+        <p className="text-sm text-[#94A3B8] mt-1">Sign in to your account</p>
       </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div>
+          <Label htmlFor="email" className="mb-1.5 block text-[#0F172A]">Email address</Label>
+          <Input id="email" type="email" placeholder="you@example.com" {...register('email')} autoFocus />
+          {errors.email && <p className="text-xs text-[#EF4444] mt-1">{errors.email.message}</p>}
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <Label htmlFor="password" className="text-[#0F172A]">Password</Label>
+            <Link to={ROUTES.FORGOT_PASSWORD} className="text-xs text-[#6366F1] hover:text-[#4F46E5] font-medium">
+              Forgot password?
+            </Link>
+          </div>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              {...register('password')}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B] cursor-pointer transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.password && <p className="text-xs text-[#EF4444] mt-1">{errors.password.message}</p>}
+        </div>
+
+        <Button type="submit" className="w-full h-11 font-semibold text-base" disabled={loading}>
+          {loading ? 'Signing in…' : 'Sign in'}
+        </Button>
+      </form>
+
+      <p className="text-sm text-[#94A3B8] text-center mt-6">
+        Don't have an account?{' '}
+        <Link to={ROUTES.REGISTER} className="text-[#6366F1] hover:text-[#4F46E5] font-medium">
+          Create account
+        </Link>
+      </p>
     </>
   )
 }

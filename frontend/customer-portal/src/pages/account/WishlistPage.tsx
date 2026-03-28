@@ -55,7 +55,7 @@ export default function WishlistPage() {
     <>
       <SEOHead title="My Wishlist" />
       <div>
-        <h1 className="text-xl font-bold text-[#0F1111] mb-6">My Wishlist</h1>
+        <h1 className="text-xl font-bold text-[#0F172A] mb-6">My Wishlist</h1>
 
         {items.length === 0 ? (
           <EmptyState icon={<Heart className="h-16 w-16" />} title="Your wishlist is empty" description="Save items you love to your wishlist." />
@@ -67,23 +67,23 @@ export default function WishlistPage() {
               const price = item.variant?.price ?? product?.basePrice ?? 0
 
               return (
-                <div key={item.id} className="bg-white rounded-[8px] border border-[#DDD] p-4 flex gap-4">
+                <div key={item.id} className="bg-white rounded-xl border border-[#E2E8F0] p-4 flex gap-4">
                   <Link
                     to={product ? `/products/${product.slug}` : '#'}
-                    className="h-24 w-24 bg-[#F7F8F8] rounded overflow-hidden shrink-0"
+                    className="h-24 w-24 bg-[#F8FAFC] rounded overflow-hidden shrink-0"
                   >
                     {image ? <img src={image.url} alt={product?.name} className="h-full w-full object-contain" /> : null}
                   </Link>
                   <div className="flex-1 min-w-0">
-                    <Link to={product ? `/products/${product.slug}` : '#'} className="text-sm font-medium text-[#0F1111] hover:text-[#C7511F] line-clamp-2">
+                    <Link to={product ? `/products/${product.slug}` : '#'} className="text-sm font-medium text-[#0F172A] hover:text-[#4F46E5] line-clamp-2">
                       {product?.name ?? 'Product'}
                     </Link>
-                    <p className="text-base font-bold text-[#B12704] mt-1">{formatPrice(price)}</p>
+                    <p className="text-base font-bold text-[#EF4444] mt-1">{formatPrice(price)}</p>
                     <div className="flex gap-2 mt-2">
                       <Button size="sm" onClick={() => handleAddToCart(item)}>
                         <ShoppingCart className="h-3.5 w-3.5 mr-1" /> Add to Cart
                       </Button>
-                      <Button size="sm" variant="ghost" className="text-[#B12704]" onClick={() => handleRemove(item.id)}>
+                      <Button size="sm" variant="ghost" className="text-[#EF4444]" onClick={() => handleRemove(item.id)}>
                         <Trash2 className="h-3.5 w-3.5 mr-1" /> Remove
                       </Button>
                     </div>

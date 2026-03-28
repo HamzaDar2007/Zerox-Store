@@ -24,24 +24,24 @@ export function OrderCard({ order }: OrderCardProps) {
   const statusColor = STATUS_COLORS[order.status.toLowerCase()] ?? 'bg-gray-100 text-gray-800'
 
   return (
-    <div className="bg-white rounded-[8px] border border-[#DDD] overflow-hidden">
+    <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
       {/* Header */}
-      <div className="bg-[#F0F2F2] px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-sm border-b border-[#DDD]">
+      <div className="bg-[#F1F5F9] px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-sm border-b border-[#E2E8F0]">
         <div className="flex gap-6">
           <div>
-            <span className="text-[#565959] text-xs uppercase">Order Placed</span>
-            <p className="text-[#0F1111] font-medium">{formatDate(order.createdAt)}</p>
+            <span className="text-[#64748B] text-xs uppercase">Order Placed</span>
+            <p className="text-[#0F172A] font-medium">{formatDate(order.createdAt)}</p>
           </div>
           <div>
-            <span className="text-[#565959] text-xs uppercase">Total</span>
-            <p className="text-[#0F1111] font-bold">{formatPrice(order.totalAmount)}</p>
+            <span className="text-[#64748B] text-xs uppercase">Total</span>
+            <p className="text-[#0F172A] font-bold">{formatPrice(order.totalAmount)}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <span className={cn('text-xs font-bold px-3 py-1 rounded-full', statusColor)}>
             {order.status}
           </span>
-          <span className="text-xs text-[#565959]">Order #{order.id.slice(-8).toUpperCase()}</span>
+          <span className="text-xs text-[#64748B]">Order #{order.id.slice(-8).toUpperCase()}</span>
         </div>
       </div>
 
@@ -50,24 +50,24 @@ export function OrderCard({ order }: OrderCardProps) {
         {order.items?.slice(0, 3).map((item) => {
           const image = item.variant?.product?.images?.find((i) => i.isPrimary) ?? item.variant?.product?.images?.[0]
           return (
-            <div key={item.id} className="flex items-center gap-3 py-2 first:pt-0 border-b border-[#DDD] last:border-0">
-              <div className="h-16 w-16 bg-[#F7F8F8] rounded overflow-hidden shrink-0">
+            <div key={item.id} className="flex items-center gap-3 py-2 first:pt-0 border-b border-[#E2E8F0] last:border-0">
+              <div className="h-16 w-16 bg-[#F8FAFC] rounded overflow-hidden shrink-0">
                 {image ? (
                   <img src={image.url} alt={item.nameSnapshot} className="h-full w-full object-contain" />
                 ) : (
-                  <div className="h-full w-full flex items-center justify-center"><Package className="h-6 w-6 text-[#565959]" /></div>
+                  <div className="h-full w-full flex items-center justify-center"><Package className="h-6 w-6 text-[#64748B]" /></div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-[#0F1111] line-clamp-1 font-medium">{item.nameSnapshot}</p>
-                <p className="text-xs text-[#565959]">Qty: {item.quantity} × {formatPrice(item.unitPrice)}</p>
+                <p className="text-sm text-[#0F172A] line-clamp-1 font-medium">{item.nameSnapshot}</p>
+                <p className="text-xs text-[#64748B]">Qty: {item.quantity} × {formatPrice(item.unitPrice)}</p>
               </div>
-              <p className="text-sm font-bold text-[#0F1111]">{formatPrice(item.totalAmount)}</p>
+              <p className="text-sm font-bold text-[#0F172A]">{formatPrice(item.totalAmount)}</p>
             </div>
           )
         })}
         {(order.items?.length ?? 0) > 3 && (
-          <p className="text-xs text-[#565959] mt-2">+{(order.items?.length ?? 0) - 3} more items</p>
+          <p className="text-xs text-[#64748B] mt-2">+{(order.items?.length ?? 0) - 3} more items</p>
         )}
 
         <div className="mt-4 flex items-center justify-between">
@@ -78,7 +78,7 @@ export function OrderCard({ order }: OrderCardProps) {
           </Link>
           {order.status.toLowerCase() === 'delivered' && (
             <Link to={`${ROUTES.ACCOUNT_RETURNS}?orderId=${order.id}`}>
-              <Button variant="ghost" size="sm" className="text-[#007185]">Return/Refund</Button>
+              <Button variant="ghost" size="sm" className="text-[#6366F1]">Return/Refund</Button>
             </Link>
           )}
         </div>

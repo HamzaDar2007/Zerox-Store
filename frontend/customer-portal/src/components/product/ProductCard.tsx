@@ -35,10 +35,10 @@ export function ProductCard({
   const productLink = `/products/${product.slug}`
 
   return (
-    <div className={cn('product-card group bg-white rounded-[8px] border border-[#DDD] overflow-hidden flex flex-col', className)}>
+    <div className={cn('product-card group bg-white rounded-xl border border-[#E2E8F0] overflow-hidden flex flex-col', className)}>
       {/* Image Container */}
       <div className="relative overflow-hidden">
-        <Link to={productLink} className="block aspect-square overflow-hidden bg-[#F7F8F8]">
+        <Link to={productLink} className="block aspect-square overflow-hidden bg-[#F8FAFC]">
           {primaryImage ? (
             <>
               <img
@@ -60,7 +60,7 @@ export function ProductCard({
               )}
             </>
           ) : (
-            <div className="h-full w-full flex items-center justify-center text-[#565959]">
+            <div className="h-full w-full flex items-center justify-center text-[#64748B]">
               <Eye className="h-12 w-12" />
             </div>
           )}
@@ -83,14 +83,14 @@ export function ProductCard({
           )}
           aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
         >
-          <Heart className={cn('h-4 w-4', isWishlisted ? 'fill-[#CC0C39] text-[#CC0C39]' : 'text-[#565959]')} />
+          <Heart className={cn('h-4 w-4', isWishlisted ? 'fill-[#EF4444] text-[#EF4444]' : 'text-[#64748B]')} />
         </button>
 
         {/* Quick Add */}
         {!compact && (
           <button
             onClick={(e) => { e.preventDefault(); onAddToCart?.() }}
-            className="absolute bottom-0 inset-x-0 bg-[#F57224] text-white text-sm font-bold py-2 text-center translate-y-full group-hover:translate-y-0 transition-transform duration-200 flex items-center justify-center gap-2 cursor-pointer"
+            className="absolute bottom-0 inset-x-0 bg-[#6366F1] text-white text-sm font-bold py-2 text-center translate-y-full group-hover:translate-y-0 transition-transform duration-200 flex items-center justify-center gap-2 cursor-pointer"
           >
             <ShoppingCart className="h-4 w-4" /> Add to Cart
           </button>
@@ -103,7 +103,7 @@ export function ProductCard({
         {product.store && !compact && (
           <Link
             to={`/stores/${product.store.slug}`}
-            className="text-xs text-[#007185] hover:text-[#C7511F] hover:underline mb-1 line-clamp-1"
+            className="text-xs text-[#6366F1] hover:text-[#4F46E5] hover:underline mb-1 line-clamp-1"
           >
             {product.store.name}
           </Link>
@@ -112,7 +112,7 @@ export function ProductCard({
         {/* Title */}
         <Link to={productLink} className="block mb-1">
           <h3 className={cn(
-            'text-sm text-[#0F1111] hover:text-[#C7511F] line-clamp-2 font-medium',
+            'text-sm text-[#0F172A] hover:text-[#4F46E5] line-clamp-2 font-medium',
             compact && 'text-xs',
           )}>
             {product.name}
@@ -122,11 +122,11 @@ export function ProductCard({
         {/* Price */}
         <div className="mt-auto">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className={cn('font-bold text-[#B12704]', compact ? 'text-sm' : 'text-base')}>
+            <span className={cn('font-bold text-[#EF4444]', compact ? 'text-sm' : 'text-base')}>
               {formatPrice(displayPrice)}
             </span>
             {originalPrice && originalPrice > displayPrice && (
-              <span className="text-xs text-[#565959] line-through">
+              <span className="text-xs text-[#64748B] line-through">
                 {formatPrice(originalPrice)}
               </span>
             )}

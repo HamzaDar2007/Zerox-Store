@@ -82,19 +82,19 @@ export function ReturnForm({ order, onSuccess }: ReturnFormProps) {
         <Label className="mb-2 block font-bold text-sm">Select items to return</Label>
         <div className="space-y-2">
           {items.map((item) => (
-            <div key={item.orderItemId} className="flex items-center gap-3 p-3 bg-[#F7F8F8] rounded border border-[#DDD]">
+            <div key={item.orderItemId} className="flex items-center gap-3 p-3 bg-[#F8FAFC] rounded border border-[#E2E8F0]">
               <Checkbox checked={item.selected} onCheckedChange={() => toggleItem(item.orderItemId)} />
-              <span className="text-sm text-[#0F1111] flex-1">{item.nameSnapshot}</span>
+              <span className="text-sm text-[#0F172A] flex-1">{item.nameSnapshot}</span>
               {item.selected && (
                 <div className="flex items-center gap-1">
-                  <Label className="text-xs text-[#565959]">Qty:</Label>
+                  <Label className="text-xs text-[#64748B]">Qty:</Label>
                   <input
                     type="number"
                     min={1}
                     max={item.maxQuantity}
                     value={item.quantity}
                     onChange={(e) => updateQuantity(item.orderItemId, parseInt(e.target.value) || 1)}
-                    className="w-16 border border-[#DDD] rounded px-2 py-1 text-sm text-center"
+                    className="w-16 border border-[#E2E8F0] rounded px-2 py-1 text-sm text-center"
                   />
                 </div>
               )}
@@ -111,7 +111,7 @@ export function ReturnForm({ order, onSuccess }: ReturnFormProps) {
           rows={3}
           {...register('reason', { required: 'Reason is required' })}
         />
-        {errors.reason && <p className="text-xs text-[#B12704] mt-1">{errors.reason.message}</p>}
+        {errors.reason && <p className="text-xs text-[#EF4444] mt-1">{errors.reason.message}</p>}
       </div>
 
       <Button type="submit" disabled={submitting || selectedItems.length === 0}>

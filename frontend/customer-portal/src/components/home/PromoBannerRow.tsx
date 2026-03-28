@@ -7,21 +7,21 @@ const BANNERS = [
     title: 'Electronics Fest',
     subtitle: 'Up to 50% OFF',
     link: '/categories/electronics',
-    bgColor: 'bg-gradient-to-br from-[#232F3E] to-[#37475A]',
+    bgColor: 'bg-gradient-to-br from-[#0F172A] to-[#1E293B]',
   },
   {
     id: 2,
     title: 'Fashion Week',
     subtitle: 'New Arrivals',
     link: '/categories/fashion',
-    bgColor: 'bg-gradient-to-br from-[#F57224] to-[#FF8C42]',
+    bgColor: 'bg-gradient-to-br from-[#4F46E5] to-[#6366F1]',
   },
   {
     id: 3,
     title: 'Home Essentials',
     subtitle: 'Starting Rs. 199',
     link: '/categories/home-living',
-    bgColor: 'bg-gradient-to-br from-[#007600] to-[#00a000]',
+    bgColor: 'bg-gradient-to-br from-[#059669] to-[#10B981]',
   },
 ]
 
@@ -34,7 +34,7 @@ export function PromoBannerRow() {
             <Link
               key={banner.id}
               to={banner.link}
-              className={`${banner.bgColor} rounded-[8px] p-6 text-white hover:opacity-95 transition-opacity flex flex-col justify-between min-h-[160px]`}
+              className={`${banner.bgColor} rounded-xl p-6 text-white hover:opacity-95 transition-opacity flex flex-col justify-between min-h-[160px]`}
             >
               <div>
                 <h3 className="text-xl font-bold mb-1">{banner.title}</h3>

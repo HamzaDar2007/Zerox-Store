@@ -52,8 +52,8 @@ export function FilterSidebar() {
   ]
 
   return (
-    <aside className="w-full bg-white rounded-[8px] border border-[#DDD] p-4">
-      <h2 className="font-bold text-base text-[#0F1111] mb-4">Filters</h2>
+    <aside className="w-full bg-white rounded-xl border border-[#E2E8F0] p-4">
+      <h2 className="font-bold text-base text-[#0F172A] mb-4">Filters</h2>
 
       {groups.map((group, i) => (
         <div key={group.key}>
@@ -62,14 +62,14 @@ export function FilterSidebar() {
             onClick={() => toggleExpand(group.key)}
             className="flex items-center justify-between w-full text-left py-1 cursor-pointer"
           >
-            <span className="text-sm font-bold text-[#0F1111]">{group.title}</span>
-            {group.open ? <ChevronUp className="h-4 w-4 text-[#565959]" /> : <ChevronDown className="h-4 w-4 text-[#565959]" />}
+            <span className="text-sm font-bold text-[#0F172A]">{group.title}</span>
+            {group.open ? <ChevronUp className="h-4 w-4 text-[#64748B]" /> : <ChevronDown className="h-4 w-4 text-[#64748B]" />}
           </button>
 
           {group.open && group.key === 'category' && (
             <div className="mt-2 space-y-1.5 max-h-[200px] overflow-y-auto">
               {categories.map((cat) => (
-                <label key={cat.id} className="flex items-center gap-2 text-sm text-[#0F1111] cursor-pointer hover:text-[#C7511F]">
+                <label key={cat.id} className="flex items-center gap-2 text-sm text-[#0F172A] cursor-pointer hover:text-[#4F46E5]">
                   <Checkbox
                     checked={selectedCategory === cat.id}
                     onCheckedChange={() => toggleSingle('categoryId', cat.id, selectedCategory)}
@@ -83,7 +83,7 @@ export function FilterSidebar() {
           {group.open && group.key === 'brand' && (
             <div className="mt-2 space-y-1.5 max-h-[200px] overflow-y-auto">
               {brands.map((brand) => (
-                <label key={brand.id} className="flex items-center gap-2 text-sm text-[#0F1111] cursor-pointer hover:text-[#C7511F]">
+                <label key={brand.id} className="flex items-center gap-2 text-sm text-[#0F172A] cursor-pointer hover:text-[#4F46E5]">
                   <Checkbox
                     checked={selectedBrand === brand.id}
                     onCheckedChange={() => toggleSingle('brandId', brand.id, selectedBrand)}
@@ -101,16 +101,16 @@ export function FilterSidebar() {
                 placeholder="Min"
                 value={minPrice}
                 onChange={(e) => updateFilter('minPrice', e.target.value)}
-                className="w-full border border-[#DDD] rounded px-2 py-1.5 text-sm focus:border-[#F57224] focus:outline-none"
+                className="w-full border border-[#E2E8F0] rounded px-2 py-1.5 text-sm focus:border-[#6366F1] focus:outline-none"
                 min={0}
               />
-              <span className="text-[#565959]">–</span>
+              <span className="text-[#64748B]">–</span>
               <input
                 type="number"
                 placeholder="Max"
                 value={maxPrice}
                 onChange={(e) => updateFilter('maxPrice', e.target.value)}
-                className="w-full border border-[#DDD] rounded px-2 py-1.5 text-sm focus:border-[#F57224] focus:outline-none"
+                className="w-full border border-[#E2E8F0] rounded px-2 py-1.5 text-sm focus:border-[#6366F1] focus:outline-none"
                 min={0}
               />
             </div>

@@ -60,7 +60,7 @@ export default function ProfilePage() {
     <>
       <SEOHead title="My Profile" />
       <div className="max-w-xl">
-        <h1 className="text-xl font-bold text-[#0F1111] mb-6">My Profile</h1>
+        <h1 className="text-xl font-bold text-[#0F172A] mb-6">My Profile</h1>
 
         {/* Avatar */}
         <div className="flex items-center gap-4 mb-6">
@@ -69,14 +69,14 @@ export default function ProfilePage() {
               <AvatarImage src={user?.avatarUrl} alt={user?.firstName} />
               <AvatarFallback className="text-xl">{user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}</AvatarFallback>
             </Avatar>
-            <label className="absolute bottom-0 right-0 h-7 w-7 bg-[#F57224] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#E06520] transition-colors">
+            <label className="absolute bottom-0 right-0 h-7 w-7 bg-[#6366F1] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#E06520] transition-colors">
               <Camera className="h-3.5 w-3.5 text-white" />
               <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
             </label>
           </div>
           <div>
-            <p className="font-medium text-[#0F1111]">{user?.firstName} {user?.lastName}</p>
-            <p className="text-sm text-[#565959]">{user?.email}</p>
+            <p className="font-medium text-[#0F172A]">{user?.firstName} {user?.lastName}</p>
+            <p className="text-sm text-[#64748B]">{user?.email}</p>
           </div>
         </div>
 
@@ -85,25 +85,25 @@ export default function ProfilePage() {
             <div>
               <Label htmlFor="firstName" className="mb-1 block">First Name</Label>
               <Input id="firstName" {...register('firstName')} />
-              {errors.firstName && <p className="text-xs text-[#B12704] mt-1">{errors.firstName.message}</p>}
+              {errors.firstName && <p className="text-xs text-[#EF4444] mt-1">{errors.firstName.message}</p>}
             </div>
             <div>
               <Label htmlFor="lastName" className="mb-1 block">Last Name</Label>
               <Input id="lastName" {...register('lastName')} />
-              {errors.lastName && <p className="text-xs text-[#B12704] mt-1">{errors.lastName.message}</p>}
+              {errors.lastName && <p className="text-xs text-[#EF4444] mt-1">{errors.lastName.message}</p>}
             </div>
           </div>
 
           <div>
             <Label htmlFor="email" className="mb-1 block">Email</Label>
-            <Input id="email" value={user?.email ?? ''} disabled className="bg-[#F0F2F2]" />
-            <p className="text-xs text-[#565959] mt-1">Email cannot be changed</p>
+            <Input id="email" value={user?.email ?? ''} disabled className="bg-[#F1F5F9]" />
+            <p className="text-xs text-[#64748B] mt-1">Email cannot be changed</p>
           </div>
 
           <div>
             <Label htmlFor="phone" className="mb-1 block">Phone (Optional)</Label>
             <Input id="phone" placeholder="+923001234567" {...register('phone')} />
-            {errors.phone && <p className="text-xs text-[#B12704] mt-1">{errors.phone.message}</p>}
+            {errors.phone && <p className="text-xs text-[#EF4444] mt-1">{errors.phone.message}</p>}
           </div>
 
           <Button type="submit" disabled={loading}>

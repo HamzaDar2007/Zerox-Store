@@ -22,10 +22,10 @@ export function CategoryNav() {
   }, [location.pathname, setMegaMenuOpen])
 
   return (
-    <nav className="bg-[#232F3E] text-white text-sm hidden md:block relative" aria-label="Category navigation">
-      <div className="container-main flex items-center h-10 gap-0.5 overflow-x-auto">
+    <nav className="bg-white border-b border-[#E2E8F0] text-sm hidden md:block relative" aria-label="Category navigation">
+      <div className="container-main flex items-center h-10 gap-1 overflow-x-auto">
         <button
-          className="flex items-center gap-1 px-3 h-full font-bold hover:ring-1 hover:ring-white rounded transition-all shrink-0 cursor-pointer"
+          className="flex items-center gap-1.5 px-3 h-full font-medium text-[#0F172A] hover:text-[#6366F1] rounded-md transition-colors shrink-0 cursor-pointer"
           onClick={() => {
             setMegaMenuOpen(!isMegaMenuOpen)
             setActiveMegaMenuCategory(null)
@@ -41,7 +41,7 @@ export function CategoryNav() {
           <Link
             key={cat.id}
             to={`/categories/${cat.slug}`}
-            className="px-3 h-full flex items-center hover:ring-1 hover:ring-white rounded transition-all whitespace-nowrap shrink-0"
+            className="px-3 h-full flex items-center text-[#64748B] hover:text-[#0F172A] rounded-md transition-colors whitespace-nowrap shrink-0"
             onMouseEnter={() => {
               setActiveMegaMenuCategory(cat.id)
               setMegaMenuOpen(true)
@@ -53,10 +53,10 @@ export function CategoryNav() {
 
         <Link
           to="/flash-sales"
-          className="flex items-center gap-1 px-3 h-full hover:ring-1 hover:ring-white rounded transition-all shrink-0"
+          className="flex items-center gap-1 px-3 h-full hover:text-[#EF4444] rounded-md transition-colors shrink-0"
         >
-          <Flame className="h-4 w-4 text-[#F57224] flash-sale-badge" />
-          <span className="text-[#FEBD69] font-bold">Flash Sale</span>
+          <Flame className="h-4 w-4 text-[#EF4444] flash-sale-badge" />
+          <span className="text-[#EF4444] font-medium">Flash Sale</span>
         </Link>
       </div>
 

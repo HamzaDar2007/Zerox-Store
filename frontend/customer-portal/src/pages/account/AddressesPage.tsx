@@ -79,7 +79,7 @@ export default function AddressesPage() {
       <SEOHead title="My Addresses" />
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold text-[#0F1111]">My Addresses</h1>
+          <h1 className="text-xl font-bold text-[#0F172A]">My Addresses</h1>
           <Button onClick={openCreate} size="sm"><Plus className="h-4 w-4 mr-1" /> Add Address</Button>
         </div>
 
@@ -88,20 +88,20 @@ export default function AddressesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {addresses.map((addr) => (
-              <div key={addr.id} className="bg-white rounded-[8px] border border-[#DDD] p-4 relative">
-                {addr.isDefault && <span className="absolute top-2 right-2 text-xs bg-[#007600] text-white px-2 py-0.5 rounded-full">Default</span>}
+              <div key={addr.id} className="bg-white rounded-xl border border-[#E2E8F0] p-4 relative">
+                {addr.isDefault && <span className="absolute top-2 right-2 text-xs bg-[#10B981] text-white px-2 py-0.5 rounded-full">Default</span>}
                 <div className="flex items-start gap-2 mb-2">
-                  <MapPin className="h-4 w-4 text-[#F57224] mt-0.5 shrink-0" />
+                  <MapPin className="h-4 w-4 text-[#6366F1] mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium text-sm text-[#0F1111]">{addr.label ?? 'Address'}</p>
-                    <p className="text-sm text-[#565959]">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}</p>
-                    <p className="text-sm text-[#565959]">{addr.city}{addr.state ? `, ${addr.state}` : ''} {addr.postalCode}</p>
-                    <p className="text-sm text-[#565959]">{addr.country}</p>
+                    <p className="font-medium text-sm text-[#0F172A]">{addr.label ?? 'Address'}</p>
+                    <p className="text-sm text-[#64748B]">{addr.line1}{addr.line2 ? `, ${addr.line2}` : ''}</p>
+                    <p className="text-sm text-[#64748B]">{addr.city}{addr.state ? `, ${addr.state}` : ''} {addr.postalCode}</p>
+                    <p className="text-sm text-[#64748B]">{addr.country}</p>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
                   <Button variant="ghost" size="sm" onClick={() => openEdit(addr)}><Pencil className="h-3.5 w-3.5 mr-1" /> Edit</Button>
-                  <Button variant="ghost" size="sm" className="text-[#B12704]" onClick={() => handleDelete(addr.id)}><Trash2 className="h-3.5 w-3.5 mr-1" /> Delete</Button>
+                  <Button variant="ghost" size="sm" className="text-[#EF4444]" onClick={() => handleDelete(addr.id)}><Trash2 className="h-3.5 w-3.5 mr-1" /> Delete</Button>
                 </div>
               </div>
             ))}
@@ -113,15 +113,15 @@ export default function AddressesPage() {
             <DialogHeader><DialogTitle>{editingId ? 'Edit Address' : 'Add Address'}</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit(onSave)} className="space-y-3">
               <div><Label className="mb-1 block text-xs">Label</Label><Input placeholder="Home, Work" {...register('label')} /></div>
-              <div><Label className="mb-1 block text-xs">Address Line 1</Label><Input {...register('line1')} />{errors.line1 && <p className="text-xs text-[#B12704]">{errors.line1.message}</p>}</div>
+              <div><Label className="mb-1 block text-xs">Address Line 1</Label><Input {...register('line1')} />{errors.line1 && <p className="text-xs text-[#EF4444]">{errors.line1.message}</p>}</div>
               <div><Label className="mb-1 block text-xs">Address Line 2</Label><Input {...register('line2')} /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label className="mb-1 block text-xs">City</Label><Input {...register('city')} />{errors.city && <p className="text-xs text-[#B12704]">{errors.city.message}</p>}</div>
+                <div><Label className="mb-1 block text-xs">City</Label><Input {...register('city')} />{errors.city && <p className="text-xs text-[#EF4444]">{errors.city.message}</p>}</div>
                 <div><Label className="mb-1 block text-xs">State</Label><Input {...register('state')} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label className="mb-1 block text-xs">Postal Code</Label><Input {...register('postalCode')} /></div>
-                <div><Label className="mb-1 block text-xs">Country</Label><Input {...register('country')} />{errors.country && <p className="text-xs text-[#B12704]">{errors.country.message}</p>}</div>
+                <div><Label className="mb-1 block text-xs">Country</Label><Input {...register('country')} />{errors.country && <p className="text-xs text-[#EF4444]">{errors.country.message}</p>}</div>
               </div>
               <div className="flex gap-2 pt-2"><Button type="submit">Save</Button><Button type="button" variant="ghost" onClick={() => setShowDialog(false)}>Cancel</Button></div>
             </form>

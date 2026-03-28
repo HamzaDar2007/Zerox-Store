@@ -27,9 +27,9 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         this.props.fallback || (
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-            <AlertTriangle className="h-12 w-12 text-[#B12704] mb-4" />
-            <h3 className="text-lg font-semibold text-[#0F1111] mb-1">Something went wrong</h3>
-            <p className="text-sm text-[#565959] mb-4">An unexpected error occurred. Please try again.</p>
+            <AlertTriangle className="h-12 w-12 text-[#EF4444] mb-4" />
+            <h3 className="text-lg font-semibold text-[#0F172A] mb-1">Something went wrong</h3>
+            <p className="text-sm text-[#64748B] mb-4">An unexpected error occurred. Please try again.</p>
             <Button onClick={() => this.setState({ hasError: false })}>Try Again</Button>
           </div>
         )

@@ -34,12 +34,12 @@ export function CouponInput({ onApply, appliedCode, onRemove }: CouponInputProps
 
   if (appliedCode) {
     return (
-      <div className="flex items-center gap-2 bg-[#F0FFF0] border border-[#007600]/30 rounded p-3">
-        <Tag className="h-4 w-4 text-[#007600]" />
-        <span className="text-sm text-[#007600] font-medium flex-1">
+      <div className="flex items-center gap-2 bg-[#F0FFF0] border border-[#10B981]/30 rounded p-3">
+        <Tag className="h-4 w-4 text-[#10B981]" />
+        <span className="text-sm text-[#10B981] font-medium flex-1">
           Coupon <span className="font-bold">{appliedCode}</span> applied
         </span>
-        <button onClick={onRemove} className="text-sm text-[#CC0C39] hover:underline cursor-pointer">
+        <button onClick={onRemove} className="text-sm text-[#EF4444] hover:underline cursor-pointer">
           Remove
         </button>
       </div>
@@ -49,7 +49,7 @@ export function CouponInput({ onApply, appliedCode, onRemove }: CouponInputProps
   return (
     <div className="flex gap-2">
       <div className="relative flex-1">
-        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#565959]" />
+        <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B]" />
         <Input
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}

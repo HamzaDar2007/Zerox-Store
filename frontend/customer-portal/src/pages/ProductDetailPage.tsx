@@ -90,7 +90,7 @@ export default function ProductDetailPage() {
     return (
       <div className="container-main py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Skeleton className="aspect-square rounded-[8px]" />
+          <Skeleton className="aspect-square rounded-xl" />
           <div className="space-y-4"><Skeleton className="h-8 w-3/4" /><Skeleton className="h-4 w-1/4" /><Skeleton className="h-12 w-1/2" /><Skeleton className="h-10 w-full" /></div>
         </div>
       </div>
@@ -100,8 +100,8 @@ export default function ProductDetailPage() {
   if (!product) {
     return (
       <div className="container-main py-16 text-center">
-        <h2 className="text-xl font-bold text-[#0F1111]">Product not found</h2>
-        <p className="text-[#565959] mt-2">The product you're looking for doesn't exist or has been removed.</p>
+        <h2 className="text-xl font-bold text-[#0F172A]">Product not found</h2>
+        <p className="text-[#64748B] mt-2">The product you're looking for doesn't exist or has been removed.</p>
       </div>
     )
   }
@@ -130,11 +130,11 @@ export default function ProductDetailPage() {
 
           {/* Details */}
           <div>
-            <h1 className="text-2xl font-bold text-[#0F1111] mb-2">{product.name}</h1>
+            <h1 className="text-2xl font-bold text-[#0F172A] mb-2">{product.name}</h1>
 
             {/* Store */}
             {product.store && (
-              <Link to={`/stores/${product.store.slug}`} className="text-sm text-[#007185] hover:text-[#C7511F] hover:underline flex items-center gap-1 mb-2">
+              <Link to={`/stores/${product.store.slug}`} className="text-sm text-[#6366F1] hover:text-[#4F46E5] hover:underline flex items-center gap-1 mb-2">
                 <Store className="h-4 w-4" /> Visit {product.store.name}
               </Link>
             )}
@@ -143,7 +143,7 @@ export default function ProductDetailPage() {
             {ratingSummary && (
               <div className="flex items-center gap-2 mb-3">
                 <StarRating rating={ratingSummary.avg ?? ratingSummary.average ?? 0} size="md" />
-                <span className="text-sm text-[#007185]">
+                <span className="text-sm text-[#6366F1]">
                   {ratingSummary.count ?? ratingSummary.total ?? 0} reviews
                 </span>
               </div>
@@ -159,7 +159,7 @@ export default function ProductDetailPage() {
             />
 
             {product.shortDesc && (
-              <p className="text-sm text-[#0F1111] mt-3">{product.shortDesc}</p>
+              <p className="text-sm text-[#0F172A] mt-3">{product.shortDesc}</p>
             )}
 
             <Separator className="my-4" />
@@ -182,12 +182,12 @@ export default function ProductDetailPage() {
 
             {/* Quick actions */}
             <div className="flex items-center gap-6 mt-4">
-              <button className="text-sm text-[#007185] hover:text-[#C7511F] flex items-center gap-1 cursor-pointer">
+              <button className="text-sm text-[#6366F1] hover:text-[#4F46E5] flex items-center gap-1 cursor-pointer">
                 <Heart className="h-4 w-4" /> Add to Wishlist
               </button>
               <button
                 onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success('Link copied!') }}
-                className="text-sm text-[#007185] hover:text-[#C7511F] flex items-center gap-1 cursor-pointer"
+                className="text-sm text-[#6366F1] hover:text-[#4F46E5] flex items-center gap-1 cursor-pointer"
               >
                 <Share2 className="h-4 w-4" /> Share
               </button>
@@ -198,16 +198,16 @@ export default function ProductDetailPage() {
             {/* Trust badges */}
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="flex flex-col items-center gap-1">
-                <Truck className="h-5 w-5 text-[#007600]" />
-                <span className="text-xs text-[#565959]">Free Delivery</span>
+                <Truck className="h-5 w-5 text-[#10B981]" />
+                <span className="text-xs text-[#64748B]">Free Delivery</span>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <RefreshCw className="h-5 w-5 text-[#007600]" />
-                <span className="text-xs text-[#565959]">Easy Returns</span>
+                <RefreshCw className="h-5 w-5 text-[#10B981]" />
+                <span className="text-xs text-[#64748B]">Easy Returns</span>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <ShieldCheck className="h-5 w-5 text-[#007600]" />
-                <span className="text-xs text-[#565959]">Secure Payment</span>
+                <ShieldCheck className="h-5 w-5 text-[#10B981]" />
+                <span className="text-xs text-[#64748B]">Secure Payment</span>
               </div>
             </div>
           </div>
@@ -223,28 +223,28 @@ export default function ProductDetailPage() {
           </TabsList>
 
           <TabsContent value="description">
-            <div className="bg-white rounded-[8px] border border-[#DDD] p-6">
+            <div className="bg-white rounded-xl border border-[#E2E8F0] p-6">
               {product.fullDesc ? (
-                <div className="prose max-w-none text-sm text-[#0F1111]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.fullDesc) }} />
+                <div className="prose max-w-none text-sm text-[#0F172A]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.fullDesc) }} />
               ) : (
-                <p className="text-sm text-[#565959]">{product.shortDesc ?? 'No description available.'}</p>
+                <p className="text-sm text-[#64748B]">{product.shortDesc ?? 'No description available.'}</p>
               )}
             </div>
           </TabsContent>
 
           <TabsContent value="reviews">
-            <div className="bg-white rounded-[8px] border border-[#DDD] p-6 space-y-6">
+            <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 space-y-6">
               {ratingSummary && <ReviewSummary summary={ratingSummary} />}
               <Separator />
               {reviews.length > 0 ? (
                 reviews.map((r) => <ReviewCard key={r.id} review={r} />)
               ) : (
-                <p className="text-sm text-[#565959] text-center py-4">No reviews yet. Be the first to review!</p>
+                <p className="text-sm text-[#64748B] text-center py-4">No reviews yet. Be the first to review!</p>
               )}
               <Separator />
               {isAuthenticated && (
                 <div>
-                  <h3 className="text-lg font-bold text-[#0F1111] mb-4">Write a Review</h3>
+                  <h3 className="text-lg font-bold text-[#0F172A] mb-4">Write a Review</h3>
                   <ReviewForm
                     productId={product.id}
                     onSuccess={() => {

@@ -34,7 +34,7 @@ export default function OrdersPage() {
     <>
       <SEOHead title="My Orders" />
       <div>
-        <h1 className="text-xl font-bold text-[#0F1111] mb-4">My Orders</h1>
+        <h1 className="text-xl font-bold text-[#0F172A] mb-4">My Orders</h1>
 
         {/* Status filter */}
         <div className="flex gap-2 mb-4 flex-wrap">
@@ -70,7 +70,7 @@ export default function OrdersPage() {
             {totalPages > 1 && (
               <div className="flex justify-center gap-2 mt-6">
                 <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => { const n = new URLSearchParams(searchParams); n.set('page', String(page - 1)); setSearchParams(n) }}>Previous</Button>
-                <span className="text-sm text-[#565959] self-center">Page {page} of {totalPages}</span>
+                <span className="text-sm text-[#64748B] self-center">Page {page} of {totalPages}</span>
                 <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => { const n = new URLSearchParams(searchParams); n.set('page', String(page + 1)); setSearchParams(n) }}>Next</Button>
               </div>
             )}

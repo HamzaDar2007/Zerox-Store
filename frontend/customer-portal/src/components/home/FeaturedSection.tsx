@@ -17,12 +17,12 @@ export function FeaturedSection({ title, products, viewAllLink, loading }: Featu
   return (
     <section className="py-6" aria-label={title}>
       <div className="container-main">
-        <div className="bg-white rounded-[8px] border border-[#DDD] p-4 md:p-6">
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 md:p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl md:text-2xl font-bold text-[#0F1111]">{title}</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-[#0F172A]">{title}</h2>
             {viewAllLink && (
-              <Link to={viewAllLink} className="text-sm text-[#007185] hover:text-[#C7511F] flex items-center gap-1">
+              <Link to={viewAllLink} className="text-sm text-[#6366F1] hover:text-[#4F46E5] flex items-center gap-1">
                 See All <ChevronRight className="h-4 w-4" />
               </Link>
             )}

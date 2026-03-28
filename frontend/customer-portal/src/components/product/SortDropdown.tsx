@@ -24,7 +24,7 @@ export function SortDropdown() {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm text-[#565959] shrink-0">Sort by:</span>
+      <span className="text-sm text-[#64748B] shrink-0">Sort by:</span>
       <Select value={currentSort} onValueChange={handleSort}>
         <SelectTrigger className="w-[180px] h-9 text-sm">
           <SelectValue />

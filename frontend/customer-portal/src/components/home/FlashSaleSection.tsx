@@ -27,7 +27,7 @@ export function FlashSaleSection() {
     <section className="py-6" aria-label="Flash sale">
       <div className="container-main">
         {/* Header */}
-        <div className="bg-[#CC0C39] rounded-t-[8px] px-4 md:px-6 py-3 flex items-center justify-between">
+        <div className="bg-[#EF4444] rounded-t-[8px] px-4 md:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Flame className="h-6 w-6 text-white flash-sale-badge" />
             <h2 className="text-white font-bold text-lg md:text-xl">{flashSale.name || 'Flash Sale'}</h2>
@@ -42,7 +42,7 @@ export function FlashSaleSection() {
         </div>
 
         {/* Products */}
-        <div className="bg-white rounded-b-[8px] border border-t-0 border-[#DDD] p-4">
+        <div className="bg-white rounded-b-[8px] border border-t-0 border-[#E2E8F0] p-4">
           <ScrollArea className="w-full">
             <div className="flex gap-4 pb-2">
               {items.map((item) => (

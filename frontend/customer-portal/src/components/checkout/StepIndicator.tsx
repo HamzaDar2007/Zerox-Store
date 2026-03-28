@@ -25,15 +25,15 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
               <div className="flex flex-col items-center text-center w-full">
                 <div className={cn(
                   'checkout-step flex items-center justify-center h-10 w-10 rounded-full text-sm font-bold border-2 mb-2 transition-colors',
-                  isCompleted && 'bg-[#007600] border-[#007600] text-white completed',
-                  isCurrent && 'bg-[#F57224] border-[#F57224] text-white active',
-                  !isCompleted && !isCurrent && 'bg-white border-[#DDD] text-[#565959]',
+                  isCompleted && 'bg-[#10B981] border-[#10B981] text-white completed',
+                  isCurrent && 'bg-[#6366F1] border-[#6366F1] text-white active',
+                  !isCompleted && !isCurrent && 'bg-white border-[#E2E8F0] text-[#64748B]',
                 )}>
                   {isCompleted ? <Check className="h-5 w-5" /> : stepNum}
                 </div>
                 <span className={cn(
                   'text-xs font-medium',
-                  isCurrent ? 'text-[#F57224]' : isCompleted ? 'text-[#007600]' : 'text-[#565959]',
+                  isCurrent ? 'text-[#6366F1]' : isCompleted ? 'text-[#10B981]' : 'text-[#64748B]',
                 )}>
                   {step.label}
                 </span>
@@ -41,7 +41,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
               {index < steps.length - 1 && (
                 <div className={cn(
                   'flex-1 h-0.5 mx-2 mt-[-20px]',
-                  isCompleted ? 'bg-[#007600]' : 'bg-[#DDD]',
+                  isCompleted ? 'bg-[#10B981]' : 'bg-[#E2E8F0]',
                 )} />
               )}
             </li>

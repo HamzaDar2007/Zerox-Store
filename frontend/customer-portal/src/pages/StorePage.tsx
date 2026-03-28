@@ -26,7 +26,7 @@ export default function StorePage() {
   if (loading) {
     return (
       <div className="container-main py-6 space-y-4">
-        <Skeleton className="h-48 w-full rounded-[8px]" />
+        <Skeleton className="h-48 w-full rounded-xl" />
         <Skeleton className="h-8 w-1/3" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">{[...Array(8)].map((_, i) => <Skeleton key={i} className="h-64" />)}</div>
       </div>
@@ -44,7 +44,7 @@ export default function StorePage() {
         <Breadcrumb items={[{ label: 'Stores' }, { label: store.name }]} />
 
         {/* Banner */}
-        <div className="relative h-48 md:h-64 bg-gradient-to-r from-[#232F3E] to-[#37475A] rounded-[8px] overflow-hidden mt-4 flex items-end p-6">
+        <div className="relative h-48 md:h-64 bg-gradient-to-r from-[#1E293B] to-[#334155] rounded-xl overflow-hidden mt-4 flex items-end p-6">
           {store.bannerUrl && (
             <img src={store.bannerUrl} alt={store.name} className="absolute inset-0 h-full w-full object-cover opacity-50" />
           )}
@@ -52,7 +52,7 @@ export default function StorePage() {
             {store.logoUrl ? (
               <img src={store.logoUrl} alt={store.name} className="h-16 w-16 rounded-full bg-white border-2 border-white object-contain" />
             ) : (
-              <div className="h-16 w-16 rounded-full bg-[#F57224] flex items-center justify-center text-white text-2xl font-bold border-2 border-white">
+              <div className="h-16 w-16 rounded-full bg-[#6366F1] flex items-center justify-center text-white text-2xl font-bold border-2 border-white">
                 {store.name.charAt(0)}
               </div>
             )}
@@ -65,7 +65,7 @@ export default function StorePage() {
 
         {/* Products */}
         <div className="mt-6">
-          <h2 className="text-lg font-bold text-[#0F1111] mb-4">All Products ({products.length})</h2>
+          <h2 className="text-lg font-bold text-[#0F172A] mb-4">All Products ({products.length})</h2>
           <ProductGrid products={products} />
         </div>
       </div>

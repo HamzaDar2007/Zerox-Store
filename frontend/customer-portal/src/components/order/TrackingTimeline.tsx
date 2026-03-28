@@ -23,7 +23,7 @@ export function TrackingTimeline({ events, currentStatus: _currentStatus }: Trac
 
   if (sorted.length === 0) {
     return (
-      <div className="text-sm text-[#565959] py-4 text-center">
+      <div className="text-sm text-[#64748B] py-4 text-center">
         No tracking information available yet.
       </div>
     )
@@ -42,22 +42,22 @@ export function TrackingTimeline({ events, currentStatus: _currentStatus }: Trac
             <div className="flex flex-col items-center">
               <div className={cn(
                 'h-8 w-8 rounded-full flex items-center justify-center shrink-0',
-                isFirst ? 'bg-[#F57224] text-white' : 'bg-[#F0F2F2] text-[#565959]',
+                isFirst ? 'bg-[#6366F1] text-white' : 'bg-[#F1F5F9] text-[#64748B]',
               )}>
                 <Icon className="h-4 w-4" />
               </div>
-              {!isLast && <div className="w-0.5 flex-1 bg-[#DDD] mt-1" />}
+              {!isLast && <div className="w-0.5 flex-1 bg-[#E2E8F0] mt-1" />}
             </div>
 
             {/* Content */}
             <div className="pb-2">
-              <p className={cn('text-sm font-medium', isFirst ? 'text-[#0F1111]' : 'text-[#565959]')}>
+              <p className={cn('text-sm font-medium', isFirst ? 'text-[#0F172A]' : 'text-[#64748B]')}>
                 {event.description ?? event.status.replace(/_/g, ' ')}
               </p>
               <div className="flex items-center gap-3 mt-0.5">
-                <time className="text-xs text-[#565959]">{formatDate(event.occurredAt)}</time>
+                <time className="text-xs text-[#64748B]">{formatDate(event.occurredAt)}</time>
                 {event.location && (
-                  <span className="text-xs text-[#565959] flex items-center gap-1">
+                  <span className="text-xs text-[#64748B] flex items-center gap-1">
                     <MapPin className="h-3 w-3" /> {event.location}
                   </span>
                 )}

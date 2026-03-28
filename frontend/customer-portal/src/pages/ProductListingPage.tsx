@@ -69,7 +69,7 @@ export default function ProductListingPage() {
             {/* Toolbar */}
             <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <p className="text-sm text-[#565959]">
+                <p className="text-sm text-[#64748B]">
                   {loading ? 'Loading…' : `${total} results`}
                   {search && <span> for "<strong>{search}</strong>"</span>}
                 </p>
@@ -89,17 +89,17 @@ export default function ProductListingPage() {
 
               <div className="flex items-center gap-3">
                 <SortDropdown />
-                <div className="hidden md:flex items-center border border-[#DDD] rounded overflow-hidden">
+                <div className="hidden md:flex items-center border border-[#E2E8F0] rounded overflow-hidden">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 cursor-pointer ${viewMode === 'grid' ? 'bg-[#F57224] text-white' : 'text-[#565959] hover:bg-[#F0F2F2]'}`}
+                    className={`p-2 cursor-pointer ${viewMode === 'grid' ? 'bg-[#6366F1] text-white' : 'text-[#64748B] hover:bg-[#F1F5F9]'}`}
                     aria-label="Grid view"
                   >
                     <LayoutGrid className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 cursor-pointer ${viewMode === 'list' ? 'bg-[#F57224] text-white' : 'text-[#565959] hover:bg-[#F0F2F2]'}`}
+                    className={`p-2 cursor-pointer ${viewMode === 'list' ? 'bg-[#6366F1] text-white' : 'text-[#64748B] hover:bg-[#F1F5F9]'}`}
                     aria-label="List view"
                   >
                     <List className="h-4 w-4" />

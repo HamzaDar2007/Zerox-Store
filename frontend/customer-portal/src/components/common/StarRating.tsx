@@ -42,11 +42,11 @@ export function StarRating({
         aria-label={`${i} star${i > 1 ? 's' : ''}`}
       >
         {isFilled ? (
-          <Star className={cn(sizeClass, 'fill-[#FFA41C] text-[#FFA41C]')} />
+          <Star className={cn(sizeClass, 'fill-[#F59E0B] text-[#F59E0B]')} />
         ) : isHalf ? (
-          <StarHalf className={cn(sizeClass, 'fill-[#FFA41C] text-[#FFA41C]')} />
+          <StarHalf className={cn(sizeClass, 'fill-[#F59E0B] text-[#F59E0B]')} />
         ) : (
-          <Star className={cn(sizeClass, 'text-[#e0e0e0]')} />
+          <Star className={cn(sizeClass, 'text-[#E2E8F0]')} />
         )}
       </button>,
     )
@@ -55,8 +55,8 @@ export function StarRating({
   return (
     <div className={cn('flex items-center gap-0.5', className)} role="img" aria-label={`${rating} out of ${maxRating} stars`}>
       {stars}
-      {showValue && <span className="ml-1 text-sm text-[#565959]">{rating.toFixed(1)}</span>}
-      {count !== undefined && <span className="ml-1 text-sm text-[#007185]">({count.toLocaleString()})</span>}
+      {showValue && <span className="ml-1 text-sm text-[#64748B]">{rating.toFixed(1)}</span>}
+      {count !== undefined && <span className="ml-1 text-sm text-[#6366F1]">({count.toLocaleString()})</span>}
     </div>
   )
 }

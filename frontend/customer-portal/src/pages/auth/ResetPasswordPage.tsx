@@ -40,23 +40,25 @@ export default function ResetPasswordPage() {
   return (
     <>
       <SEOHead title="Reset Password" />
-      <div className="w-full max-w-md mx-auto">
-        <h1 className="text-2xl font-extrabold text-[#0F1111] mb-1">Reset Password</h1>
-        <p className="text-sm text-[#565959] mb-6">Enter your new password below</p>
+      <div>
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight">Reset password</h1>
+          <p className="text-sm text-[#94A3B8] mt-1">Enter your new password below</p>
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <Label htmlFor="newPassword" className="mb-1 block">New Password</Label>
             <Input id="newPassword" type="password" placeholder="New password" {...register('newPassword')} autoFocus />
-            {errors.newPassword && <p className="text-xs text-[#B12704] mt-1">{errors.newPassword.message}</p>}
+            {errors.newPassword && <p className="text-xs text-[#EF4444] mt-1">{errors.newPassword.message}</p>}
           </div>
           <div>
             <Label htmlFor="confirmPassword" className="mb-1 block">Confirm Password</Label>
             <Input id="confirmPassword" type="password" placeholder="Confirm new password" {...register('confirmPassword')} />
-            {errors.confirmPassword && <p className="text-xs text-[#B12704] mt-1">{errors.confirmPassword.message}</p>}
+            {errors.confirmPassword && <p className="text-xs text-[#EF4444] mt-1">{errors.confirmPassword.message}</p>}
           </div>
-          <Button type="submit" className="w-full font-bold" disabled={loading}>
-            {loading ? 'Resetting…' : 'Reset Password'}
+          <Button type="submit" className="w-full h-11 font-semibold text-base" disabled={loading}>
+            {loading ? 'Resetting…' : 'Reset password'}
           </Button>
         </form>
       </div>

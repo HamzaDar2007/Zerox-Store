@@ -35,7 +35,7 @@ export function ProductCarousel({ products, title, className }: ProductCarouselP
 
   return (
     <div className={cn('relative', className)}>
-      {title && <h3 className="text-lg font-bold text-[#0F1111] mb-3">{title}</h3>}
+      {title && <h3 className="text-lg font-bold text-[#0F172A] mb-3">{title}</h3>}
 
       <div ref={emblaRef} className="overflow-hidden">
         <div className="flex gap-4">
@@ -50,19 +50,19 @@ export function ProductCarousel({ products, title, className }: ProductCarouselP
       {canPrev && (
         <button
           onClick={() => emblaApi?.scrollPrev()}
-          className="absolute -left-3 top-1/2 -translate-y-1/2 h-20 w-8 bg-white border border-[#DDD] rounded shadow-sm flex items-center justify-center hover:bg-[#F7F8F8] transition-colors cursor-pointer z-10"
+          className="absolute -left-3 top-1/2 -translate-y-1/2 h-20 w-8 bg-white border border-[#E2E8F0] rounded shadow-sm flex items-center justify-center hover:bg-[#F8FAFC] transition-colors cursor-pointer z-10"
           aria-label="Previous"
         >
-          <ChevronLeft className="h-5 w-5 text-[#0F1111]" />
+          <ChevronLeft className="h-5 w-5 text-[#0F172A]" />
         </button>
       )}
       {canNext && (
         <button
           onClick={() => emblaApi?.scrollNext()}
-          className="absolute -right-3 top-1/2 -translate-y-1/2 h-20 w-8 bg-white border border-[#DDD] rounded shadow-sm flex items-center justify-center hover:bg-[#F7F8F8] transition-colors cursor-pointer z-10"
+          className="absolute -right-3 top-1/2 -translate-y-1/2 h-20 w-8 bg-white border border-[#E2E8F0] rounded shadow-sm flex items-center justify-center hover:bg-[#F8FAFC] transition-colors cursor-pointer z-10"
           aria-label="Next"
         >
-          <ChevronRight className="h-5 w-5 text-[#0F1111]" />
+          <ChevronRight className="h-5 w-5 text-[#0F172A]" />
         </button>
       )}
     </div>
