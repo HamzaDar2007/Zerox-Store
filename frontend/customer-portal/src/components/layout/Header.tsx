@@ -19,7 +19,7 @@ export function Header() {
   const [suggestions, setSuggestions] = useState<Array<{ query: string; count: number }>>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault()

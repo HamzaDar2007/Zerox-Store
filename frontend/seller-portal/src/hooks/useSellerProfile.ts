@@ -7,14 +7,14 @@ export function useSellerProfile() {
 
   const sellerQuery = useQuery({
     queryKey: ['seller-profile', user?.id],
-    queryFn: () => sellerApi.getMyProfile(user!.id),
+    queryFn: () => sellerApi.getMyProfile(user?.id ?? ''),
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
   })
 
   const storeQuery = useQuery({
     queryKey: ['my-store', sellerQuery.data?.id],
-    queryFn: () => storeApi.getMyStore(sellerQuery.data!.id),
+    queryFn: () => storeApi.getMyStore(sellerQuery.data?.id ?? ''),
     enabled: !!sellerQuery.data?.id,
     staleTime: 5 * 60 * 1000,
   })

@@ -19,8 +19,8 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 import { useForm, Controller } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { FileUploader } from '@/components/shared/file-uploader'
 import { UrlFileField } from '@/components/shared/url-file-field'
 import { Progress } from '@/components/ui/progress'
@@ -43,7 +43,7 @@ export default function CategoriesPage() {
   const qc = useQueryClient()
 
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list })
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({ resolver: formResolver(schema) })
 
   const createM = useMutation({ mutationFn: categoriesApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['categories'] }); setDialogOpen(false); reset(); toast.success('Category created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => categoriesApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['categories'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })

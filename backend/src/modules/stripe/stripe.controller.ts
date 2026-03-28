@@ -150,10 +150,10 @@ export class StripeController {
                 'paid',
               ],
             );
-            await manager.query(
-              `UPDATE orders SET status = $1 WHERE id = $2`,
-              ['confirmed', orderId],
-            );
+            await manager.query(`UPDATE orders SET status = $1 WHERE id = $2`, [
+              'confirmed',
+              orderId,
+            ]);
           });
 
           if (userId) {

@@ -55,8 +55,18 @@ export class ShippingController {
   @Get('zones')
   @Public()
   @ApiOperation({ summary: 'List all shipping zones' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 50)',
+  })
   @ApiResponse({ status: 200, description: 'Zones list returned' })
   findAllZones(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.svc.findAllZones(+(page || 1), +(limit || 50));
@@ -137,8 +147,18 @@ export class ShippingController {
     type: String,
     description: 'Filter by zone UUID',
   })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 50)',
+  })
   @ApiResponse({ status: 200, description: 'Methods list returned' })
   findAllMethods(
     @Query('zoneId') zoneId?: string,

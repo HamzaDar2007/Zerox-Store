@@ -62,8 +62,18 @@ export class CategoriesController {
   @Get()
   @Public()
   @ApiOperation({ summary: 'List all categories' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 50)',
+  })
   @ApiResponse({ status: 200, description: 'Categories list returned' })
   findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.svc.findAllCategories(+(page || 1), +(limit || 50));
@@ -154,8 +164,18 @@ export class BrandsController {
   @Get()
   @Public()
   @ApiOperation({ summary: 'List all brands' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 50)',
+  })
   @ApiResponse({ status: 200, description: 'Brands list returned' })
   findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.svc.findAllBrands(+(page || 1), +(limit || 50));

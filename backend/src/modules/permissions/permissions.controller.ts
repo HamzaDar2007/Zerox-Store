@@ -45,8 +45,18 @@ export class PermissionsController {
 
   @Get()
   @ApiOperation({ summary: 'List all permissions (Admin only)' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 100)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 100)',
+  })
   @ApiResponse({ status: 200, description: 'Permissions list returned' })
   findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.permissionsService.findAll(+(page || 1), +(limit || 100));

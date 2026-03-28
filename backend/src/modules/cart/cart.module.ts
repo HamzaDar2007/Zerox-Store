@@ -33,7 +33,12 @@ import { GuardsModule } from '../../common/modules/guards.module';
     SharedModule,
     GuardsModule,
   ],
-  controllers: [CartController, WishlistController, CouponsController, FlashSalesController],
+  controllers: [
+    CartController,
+    WishlistController,
+    CouponsController,
+    FlashSalesController,
+  ],
   providers: [CartService],
   exports: [CartService, TypeOrmModule],
 })

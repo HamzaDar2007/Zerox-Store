@@ -38,7 +38,8 @@ export class UsersService {
     search?: string;
     role?: string;
   }): Promise<{ data: User[]; total: number }> {
-    const qb = this.userRepo.createQueryBuilder('u')
+    const qb = this.userRepo
+      .createQueryBuilder('u')
       .leftJoinAndSelect('u.userRoles', 'ur')
       .leftJoinAndSelect('ur.role', 'r');
     if (options?.search) {
@@ -69,11 +70,16 @@ export class UsersService {
     return this.userRepo.findOne({ where: { email } });
   }
 
-  async update(id: string, dto: Partial<User> & { password?: string }): Promise<User> {
+  async update(
+    id: string,
+    dto: Partial<User> & { password?: string },
+  ): Promise<User> {
     const user = await this.findOne(id);
     // Check for email uniqueness if email is being changed
     if (dto.email && dto.email !== user.email) {
-      const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+      const existing = await this.userRepo.findOne({
+        where: { email: dto.email },
+      });
       if (existing) throw new ConflictException('Email already exists');
       user.isEmailVerified = false;
     }

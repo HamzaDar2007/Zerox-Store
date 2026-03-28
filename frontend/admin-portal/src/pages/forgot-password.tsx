@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { formResolver } from '@/lib/form'
+import type { z } from 'zod'
 import { authApi } from '@/services/api'
 import { getErrorMessage } from '@/lib/api-error'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false)
 
   const { register, handleSubmit, formState: { errors } } = useForm<ForgotPasswordForm>({
-    resolver: zodResolver(forgotPasswordSchema) as any,
+    resolver: formResolver(forgotPasswordSchema),
   })
 
   const onSubmit = async (data: ForgotPasswordForm) => {

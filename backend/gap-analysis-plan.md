@@ -1,8 +1,33 @@
 # 🔍 E-Commerce Platform — Gap Analysis & Remediation Plan
 
 **Generated:** March 12, 2026
+**Last Updated:** March 2026 (comprehensive audit pass)
 **Scope:** Full audit of database design document vs actual TypeORM implementation
 **Codebase:** 112 entities | 33 modules | 138 DTOs | 23 enum files
+
+---
+
+## Audit Status (March 2026)
+
+The following remediation items from this plan have been addressed:
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Section 9 (Dead Code) | ✅ Done | Deleted 14 stale files, removed commented-out guards, removed unused deps |
+| Duplicate migration timestamps | ✅ Done | `AddSellerReplyToReviews` renumbered from 1700000000014 → 1700000000022 |
+| Env var mismatches | ✅ Done | `env.validation.ts` aligned with `.env.example` (SMTP_HOST, FRONTEND_URL, etc.) |
+| Scheduler N+1 | ✅ Done | `findDueForRenewal()` now eagerly loads user+plan relations |
+| ESLint / TypeScript errors | ✅ Done | Zero errors, zero warnings across all 4 projects |
+| Documentation alignment | ✅ Done | README, CONTRIBUTING, API_MAP.md, CHANGELOG all updated |
+
+Items still requiring attention from this plan:
+- Section 3: Critical data integrity flaws (stock reservation constraint, dual stock management)
+- Section 4: Missing FK relationships
+- Section 5: Missing unique constraints
+- Section 7: Architectural conflicts
+- Section 8: Denormalized count fields
+- Section 10: Security findings
+- Section 12: Design improvements
 
 ---
 

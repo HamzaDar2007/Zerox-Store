@@ -30,7 +30,7 @@ export default function ReturnsPage() {
 
   const { data: items } = useQuery({
     queryKey: ['return-items', detailDialog?.id],
-    queryFn: () => returnsApi.getItems(detailDialog!.id),
+    queryFn: () => returnsApi.getItems(detailDialog?.id ?? ''),
     enabled: !!detailDialog,
   })
 

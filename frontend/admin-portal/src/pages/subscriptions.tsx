@@ -20,8 +20,8 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 
 const schema = z.object({
   name: z.string().min(1),
@@ -41,7 +41,7 @@ export default function SubscriptionsPage() {
   const qc = useQueryClient()
 
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['subscription-plans'], queryFn: subscriptionsApi.listPlans })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: formResolver(schema) })
 
   const createM = useMutation({ mutationFn: subscriptionsApi.createPlan, onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription-plans'] }); setDialogOpen(false); reset(); toast.success('Plan created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => subscriptionsApi.updatePlan(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['subscription-plans'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })

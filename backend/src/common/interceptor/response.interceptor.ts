@@ -42,6 +42,17 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
             limit,
             totalPages: Math.ceil(meta.total / limit),
           };
+        } else if (data?.total !== undefined && Array.isArray(responseData)) {
+          // Alternate pagination shape: { data: [...], total, query }
+          const page = data.query?.page || 1;
+          const limit = data.query?.limit || 20;
+          responseData = {
+            items: responseData,
+            total: data.total,
+            page,
+            limit,
+            totalPages: Math.ceil(data.total / limit),
+          };
         }
 
         return {

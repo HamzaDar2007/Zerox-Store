@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { formResolver } from '@/lib/form'
+import type { z } from 'zod'
 import { useAuthStore } from '@/store/auth.store'
 import { useThemeStore, type ThemeColor } from '@/store/theme.store'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -42,12 +42,12 @@ export default function SettingsPage() {
   const [avatarLoading, setAvatarLoading] = useState(false)
 
   const profileForm = useForm<ProfileForm>({
-    resolver: zodResolver(profileSchema) as any,
+    resolver: formResolver(profileSchema),
     defaultValues: { firstName: user?.firstName ?? '', lastName: user?.lastName ?? '', phone: user?.phone ?? '' },
   })
 
   const passwordForm = useForm<PasswordForm>({
-    resolver: zodResolver(changePasswordSchema) as any,
+    resolver: formResolver(changePasswordSchema),
   })
 
   const onProfileSubmit = async (data: ProfileForm) => {

@@ -18,8 +18,8 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 
 const schema = z.object({
   code: z.string().min(1, 'Required'),
@@ -35,7 +35,7 @@ export default function PermissionsPage() {
   const qc = useQueryClient()
 
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['permissions'], queryFn: permissionsApi.list })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: formResolver(schema) })
 
   const createM = useMutation({ mutationFn: permissionsApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['permissions'] }); setDialogOpen(false); reset(); toast.success('Permission created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => permissionsApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['permissions'] }); setDialogOpen(false); setEditing(null); reset(); toast.success('Permission updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })

@@ -43,29 +43,16 @@ export class SchedulerService {
     this.logger.log(`Found ${due.length} subscriptions due for renewal`);
     if (!due.length) return;
 
-    // Preload plans to avoid N+1
-    const planIds = [...new Set(due.map((s) => s.planId))];
-    const plans = new Map<string, any>();
-    for (const pid of planIds) {
-      try {
-        plans.set(pid, await this.subscriptionsService.findPlan(pid));
-      } catch {
-        /* skip */
-      }
-    }
-
     for (const sub of due) {
       try {
-        const plan = plans.get(sub.planId);
+        const plan = sub.plan;
         if (!plan) {
           this.logger.warn(
-            `Plan ${sub.planId} not found, skipping sub ${sub.id}`,
+            `Plan not found for subscription ${sub.id}, skipping`,
           );
           continue;
         }
-        const fullSub = await this.subscriptionsService.findSubscription(
-          sub.id,
-        );
+
         const newStart = new Date(sub.currentPeriodEnd);
         const newEnd = new Date(newStart);
 
@@ -101,11 +88,11 @@ export class SchedulerService {
           .catch(() => {});
 
         // Send renewal email
-        if (fullSub.user?.email) {
+        if (sub.user?.email) {
           this.mailService
             .sendSubscriptionRenewalEmail(
-              fullSub.user.email,
-              fullSub.user.firstName || 'Customer',
+              sub.user.email,
+              sub.user.firstName || 'Customer',
               plan.name,
               newEnd.toLocaleDateString(),
             )

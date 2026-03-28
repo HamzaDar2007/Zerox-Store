@@ -77,7 +77,9 @@ async function bootstrap() {
   await app.listen(port);
   winstonLogger.log(`Application is running on: http://localhost:${port}`);
   if (!isProduction) {
-    winstonLogger.log(`Swagger docs available at: http://localhost:${port}/api/docs`);
+    winstonLogger.log(
+      `Swagger docs available at: http://localhost:${port}/api/docs`,
+    );
   }
 }
 bootstrap();

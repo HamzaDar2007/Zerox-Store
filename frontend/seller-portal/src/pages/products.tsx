@@ -159,7 +159,7 @@ export default function ProductsPage() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['products', { storeId, page, limit: 10, search }],
-    queryFn: () => productsApi.list({ storeId: storeId!, page, limit: 10, search: search || undefined }),
+    queryFn: () => productsApi.list({ storeId: storeId ?? '', page, limit: 10, search: search || undefined }),
     enabled: !!storeId,
   })
 
@@ -170,7 +170,7 @@ export default function ProductsPage() {
   const isExisting = !!editingProduct
 
   const createM = useMutation({
-    mutationFn: (d: ProductFormData) => productsApi.create({ ...d, storeId: storeId! }),
+    mutationFn: (d: ProductFormData) => productsApi.create({ ...d, storeId: storeId ?? '' }),
     onSuccess: (newProduct) => { qc.invalidateQueries({ queryKey: ['products'] }); setEditingProduct(newProduct); setActiveTab('variants'); toast.success('Product created — now add variants & images') },
     onError: (e) => toast.error(getErrorMessage(e)),
   })

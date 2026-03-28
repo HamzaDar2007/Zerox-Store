@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { authApi } from '@/services/api'
 import { useAuthStore } from '@/store/auth.store'
 import { getErrorMessage } from '@/lib/api-error'
@@ -28,7 +28,7 @@ export default function LoginPage() {
   const setAuth = useAuthStore((s) => s.setAuth)
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema) as any,
+    resolver: formResolver(loginSchema),
   })
 
   const onSubmit = async (data: LoginForm) => {

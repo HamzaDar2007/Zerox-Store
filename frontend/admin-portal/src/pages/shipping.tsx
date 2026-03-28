@@ -19,8 +19,8 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 
 const zoneSchema = z.object({ name: z.string().min(1) })
 const methodSchema = z.object({ name: z.string().min(1), zoneId: z.string().min(1), baseRate: z.coerce.number().min(0), perKgRate: z.coerce.number().min(0).default(0), estimatedDaysMin: z.coerce.number().optional(), estimatedDaysMax: z.coerce.number().optional(), carrier: z.string().optional(), freeThreshold: z.coerce.number().optional() })
@@ -37,12 +37,12 @@ export default function ShippingPage() {
   const { data: zones, isLoading: loadingZones, isError: errorZones, refetch: refetchZones } = useQuery({ queryKey: ['shipping-zones'], queryFn: shippingApi.listZones })
   const { data: methods, isLoading: loadingMethods, isError: errorMethods, refetch: refetchMethods } = useQuery({ queryKey: ['shipping-methods'], queryFn: shippingApi.listMethods })
 
-  const zoneForm = useForm<z.infer<typeof zoneSchema>>({ resolver: zodResolver(zoneSchema) as any })
-  const methodForm = useForm<z.infer<typeof methodSchema>>({ resolver: zodResolver(methodSchema) as any })
+  const zoneForm = useForm<z.infer<typeof zoneSchema>>({ resolver: formResolver(zoneSchema) })
+  const methodForm = useForm<z.infer<typeof methodSchema>>({ resolver: formResolver(methodSchema) })
 
   const { data: zoneCountries, refetch: refetchCountries } = useQuery({
     queryKey: ['zone-countries', countriesZone?.id],
-    queryFn: () => shippingApi.getCountries(countriesZone!.id),
+    queryFn: () => shippingApi.getCountries(countriesZone?.id ?? ''),
     enabled: !!countriesZone,
   })
 
@@ -243,12 +243,12 @@ function ShipmentsTab() {
 
   const { data: events } = useQuery({
     queryKey: ['shipment-events', detailShipment?.id],
-    queryFn: () => shippingApi.getShipmentEvents(detailShipment!.id),
+    queryFn: () => shippingApi.getShipmentEvents(detailShipment?.id ?? ''),
     enabled: !!detailShipment,
   })
 
-  const createForm = useForm<z.infer<typeof shipmentSchema>>({ resolver: zodResolver(shipmentSchema) as any })
-  const eventForm = useForm<z.infer<typeof eventSchema>>({ resolver: zodResolver(eventSchema) as any })
+  const createForm = useForm<z.infer<typeof shipmentSchema>>({ resolver: formResolver(shipmentSchema) })
+  const eventForm = useForm<z.infer<typeof eventSchema>>({ resolver: formResolver(eventSchema) })
 
   const createM = useMutation({
     mutationFn: shippingApi.createShipment,

@@ -47,8 +47,18 @@ export class RolesController {
 
   @Get()
   @ApiOperation({ summary: 'List all roles (Admin only)' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 50)',
+  })
   @ApiResponse({ status: 200, description: 'Roles list returned' })
   findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.rolesService.findAll(+(page || 1), +(limit || 50));

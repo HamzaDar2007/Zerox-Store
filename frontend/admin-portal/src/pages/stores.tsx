@@ -18,8 +18,8 @@ import { formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { useForm, Controller } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FileUploader } from '@/components/shared/file-uploader'
 import { Progress } from '@/components/ui/progress'
@@ -49,8 +49,8 @@ export default function StoresPage() {
 
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['stores'], queryFn: storesApi.list })
   const { data: sellersForDropdown } = useQuery({ queryKey: ['sellers'], queryFn: sellersApi.list })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
-  const createForm = useForm<CreateFormData>({ resolver: zodResolver(createSchema) as any })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: formResolver(schema) })
+  const createForm = useForm<CreateFormData>({ resolver: formResolver(createSchema) })
 
   const createM = useMutation({
     mutationFn: storesApi.create,

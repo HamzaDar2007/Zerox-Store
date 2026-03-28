@@ -19,8 +19,8 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 import { useForm } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 
 const schema = z.object({ name: z.string().min(1), startsAt: z.string().min(1), endsAt: z.string().min(1) })
 type FormData = z.infer<typeof schema>
@@ -37,17 +37,17 @@ export default function FlashSalesPage() {
   const qc = useQueryClient()
 
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['flash-sales'], queryFn: flashSalesApi.list })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: formResolver(schema) })
 
   const createM = useMutation({ mutationFn: flashSalesApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['flash-sales'] }); setDialogOpen(false); reset(); toast.success('Flash sale created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => flashSalesApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['flash-sales'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const deleteM = useMutation({ mutationFn: (id: string) => flashSalesApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['flash-sales'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
-  const addItemForm = useForm<AddItemFormData>({ resolver: zodResolver(addItemSchema) as any })
+  const addItemForm = useForm<AddItemFormData>({ resolver: formResolver(addItemSchema) })
 
   const { data: detailItems, refetch: refetchItems } = useQuery({
     queryKey: ['flash-sale-items', detailSale?.id],
-    queryFn: () => flashSalesApi.getItems(detailSale!.id),
+    queryFn: () => flashSalesApi.getItems(detailSale?.id ?? ''),
     enabled: !!detailSale,
   })
 

@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class FixChatThreadStatusAndReviewDefault1700000000020
-  implements MigrationInterface
-{
+export class FixChatThreadStatusAndReviewDefault1700000000020 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Fix chat_threads status CHECK to include all ConversationStatus enum values
     await queryRunner.query(

@@ -51,8 +51,8 @@ export class SellersController {
   @ApiOperation({ summary: 'Register as a seller' })
   @ApiResponse({ status: 201, description: 'Seller profile created' })
   @Auditable({ action: 'CREATE', tableName: 'sellers' })
-  create(@Body() dto: CreateSellerDto) {
-    return this.svc.createSeller(dto);
+  create(@Body() dto: CreateSellerDto, @Req() req: any) {
+    return this.svc.createSeller({ ...dto, userId: req.user.id });
   }
 
   @Get()

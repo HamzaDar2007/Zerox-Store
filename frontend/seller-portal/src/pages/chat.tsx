@@ -32,13 +32,13 @@ export default function ChatPage() {
 
   const { data: messages = [] } = useQuery({
     queryKey: ['chat-messages', selectedThread?.id],
-    queryFn: () => chatApi.getMessages(selectedThread!.id),
+    queryFn: () => chatApi.getMessages(selectedThread?.id ?? ''),
     enabled: !!selectedThread,
     refetchInterval: 5000,
   })
 
   const sendM = useMutation({
-    mutationFn: (body: string) => chatApi.sendMessage({ threadId: selectedThread!.id, body }),
+    mutationFn: (body: string) => chatApi.sendMessage({ threadId: selectedThread?.id ?? '', body }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['chat-messages', selectedThread?.id] })
       qc.invalidateQueries({ queryKey: ['chat-threads'] })

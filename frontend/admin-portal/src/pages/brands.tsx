@@ -18,8 +18,8 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 import { useForm, Controller } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { FileUploader } from '@/components/shared/file-uploader'
 import { UrlFileField } from '@/components/shared/url-file-field'
 import { Progress } from '@/components/ui/progress'
@@ -35,7 +35,7 @@ export default function BrandsPage() {
   const qc = useQueryClient()
 
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['brands'], queryFn: brandsApi.list })
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({ resolver: formResolver(schema) })
 
   const createM = useMutation({ mutationFn: brandsApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['brands'] }); setDialogOpen(false); reset(); toast.success('Brand created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed to create brand')) })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => brandsApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['brands'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed to update brand')) })

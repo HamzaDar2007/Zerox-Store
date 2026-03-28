@@ -72,7 +72,7 @@ export function Header() {
           <Bell className="h-4 w-4" />
           {((unreadData as { count?: number })?.count ?? 0) > 0 && (
             <span className="notification-dot absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white ring-2 ring-background">
-              {(unreadData as { count?: number })!.count! > 99 ? '99+' : (unreadData as { count?: number })!.count}
+              {(unreadData as { count?: number })?.count && (unreadData as { count?: number }).count > 99 ? '99+' : (unreadData as { count?: number })?.count}
             </span>
           )}
         </Button>

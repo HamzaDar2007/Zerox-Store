@@ -29,6 +29,7 @@ const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'))
+const VerifyEmailPage = lazy(() => import('@/pages/auth/VerifyEmailPage'))
 
 // Account
 const ProfilePage = lazy(() => import('@/pages/account/ProfilePage'))
@@ -40,6 +41,7 @@ const NotificationsPage = lazy(() => import('@/pages/account/NotificationsPage')
 const ReviewsPage = lazy(() => import('@/pages/account/ReviewsPage'))
 const ReturnsPage = lazy(() => import('@/pages/account/ReturnsPage'))
 const SettingsPage = lazy(() => import('@/pages/account/SettingsPage'))
+const ChatPage = lazy(() => import('@/pages/account/ChatPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,6 +93,7 @@ export default function App() {
                   <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
                   <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
                   <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
+                  <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmailPage />} />
                 </Route>
 
                 {/* Checkout layout (protected) */}
@@ -111,6 +114,7 @@ export default function App() {
                   <Route path={ROUTES.ACCOUNT_REVIEWS} element={<ReviewsPage />} />
                   <Route path={ROUTES.ACCOUNT_RETURNS} element={<ReturnsPage />} />
                   <Route path={ROUTES.ACCOUNT_SETTINGS} element={<SettingsPage />} />
+                  <Route path={ROUTES.ACCOUNT_CHAT} element={<ChatPage />} />
                 </Route>
 
                 {/* Catch-all */}

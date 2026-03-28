@@ -42,7 +42,23 @@ class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
-  MAIL_HOST?: string;
+  SMTP_HOST?: string;
+
+  @IsOptional()
+  @IsNumberString()
+  SMTP_PORT?: string;
+
+  @IsOptional()
+  @IsString()
+  NOTIFICATION_ENABLED?: string;
+
+  @IsOptional()
+  @IsString()
+  ADMIN_EMAIL?: string;
+
+  @IsOptional()
+  @IsString()
+  FRONTEND_URL?: string;
 
   @IsOptional()
   @IsString()

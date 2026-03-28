@@ -34,13 +34,13 @@ export default function AnalyticsPage() {
 
   const { data: ordersData } = useQuery({
     queryKey: ['analytics-orders', storeId],
-    queryFn: () => ordersApi.list({ storeId: storeId!, page: 1, limit: 1000 }),
+    queryFn: () => ordersApi.list({ storeId: storeId ?? '', page: 1, limit: 1000 }),
     enabled: !!storeId,
   })
 
   const { data: productsData } = useQuery({
     queryKey: ['analytics-products', storeId],
-    queryFn: () => productsApi.list({ storeId: storeId!, page: 1, limit: 500 }),
+    queryFn: () => productsApi.list({ storeId: storeId ?? '', page: 1, limit: 500 }),
     enabled: !!storeId,
   })
 
@@ -109,7 +109,8 @@ export default function AnalyticsPage() {
   for (const o of validOrders) {
     const key = new Date(o.createdAt).toISOString().slice(0, 10)
     if (dailyMap.has(key)) {
-      const entry = dailyMap.get(key)!
+      const entry = dailyMap.get(key)
+      if (!entry) continue
       entry.orders += 1
       entry.revenue += Number(o.totalAmount ?? 0)
     }

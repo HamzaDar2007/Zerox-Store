@@ -71,7 +71,11 @@ export class ShippingService {
     return this.methodRepo.save(m);
   }
 
-  async findAllMethods(zoneId?: string, page = 1, limit = 50): Promise<ShippingMethod[]> {
+  async findAllMethods(
+    zoneId?: string,
+    page = 1,
+    limit = 50,
+  ): Promise<ShippingMethod[]> {
     const where: any = {};
     if (zoneId) where.zoneId = zoneId;
     return this.methodRepo.find({

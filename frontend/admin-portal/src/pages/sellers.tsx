@@ -18,8 +18,8 @@ import { formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { useForm, Controller } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const createSchema = z.object({
@@ -38,7 +38,7 @@ export default function SellersPage() {
 
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['sellers'], queryFn: sellersApi.list })
   const { data: usersForDropdown } = useQuery({ queryKey: ['users', { page: 1, limit: 200, role: 'seller' }], queryFn: () => usersApi.list({ page: 1, limit: 200, role: 'seller' }) })
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<CreateFormData>({ resolver: zodResolver(createSchema) as any })
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<CreateFormData>({ resolver: formResolver(createSchema) })
 
   const createM = useMutation({
     mutationFn: sellersApi.create,

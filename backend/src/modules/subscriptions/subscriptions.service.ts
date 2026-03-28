@@ -138,6 +138,8 @@ export class SubscriptionsService {
   async findDueForRenewal(): Promise<Subscription[]> {
     return this.subRepo
       .createQueryBuilder('s')
+      .leftJoinAndSelect('s.user', 'user')
+      .leftJoinAndSelect('s.plan', 'plan')
       .where('s.status = :status', { status: 'active' })
       .andWhere('s.currentPeriodEnd <= :now', { now: new Date() })
       .getMany();

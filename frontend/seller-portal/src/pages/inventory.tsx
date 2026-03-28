@@ -32,7 +32,7 @@ export default function InventoryPage() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['inventory', storeId],
-    queryFn: () => productsApi.list({ storeId: storeId!, page: 1, limit: 500 }),
+    queryFn: () => productsApi.list({ storeId: storeId ?? '', page: 1, limit: 500 }),
     enabled: !!storeId,
   })
 

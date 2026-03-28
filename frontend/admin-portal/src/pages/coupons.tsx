@@ -19,8 +19,8 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 import { useForm, Controller } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 
 const schema = z.object({
   code: z.string().min(1),
@@ -46,7 +46,7 @@ export default function CouponsPage() {
   const qc = useQueryClient()
 
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['coupons'], queryFn: couponsApi.list })
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({ resolver: formResolver(schema) })
 
   const createM = useMutation({ mutationFn: couponsApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['coupons'] }); setDialogOpen(false); reset(); toast.success('Coupon created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: FormData & { id: string }) => couponsApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['coupons'] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
@@ -54,7 +54,7 @@ export default function CouponsPage() {
 
   const { data: scopes, refetch: refetchScopes } = useQuery({
     queryKey: ['coupon-scopes', scopeCoupon?.id],
-    queryFn: () => couponsApi.getScopes(scopeCoupon!.id),
+    queryFn: () => couponsApi.getScopes(scopeCoupon?.id ?? ''),
     enabled: !!scopeCoupon,
   })
 

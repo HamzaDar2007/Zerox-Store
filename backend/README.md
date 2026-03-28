@@ -8,11 +8,12 @@
   A multi-vendor e-commerce platform API built with NestJS, TypeORM, and PostgreSQL.
 </p>
 
-> **Project Status: Under Active Development — Not Production Ready**
+> **Project Status: Active Development — Audit Completed March 2026**
 >
-> A comprehensive [project audit](docs/FULL-PROJECT-AUDIT.md) (Feb 24, 2026) identified 140+ issues including 22 runtime crash bugs, 15 security vulnerabilities, and 60+ endpoints with missing input validation. See [docs/KNOWN-ISSUES.md](docs/KNOWN-ISSUES.md) for the prioritized issue tracker.
->
-> The core architecture, entity design (112 tables), and auth modules are solid. Feature modules require significant bug fixes before deployment.
+> A comprehensive code audit was performed in March 2026 covering dead code removal,
+> ESLint/TypeScript cleanup (zero errors across all projects), environment variable
+> validation alignment, and documentation updates. The backend has 24 feature modules,
+> 22 migrations, and 5 seed scripts.
 
 <p align="center">
   <img src="https://img.shields.io/badge/NestJS-10.2.10-E0234E?style=flat-square&logo=nestjs" alt="NestJS" />

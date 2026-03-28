@@ -125,7 +125,10 @@ export class AuthController {
   @Public()
   @ApiOperation({ summary: 'Verify email address using token from email' })
   @ApiResponse({ status: 200, description: 'Email verified successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid or expired verification token' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid or expired verification token',
+  })
   @ApiBody({
     schema: {
       type: 'object',

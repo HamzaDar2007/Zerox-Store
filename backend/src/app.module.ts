@@ -117,17 +117,7 @@ import { StripeModule } from './modules/stripe/stripe.module';
       useClass: JwtAuthGuard,
     },
 
-    // Global Roles Guard (Optional - Uncomment if needed)
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: RolesGuard,
-    // },
-
-    // Global Permissions Guard (Optional - Uncomment if needed)
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: PermissionsGuard,
-    // },
+    // Note: RolesGuard and PermissionsGuard are applied per-route via @Roles() and @Permissions() decorators
 
     // Global Response Interceptor
     {

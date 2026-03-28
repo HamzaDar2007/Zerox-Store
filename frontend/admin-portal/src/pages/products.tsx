@@ -20,8 +20,8 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useForm, Controller } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { FileUploader } from '@/components/shared/file-uploader'
 import { Progress } from '@/components/ui/progress'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
@@ -66,7 +66,7 @@ function VariantsPanel({ productId }: { productId: string }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<ProductVariant | null>(null)
   const { data: variants = [], isLoading } = useQuery({ queryKey: ['product-variants', productId], queryFn: () => productsApi.getVariants(productId) })
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<VariantFormData>({ resolver: zodResolver(variantSchema) as any })
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<VariantFormData>({ resolver: formResolver(variantSchema) })
   const createM = useMutation({ mutationFn: (d: VariantFormData) => productsApi.createVariant({ ...d, productId }), onSuccess: () => { qc.invalidateQueries({ queryKey: ['product-variants', productId] }); setDialogOpen(false); reset(); toast.success('Variant created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: VariantFormData & { id: string }) => productsApi.updateVariant(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['product-variants', productId] }); setDialogOpen(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const deleteM = useMutation({ mutationFn: (id: string) => productsApi.deleteVariant(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['product-variants', productId] }); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
@@ -163,19 +163,19 @@ function AttributeKeysPanel() {
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
   const [addValueOpen, setAddValueOpen] = useState(false)
   const { data: keys = [], isLoading } = useQuery({ queryKey: ['attribute-keys'], queryFn: productsApi.getAttributeKeys })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<AttrKeyFormData>({ resolver: zodResolver(attrKeySchema) as any })
-  const valueForm = useForm<AttrValueFormData>({ resolver: zodResolver(attrValueSchema) as any })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<AttrKeyFormData>({ resolver: formResolver(attrKeySchema) })
+  const valueForm = useForm<AttrValueFormData>({ resolver: formResolver(attrValueSchema) })
   const createM = useMutation({ mutationFn: (d: AttrKeyFormData) => productsApi.createAttributeKey({ ...d, slug: d.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') }), onSuccess: () => { qc.invalidateQueries({ queryKey: ['attribute-keys'] }); setDialogOpen(false); reset(); toast.success('Created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const deleteM = useMutation({ mutationFn: (id: string) => productsApi.deleteAttributeKey(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['attribute-keys'] }); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
   const { data: values = [] } = useQuery({
     queryKey: ['attribute-values', expandedKey],
-    queryFn: () => productsApi.getAttributeValues(expandedKey!),
+    queryFn: () => productsApi.getAttributeValues(expandedKey ?? ''),
     enabled: !!expandedKey,
   })
 
   const createValueM = useMutation({
-    mutationFn: (d: AttrValueFormData) => productsApi.createAttributeValue(expandedKey!, d),
+    mutationFn: (d: AttrValueFormData) => productsApi.createAttributeValue(expandedKey ?? '', d),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['attribute-values', expandedKey] }); setAddValueOpen(false); valueForm.reset(); toast.success('Value added') },
     onError: (e) => toast.error(getErrorMessage(e, 'Failed')),
   })
@@ -262,7 +262,7 @@ export default function ProductsPage() {
     queryFn: () => productsApi.list({ page, limit: 10, search: search || undefined }),
   })
 
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) as any })
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormData>({ resolver: formResolver(schema) })
 
   const { data: storesForDropdown } = useQuery({ queryKey: ['stores'], queryFn: storesApi.list })
   const { data: categoriesForDropdown } = useQuery({ queryKey: ['categories'], queryFn: categoriesApi.list })

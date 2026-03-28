@@ -18,7 +18,6 @@
 | GET    | /users/:id                  | Yes  | Get user profile         |
 | PUT    | /users/:id                  | Yes  | Update profile           |
 | PATCH  | /users/:id/avatar           | Yes  | Upload avatar            |
-| DELETE | /users/:id                  | Yes  | Delete account           |
 
 ## Addresses
 | Method | Endpoint                    | Auth | Description              |
@@ -87,7 +86,6 @@
 ## Payments
 | Method | Endpoint             | Auth | Description              |
 |--------|----------------------|------|--------------------------|
-| POST   | /payments            | Yes  | Create payment           |
 | GET    | /payments            | Yes  | List payments            |
 | GET    | /payments/:id        | Yes  | Get payment              |
 
@@ -103,7 +101,6 @@
 | GET    | /reviews                          | No   | List (filterable)        |
 | GET    | /reviews/:id                      | No   | Get review               |
 | GET    | /reviews/product/:productId/summary| No  | Rating summary           |
-| PUT    | /reviews/:id                      | Yes  | Update review            |
 | DELETE | /reviews/:id                      | Yes  | Delete review            |
 
 ## Coupons

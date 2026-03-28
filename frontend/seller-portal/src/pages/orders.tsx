@@ -28,7 +28,7 @@ export default function OrdersPage() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['orders', { storeId, page, limit: 10, search }],
-    queryFn: () => ordersApi.list({ storeId: storeId!, page, limit: 10 }),
+    queryFn: () => ordersApi.list({ storeId: storeId ?? '', page, limit: 10 }),
     enabled: !!storeId,
   })
 

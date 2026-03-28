@@ -110,7 +110,7 @@ src/modules/<module-name>/
 | `src/common/interceptor/` | `ResponseInterceptor` (wraps all responses) |
 | `src/common/pipes/` | `GlobalValidationPipe` |
 | `src/config/` | Database, security, and data-source configs |
-| `seeds/` | Database seed scripts (3 files) |
+| `seeds/` | Database seed scripts (5 files) |
 | `src/migrations/` | Database migrations (35 files — **never edit manually**) |
 
 ---

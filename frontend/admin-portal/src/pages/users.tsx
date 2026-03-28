@@ -19,8 +19,8 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 import { useForm, Controller } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { UrlFileField } from '@/components/shared/url-file-field'
 
@@ -92,7 +92,7 @@ function UserAddressesPanel({ userId }: { userId: string }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingAddr, setEditingAddr] = useState<Address | null>(null)
   const { data: addresses = [], isLoading } = useQuery({ queryKey: ['user-addresses', userId], queryFn: () => usersApi.getAddresses(userId) })
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<AddressFormData>({ resolver: zodResolver(addressSchema) as any })
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<AddressFormData>({ resolver: formResolver(addressSchema) })
   const createM = useMutation({ mutationFn: (d: AddressFormData) => usersApi.createAddress(userId, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-addresses', userId] }); setDialogOpen(false); reset(); toast.success('Address added') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: AddressFormData & { id: string }) => usersApi.updateAddress(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-addresses', userId] }); setDialogOpen(false); setEditingAddr(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const deleteM = useMutation({ mutationFn: (id: string) => usersApi.deleteAddress(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['user-addresses', userId] }); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
@@ -165,7 +165,7 @@ export default function UsersPage() {
   })
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<UserFormData>({
-    resolver: zodResolver(userSchema) as any,
+    resolver: formResolver(userSchema),
   })
 
   const { data: allRoles = [] } = useQuery({ queryKey: ['roles'], queryFn: rolesApi.list })
@@ -173,7 +173,7 @@ export default function UsersPage() {
   const createMutation = useMutation({
     mutationFn: (d: UserFormData) => {
       const { roleId, ...userData } = d
-      return usersApi.create({ ...userData, password: userData.password! }).then(async (user) => {
+      return usersApi.create({ ...userData, password: userData.password ?? '' }).then(async (user) => {
         if (roleId) await usersApi.assignRole(user.id, roleId)
         return user
       })

@@ -9,6 +9,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- `frontend/admin-portal/src/lib/form.ts` — Centralized `formResolver()` wrapper for Zod v4 / React Hook Form type compatibility
+- `frontend/seller-portal/API_MAP.md` — Regenerated from actual `services/api.ts` source code
+
+### Changed
+- **Scheduler N+1 fix** — `findDueForRenewal()` now eagerly loads `user` and `plan` relations, eliminating per-subscription re-fetches during renewal processing (reduced from N+2 queries to 1)
+- **Migration timestamp fix** — Renamed `AddSellerReplyToReviews` from timestamp `1700000000014` to `1700000000022` to resolve duplicate with `CreateEcommerceIndexes`
+- **Environment validation alignment** — `env.validation.ts` now validates `SMTP_HOST`/`SMTP_PORT` (was `MAIL_HOST`), added `NOTIFICATION_ENABLED`, `ADMIN_EMAIL`, `FRONTEND_URL`
+- **`.env.example`** — Added `STRIPE_CURRENCY`, `STRIPE_PRICE_*`, `ENCRYPTION_KEY`, `TRUST_PROXY`, `DB_SSL` vars; removed stale `RATE_LIMIT`
+- **`CONTRIBUTING.md`** — Fixed seed file count from 3 to 5
+- **Backend README** — Updated project status notice
+- **Customer-portal `API_MAP.md`** — Removed 3 documented-only endpoints not in actual api.ts (`DELETE /users/:id`, `POST /payments`, `PUT /reviews/:id`)
+- **Admin portal** — Replaced 28 `zodResolver(schema) as any` casts with centralized `formResolver(schema)` across 18 page files
+- **Seller portal** — Replaced all non-null assertions (`!`) with optional chaining (`?.`) across 14 files
+- **Customer portal** — Fixed `Header.tsx` `useRef` missing initial value; fixed `vite.config.ts` to import from `vitest/config`
+- **ESLint configs (all portals)** — Added overrides for UI components and test files; zero errors, zero warnings
+- **Backend ESLint** — Fixed 1181 Prettier formatting issues; fixed unused `passwordHash` variable in `sellers.service.ts`
+
+### Removed
+- **14 stale files deleted:**
+  - `document.md.bak`, `srs.md`, `FRONTEND_README.md`, `details.txt`, `database.md` (backend root)
+  - `adminportal.md` (frontend root)
+  - `test_output.txt`, `test-output.txt`, `test-results.json` (admin-portal)
+  - `quick-start.ps1`, `test-simple.ps1`, `test-routes.ps1`, `test-api.ps1`, `check-swagger.ps1` (test_scripts)
+- **Unused dependencies removed:**
+  - Backend: `typeorm-ts-node-esm`, `source-map-support`, `ts-loader`
+  - Customer portal: `jspdf`, `jspdf-autotable`
+  - Seller portal: `@types/testing-library__jest-dom`
+- Commented-out `RolesGuard`/`PermissionsGuard` global providers in `app.module.ts`
+
+---
+
+## [Previous Unreleased]
+
+### Added
 - `CONTRIBUTING.md` — Developer onboarding and contribution guide
 - `SECURITY.md` — Security policy, known vulnerabilities, and reporting process
 - `CHANGELOG.md` — This file

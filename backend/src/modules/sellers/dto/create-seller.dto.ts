@@ -1,21 +1,7 @@
-import {
-  IsString,
-  IsOptional,
-  IsNotEmpty,
-  MaxLength,
-  IsUUID,
-} from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateSellerDto {
-  @ApiProperty({
-    example: '550e8400-e29b-41d4-a716-446655440000',
-    description: 'UUID of the user to register as seller',
-  })
-  @IsUUID()
-  @IsNotEmpty()
-  userId: string;
-
   @ApiProperty({
     example: 'TechStore',
     description: 'Display name of the seller',

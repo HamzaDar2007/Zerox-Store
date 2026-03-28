@@ -32,7 +32,7 @@ export default function OrdersPage() {
 
   const { data: orderItems } = useQuery({
     queryKey: ['order-items', detailDialog?.id],
-    queryFn: () => ordersApi.getItems(detailDialog!.id),
+    queryFn: () => ordersApi.getItems(detailDialog?.id ?? ''),
     enabled: !!detailDialog,
   })
 

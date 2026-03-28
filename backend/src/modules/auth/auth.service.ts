@@ -157,7 +157,9 @@ export class AuthService {
       userRoles
         .map((ur) => ur.role?.name)
         .filter(Boolean)
-        .sort((a, b) => (ROLE_PRIORITY[b!] ?? 0) - (ROLE_PRIORITY[a!] ?? 0))[0] ?? null;
+        .sort(
+          (a, b) => (ROLE_PRIORITY[b!] ?? 0) - (ROLE_PRIORITY[a!] ?? 0),
+        )[0] ?? null;
 
     return {
       accessToken,

@@ -114,13 +114,13 @@ export default function ProductDetailPage() {
       <SEOHead
         title={product.name}
         description={product.shortDesc ?? `Buy ${product.name} at ShopVerse`}
-        ogImage={images[0]?.url}
+        image={images[0]?.url}
       />
 
       <div className="container-main py-4">
         <Breadcrumb items={[
-          { label: 'Products', href: '/products' },
-          ...(product.category ? [{ label: product.category.name, href: `/categories/${product.category.slug}` }] : []),
+          { label: 'Products', to: '/products' },
+          ...(product.category ? [{ label: product.category.name, to: `/categories/${product.category.slug}` }] : []),
           { label: product.name },
         ]} />
 

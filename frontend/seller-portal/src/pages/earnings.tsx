@@ -21,7 +21,7 @@ export default function EarningsPage() {
 
   const { data: ordersData } = useQuery({
     queryKey: ['earnings-orders', storeId],
-    queryFn: () => ordersApi.list({ storeId: storeId!, page: 1, limit: 500 }),
+    queryFn: () => ordersApi.list({ storeId: storeId ?? '', page: 1, limit: 500 }),
     enabled: !!storeId,
   })
 

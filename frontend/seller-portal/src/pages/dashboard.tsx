@@ -26,13 +26,13 @@ export default function DashboardPage() {
 
   const { data: products } = useQuery({
     queryKey: ['products', storeId],
-    queryFn: () => productsApi.list({ storeId: storeId!, page: 1, limit: 100 }),
+    queryFn: () => productsApi.list({ storeId: storeId ?? '', page: 1, limit: 100 }),
     enabled: !!storeId,
   })
 
   const { data: orders } = useQuery({
     queryKey: ['orders', storeId],
-    queryFn: () => ordersApi.list({ storeId: storeId!, page: 1, limit: 100 }),
+    queryFn: () => ordersApi.list({ storeId: storeId ?? '', page: 1, limit: 100 }),
     enabled: !!storeId,
   })
 

@@ -20,8 +20,8 @@ import { formatDateTime } from '@/lib/utils'
 import { useNavigate } from 'react-router-dom'
 import { VirtualizedList } from '@/components/shared/virtualized-list'
 import { useForm, Controller } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 
 const notifySchema = z.object({
   userId: z.string().min(1, 'User ID required'),
@@ -41,7 +41,7 @@ export default function NotificationsPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const limit = 20
 
-  const notifyForm = useForm<NotifyFormData>({ resolver: zodResolver(notifySchema) as any })
+  const notifyForm = useForm<NotifyFormData>({ resolver: formResolver(notifySchema) })
 
   const { data, isLoading } = useQuery({
     queryKey: ['notifications', { page, limit }],

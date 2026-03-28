@@ -23,6 +23,7 @@ import {
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { ReplyReviewDto } from './dto/reply-review.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -122,10 +123,10 @@ export class ReviewsController {
   @ApiResponse({ status: 200, description: 'Reply added' })
   reply(
     @Param('id') id: string,
-    @Body('body') body: string,
+    @Body() dto: ReplyReviewDto,
     @CurrentUser() user: any,
   ) {
-    return this.svc.reply(id, body, user.id);
+    return this.svc.reply(id, dto.body, user.id);
   }
 
   @Delete(':id')

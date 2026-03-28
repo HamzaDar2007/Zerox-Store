@@ -28,7 +28,9 @@ export class SellersService {
 
     // Auto-assign seller role to the user
     if (dto.userId) {
-      const sellerRole = await this.roleRepo.findOne({ where: { name: 'seller' } });
+      const sellerRole = await this.roleRepo.findOne({
+        where: { name: 'seller' },
+      });
       if (sellerRole) {
         const existing = await this.userRoleRepo.findOne({
           where: { userId: dto.userId, roleId: sellerRole.id },
@@ -69,7 +71,7 @@ export class SellersService {
       if ((seller as any)[f] !== undefined) safe[f] = (seller as any)[f];
     }
     if (safe.user) {
-      const { passwordHash, ...userSafe } = safe.user;
+      const { passwordHash: _passwordHash, ...userSafe } = safe.user;
       safe.user = userSafe;
     }
     return safe;

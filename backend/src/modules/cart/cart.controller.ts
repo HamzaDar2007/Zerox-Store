@@ -30,6 +30,7 @@ import { CreateFlashSaleDto } from './dto/create-flash-sale.dto';
 import { CreateFlashSaleItemDto } from './dto/create-flash-sale-item.dto';
 import { UpdateFlashSaleDto } from './dto/update-flash-sale.dto';
 import { UpdateWishlistDto } from './dto/update-wishlist.dto';
+import { CreateCouponScopeDto } from './dto/create-coupon-scope.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -193,8 +194,18 @@ export class CouponsController {
   @Roles(RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'List all coupons (Admin only)' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 50)',
+  })
   @ApiResponse({ status: 200, description: 'Coupons list returned' })
   findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.svc.findAllCoupons(+(page || 1), +(limit || 50));
@@ -250,7 +261,7 @@ export class CouponsController {
   @ApiOperation({ summary: 'Add scope to coupon (Admin only)' })
   @ApiParam({ name: 'id', description: 'Coupon UUID' })
   @ApiResponse({ status: 201, description: 'Coupon scope added' })
-  addScope(@Param('id') id: string, @Body() dto: any) {
+  addScope(@Param('id') id: string, @Body() dto: CreateCouponScopeDto) {
     return this.svc.addCouponScope({ ...dto, couponId: id });
   }
 
@@ -296,8 +307,18 @@ export class FlashSalesController {
   @Get()
   @Public()
   @ApiOperation({ summary: 'List all flash sales' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 50)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 50)',
+  })
   @ApiResponse({ status: 200, description: 'Flash sales list returned' })
   findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.svc.findAllFlashSales(+(page || 1), +(limit || 50));

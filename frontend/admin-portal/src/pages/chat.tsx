@@ -35,13 +35,13 @@ export default function ChatPage() {
 
   const { data: messages, refetch: refetchMessages } = useQuery({
     queryKey: ['chat-messages', selectedThread?.id],
-    queryFn: () => chatApi.getMessages(selectedThread!.id),
+    queryFn: () => chatApi.getMessages(selectedThread?.id ?? ''),
     enabled: !!selectedThread,
     refetchInterval: 5000,
   })
 
   const sendM = useMutation({
-    mutationFn: (body: string) => chatApi.sendMessage({ threadId: selectedThread!.id, body }),
+    mutationFn: (body: string) => chatApi.sendMessage({ threadId: selectedThread?.id ?? '', body }),
     onSuccess: () => { setMessage(''); refetchMessages() },
     onError: (e) => toast.error(getErrorMessage(e, 'Failed to send message')),
   })
@@ -66,7 +66,7 @@ export default function ChatPage() {
 
   const { data: participants } = useQuery({
     queryKey: ['chat-participants', selectedThread?.id],
-    queryFn: () => chatApi.getParticipants(selectedThread!.id),
+    queryFn: () => chatApi.getParticipants(selectedThread?.id ?? ''),
     enabled: !!selectedThread && showParticipants,
   })
 

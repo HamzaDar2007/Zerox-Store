@@ -87,7 +87,7 @@ export default function OnboardingPage() {
         ...data,
         displayName: sanitizeText(data.displayName),
         legalName: data.legalName ? sanitizeText(data.legalName) : undefined,
-        userId: user!.id,
+        userId: user?.id ?? '',
       })
       setSeller(created)
       toast.success('Business profile created!')
@@ -105,7 +105,7 @@ export default function OnboardingPage() {
       const created = await storeApi.create({
         ...data,
         name: sanitizeText(data.name),
-        sellerId: seller!.id,
+        sellerId: seller?.id ?? '',
       })
       setStore(created)
       toast.success('Store created!')

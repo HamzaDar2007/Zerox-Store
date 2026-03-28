@@ -19,8 +19,8 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { formatDate } from '@/lib/utils'
 import { useForm, Controller } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 
 const roleSchema = z.object({
   name: z.string().min(1, 'Required'),
@@ -38,7 +38,7 @@ export default function RolesPage() {
   const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['roles'], queryFn: rolesApi.list })
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<RoleFormData>({
-    resolver: zodResolver(roleSchema) as any,
+    resolver: formResolver(roleSchema),
   })
 
   const createMutation = useMutation({

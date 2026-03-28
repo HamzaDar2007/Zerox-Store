@@ -19,8 +19,8 @@ import { MoreHorizontal, Pencil, Trash2, AlertTriangle, PackagePlus, ArrowUpDown
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/api-error'
 import { useForm, Controller } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 
 const whSchema = z.object({ code: z.string().min(1), name: z.string().min(1), line1: z.string().optional(), city: z.string().optional(), country: z.string().optional(), isActive: z.boolean().default(true) })
 type WHFormData = z.infer<typeof whSchema>
@@ -44,16 +44,16 @@ export default function InventoryPage() {
   const { data: inventory, isLoading: loadingInv, isError: errorInv, refetch: refetchInv } = useQuery({ queryKey: ['inventory'], queryFn: inventoryApi.list })
   const { data: lowStock, isLoading: loadingLow, isError: errorLow, refetch: refetchLow } = useQuery({ queryKey: ['inventory', 'low-stock'], queryFn: inventoryApi.lowStock })
 
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<WHFormData>({ resolver: zodResolver(whSchema) as any })
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<WHFormData>({ resolver: formResolver(whSchema) })
 
   const createM = useMutation({ mutationFn: warehousesApi.create, onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setWhDialog(false); reset(); toast.success('Warehouse created') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const updateM = useMutation({ mutationFn: ({ id, ...d }: WHFormData & { id: string }) => warehousesApi.update(id, d), onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setWhDialog(false); setEditing(null); toast.success('Updated') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
   const deleteM = useMutation({ mutationFn: (id: string) => warehousesApi.delete(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['warehouses'] }); setDeleteTarget(null); toast.success('Deleted') }, onError: (e) => toast.error(getErrorMessage(e, 'Failed')) })
 
-  const setStockForm = useForm<z.infer<typeof setStockSchema>>({ resolver: zodResolver(setStockSchema) as any })
-  const adjustStockForm = useForm<z.infer<typeof adjustStockSchema>>({ resolver: zodResolver(adjustStockSchema) as any })
-  const reserveForm = useForm<z.infer<typeof reserveSchema>>({ resolver: zodResolver(reserveSchema) as any })
-  const releaseForm = useForm<z.infer<typeof releaseSchema>>({ resolver: zodResolver(releaseSchema) as any })
+  const setStockForm = useForm<z.infer<typeof setStockSchema>>({ resolver: formResolver(setStockSchema) })
+  const adjustStockForm = useForm<z.infer<typeof adjustStockSchema>>({ resolver: formResolver(adjustStockSchema) })
+  const reserveForm = useForm<z.infer<typeof reserveSchema>>({ resolver: formResolver(reserveSchema) })
+  const releaseForm = useForm<z.infer<typeof releaseSchema>>({ resolver: formResolver(releaseSchema) })
 
   const setStockM = useMutation({
     mutationFn: inventoryApi.set,
@@ -124,7 +124,7 @@ export default function InventoryPage() {
         <TabsList>
           <TabsTrigger value="warehouses">Warehouses</TabsTrigger>
           <TabsTrigger value="stock">Stock</TabsTrigger>
-          <TabsTrigger value="low-stock">Low Stock {(lowStock?.length ?? 0) > 0 && <Badge variant="destructive" className="ml-1">{lowStock!.length}</Badge>}</TabsTrigger>
+          <TabsTrigger value="low-stock">Low Stock {(lowStock?.length ?? 0) > 0 && <Badge variant="destructive" className="ml-1">{lowStock?.length}</Badge>}</TabsTrigger>
         </TabsList>
         <TabsContent value="warehouses">
           <DataTable columns={whColumns} data={warehouses ?? []} isLoading={loadingWH} isError={errorWH} onRetry={refetchWH} searchColumn="name" searchPlaceholder="Search warehouses..."

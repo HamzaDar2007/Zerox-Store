@@ -36,6 +36,10 @@ import {
   UploadProductImageDto,
   UploadProductImagesDto,
 } from './dto/upload-product-image.dto';
+import { CreateAttributeKeyDto } from './dto/create-attribute-key.dto';
+import { UpdateAttributeKeyDto } from './dto/update-attribute-key.dto';
+import { CreateAttributeValueDto } from './dto/create-attribute-value.dto';
+import { AssignVariantAttributeDto } from './dto/assign-variant-attribute.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -316,7 +320,7 @@ export class ProductsController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create an attribute key (Admin only)' })
   @ApiResponse({ status: 201, description: 'Attribute key created' })
-  createAttributeKey(@Body() dto: any) {
+  createAttributeKey(@Body() dto: CreateAttributeKeyDto) {
     return this.svc.createAttributeKey(dto);
   }
 
@@ -344,7 +348,10 @@ export class ProductsController {
   @ApiOperation({ summary: 'Update attribute key (Admin only)' })
   @ApiParam({ name: 'id', description: 'Attribute key UUID' })
   @ApiResponse({ status: 200, description: 'Attribute key updated' })
-  updateAttributeKey(@Param('id') id: string, @Body() dto: any) {
+  updateAttributeKey(
+    @Param('id') id: string,
+    @Body() dto: UpdateAttributeKeyDto,
+  ) {
     return this.svc.updateAttributeKey(id, dto);
   }
 
@@ -368,7 +375,10 @@ export class ProductsController {
   @ApiOperation({ summary: 'Add a value to an attribute key (Admin only)' })
   @ApiParam({ name: 'keyId', description: 'Attribute key UUID' })
   @ApiResponse({ status: 201, description: 'Attribute value created' })
-  createAttributeValue(@Param('keyId') keyId: string, @Body() dto: any) {
+  createAttributeValue(
+    @Param('keyId') keyId: string,
+    @Body() dto: CreateAttributeValueDto,
+  ) {
     return this.svc.createAttributeValue({ ...dto, attributeKeyId: keyId });
   }
 
@@ -400,7 +410,10 @@ export class ProductsController {
   @ApiOperation({ summary: 'Assign attribute to variant' })
   @ApiParam({ name: 'variantId', description: 'Variant UUID' })
   @ApiResponse({ status: 201, description: 'Attribute assigned' })
-  assignVariantAttribute(@Param('variantId') variantId: string, @Body() dto: any) {
+  assignVariantAttribute(
+    @Param('variantId') variantId: string,
+    @Body() dto: AssignVariantAttributeDto,
+  ) {
     return this.svc.assignVariantAttribute({ ...dto, variantId });
   }
 

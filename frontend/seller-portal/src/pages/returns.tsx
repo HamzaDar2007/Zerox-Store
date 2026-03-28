@@ -27,7 +27,7 @@ export default function ReturnsPage() {
 
   const { data: returnItems = [] } = useQuery({
     queryKey: ['return-items', detailReturn?.id],
-    queryFn: () => returnsApi.getItems(detailReturn!.id),
+    queryFn: () => returnsApi.getItems(detailReturn?.id ?? ''),
     enabled: !!detailReturn,
   })
 

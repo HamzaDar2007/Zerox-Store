@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
+import { formResolver } from '@/lib/form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { authApi } from '@/services/api'
 import { getErrorMessage } from '@/lib/api-error'
 import { Button } from '@/components/ui/button'
@@ -29,7 +29,7 @@ export default function ResetPasswordPage() {
   const token = searchParams.get('token') ?? ''
 
   const { register, handleSubmit, formState: { errors } } = useForm<ResetForm>({
-    resolver: zodResolver(schema) as any,
+    resolver: formResolver(schema),
   })
 
   const onSubmit = async (data: ResetForm) => {

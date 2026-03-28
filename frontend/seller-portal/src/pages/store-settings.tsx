@@ -44,7 +44,7 @@ export default function StoreSettingsPage() {
   }, [store, reset])
 
   const updateM = useMutation({
-    mutationFn: (d: StoreFormData) => storeApi.update(store!.id, d),
+    mutationFn: (d: StoreFormData) => storeApi.update(store?.id ?? '', d),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['store'] })
       refetchStore()

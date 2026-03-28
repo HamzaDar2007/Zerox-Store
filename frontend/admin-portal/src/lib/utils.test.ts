@@ -7,7 +7,8 @@ describe('cn', () => {
   })
 
   it('handles conditional classes', () => {
-    expect(cn('px-2', false && 'py-1', 'mt-2')).toBe('px-2 mt-2')
+    const condition = false
+    expect(cn('px-2', condition && 'py-1', 'mt-2')).toBe('px-2 mt-2')
   })
 
   it('deduplicates tailwind classes', () => {

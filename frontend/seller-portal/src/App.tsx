@@ -58,7 +58,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function SellerGuard({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user)
   const role = user?.role ?? user?.roles?.[0]?.role?.name ?? user?.userRoles?.[0]?.role?.name
-  if (role && role !== 'seller' && role !== 'admin' && role !== 'super_admin') {
+  const allowed = role === 'seller' || role === 'admin' || role === 'super_admin'
+  if (!allowed) {
     return <Navigate to="/unauthorized" replace />
   }
   return <>{children}</>

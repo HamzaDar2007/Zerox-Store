@@ -46,11 +46,29 @@ export class CreateSubscriptionPlanDto {
     example: 'monthly',
     description: 'Billing interval (daily, weekly, monthly, yearly)',
     maxLength: 20,
-    enum: ['daily', 'weekly', 'monthly', 'yearly', 'day', 'week', 'month', 'year'],
+    enum: [
+      'daily',
+      'weekly',
+      'monthly',
+      'yearly',
+      'day',
+      'week',
+      'month',
+      'year',
+    ],
   })
   @IsString()
   @IsNotEmpty()
-  @IsIn(['daily', 'weekly', 'monthly', 'yearly', 'day', 'week', 'month', 'year'])
+  @IsIn([
+    'daily',
+    'weekly',
+    'monthly',
+    'yearly',
+    'day',
+    'week',
+    'month',
+    'year',
+  ])
   @MaxLength(20)
   interval: string;
 

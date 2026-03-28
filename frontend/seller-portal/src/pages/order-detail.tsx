@@ -50,38 +50,38 @@ export default function OrderDetailPage() {
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', id],
-    queryFn: () => ordersApi.get(id!),
+    queryFn: () => ordersApi.get(id ?? ''),
     enabled: !!id,
   })
 
   const { data: items = [] } = useQuery({
     queryKey: ['order-items', id],
-    queryFn: () => ordersApi.getItems(id!),
+    queryFn: () => ordersApi.getItems(id ?? ''),
     enabled: !!id,
   })
 
   const { data: shipments = [] } = useQuery({
     queryKey: ['order-shipments', id],
-    queryFn: () => shippingApi.getOrderShipments(id!),
+    queryFn: () => shippingApi.getOrderShipments(id ?? ''),
     enabled: !!id,
   })
 
   const cancelM = useMutation({
-    mutationFn: () => ordersApi.cancel(id!),
+    mutationFn: () => ordersApi.cancel(id ?? ''),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['order', id] }); setCancelOpen(false); toast.success('Order cancelled') },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
 
   const shipForm = useForm<ShipmentFormData>({ resolver: zodResolver(shipmentSchema) as never })
   const createShipM = useMutation({
-    mutationFn: (d: ShipmentFormData) => shippingApi.createShipment({ ...d, orderId: id! }),
+    mutationFn: (d: ShipmentFormData) => shippingApi.createShipment({ ...d, orderId: id ?? '' }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['order-shipments', id] }); setShipOpen(false); shipForm.reset(); toast.success('Shipment created') },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
 
   const eventForm = useForm<EventFormData>({ resolver: zodResolver(eventSchema) as never })
   const createEventM = useMutation({
-    mutationFn: (d: EventFormData) => shippingApi.createShipmentEvent(selectedShipment!.id, d),
+    mutationFn: (d: EventFormData) => shippingApi.createShipmentEvent(selectedShipment?.id ?? '', d),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['order-shipments', id] }); setEventOpen(false); eventForm.reset(); toast.success('Tracking event added') },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -188,6 +188,7 @@ export default function OrderDetailPage() {
           <DialogHeader><DialogTitle>Add Tracking Event</DialogTitle><DialogDescription>Update shipment tracking status</DialogDescription></DialogHeader>
           <form onSubmit={eventForm.handleSubmit((d) => createEventM.mutate(d))} className="space-y-4">
             <div className="space-y-2"><Label>Status</Label>
+              {/* eslint-disable-next-line react-hooks/incompatible-library */}
               <Select value={eventForm.watch('status')} onValueChange={(v) => eventForm.setValue('status', v)}>
                 <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
                 <SelectContent>
